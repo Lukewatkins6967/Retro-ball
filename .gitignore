@@ -1,0 +1,7 @@
+node_modules
+dist
+.vercel
+*.log
+preview.err
+preview.log
+tsconfig.tsbuildinfo
