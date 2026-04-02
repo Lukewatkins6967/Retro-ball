@@ -1,0 +1,433 @@
+Shader "Hidden/InternalClear" {
+SubShader { 
+ Pass {
+  ZTest Always
+  ZWrite Off
+  Cull Off
+  ColorMask 0
+  GpuProgramID 12162
+Program "vp" {
+SubProgram "opengl " {
+GpuProgramIndex 0
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 1
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 2
+}
+SubProgram "gles " {
+GpuProgramIndex 3
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 4
+}
+SubProgram "gles3 " {
+GpuProgramIndex 5
+}
+SubProgram "glcore " {
+GpuProgramIndex 6
+}
+}
+Program "fp" {
+SubProgram "opengl " {
+GpuProgramIndex 7
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 8
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 9
+}
+SubProgram "gles " {
+GpuProgramIndex 10
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 11
+}
+SubProgram "gles3 " {
+GpuProgramIndex 12
+}
+SubProgram "glcore " {
+GpuProgramIndex 13
+}
+}
+ }
+ Pass {
+  ZTest Always
+  ZWrite Off
+  Cull Off
+  GpuProgramID 123240
+Program "vp" {
+SubProgram "opengl " {
+GpuProgramIndex 0
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 1
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 2
+}
+SubProgram "gles " {
+GpuProgramIndex 3
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 4
+}
+SubProgram "gles3 " {
+GpuProgramIndex 5
+}
+SubProgram "glcore " {
+GpuProgramIndex 6
+}
+}
+Program "fp" {
+SubProgram "opengl " {
+GpuProgramIndex 7
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 8
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 9
+}
+SubProgram "gles " {
+GpuProgramIndex 10
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 11
+}
+SubProgram "gles3 " {
+GpuProgramIndex 12
+}
+SubProgram "glcore " {
+GpuProgramIndex 13
+}
+}
+ }
+ Pass {
+  ZTest Always
+  Cull Off
+  ColorMask 0
+  GpuProgramID 182433
+Program "vp" {
+SubProgram "opengl " {
+GpuProgramIndex 0
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 1
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 2
+}
+SubProgram "gles " {
+GpuProgramIndex 3
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 4
+}
+SubProgram "gles3 " {
+GpuProgramIndex 5
+}
+SubProgram "glcore " {
+GpuProgramIndex 6
+}
+}
+Program "fp" {
+SubProgram "opengl " {
+GpuProgramIndex 7
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 8
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 9
+}
+SubProgram "gles " {
+GpuProgramIndex 10
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 11
+}
+SubProgram "gles3 " {
+GpuProgramIndex 12
+}
+SubProgram "glcore " {
+GpuProgramIndex 13
+}
+}
+ }
+ Pass {
+  ZTest Always
+  Cull Off
+  GpuProgramID 251678
+Program "vp" {
+SubProgram "opengl " {
+GpuProgramIndex 0
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 1
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 2
+}
+SubProgram "gles " {
+GpuProgramIndex 3
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 4
+}
+SubProgram "gles3 " {
+GpuProgramIndex 5
+}
+SubProgram "glcore " {
+GpuProgramIndex 6
+}
+}
+Program "fp" {
+SubProgram "opengl " {
+GpuProgramIndex 7
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 8
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 9
+}
+SubProgram "gles " {
+GpuProgramIndex 10
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 11
+}
+SubProgram "gles3 " {
+GpuProgramIndex 12
+}
+SubProgram "glcore " {
+GpuProgramIndex 13
+}
+}
+ }
+ Pass {
+  ZTest Always
+  ZWrite Off
+  Cull Off
+  Stencil {
+   Pass Zero
+  }
+  ColorMask 0
+  GpuProgramID 285785
+Program "vp" {
+SubProgram "opengl " {
+GpuProgramIndex 0
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 1
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 2
+}
+SubProgram "gles " {
+GpuProgramIndex 3
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 4
+}
+SubProgram "gles3 " {
+GpuProgramIndex 5
+}
+SubProgram "glcore " {
+GpuProgramIndex 6
+}
+}
+Program "fp" {
+SubProgram "opengl " {
+GpuProgramIndex 7
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 8
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 9
+}
+SubProgram "gles " {
+GpuProgramIndex 10
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 11
+}
+SubProgram "gles3 " {
+GpuProgramIndex 12
+}
+SubProgram "glcore " {
+GpuProgramIndex 13
+}
+}
+ }
+ Pass {
+  ZTest Always
+  ZWrite Off
+  Cull Off
+  Stencil {
+   Pass Zero
+  }
+  GpuProgramID 368402
+Program "vp" {
+SubProgram "opengl " {
+GpuProgramIndex 0
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 1
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 2
+}
+SubProgram "gles " {
+GpuProgramIndex 3
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 4
+}
+SubProgram "gles3 " {
+GpuProgramIndex 5
+}
+SubProgram "glcore " {
+GpuProgramIndex 6
+}
+}
+Program "fp" {
+SubProgram "opengl " {
+GpuProgramIndex 7
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 8
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 9
+}
+SubProgram "gles " {
+GpuProgramIndex 10
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 11
+}
+SubProgram "gles3 " {
+GpuProgramIndex 12
+}
+SubProgram "glcore " {
+GpuProgramIndex 13
+}
+}
+ }
+ Pass {
+  ZTest Always
+  Cull Off
+  Stencil {
+   Pass Zero
+  }
+  ColorMask 0
+  GpuProgramID 409511
+Program "vp" {
+SubProgram "opengl " {
+GpuProgramIndex 0
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 1
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 2
+}
+SubProgram "gles " {
+GpuProgramIndex 3
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 4
+}
+SubProgram "gles3 " {
+GpuProgramIndex 5
+}
+SubProgram "glcore " {
+GpuProgramIndex 6
+}
+}
+Program "fp" {
+SubProgram "opengl " {
+GpuProgramIndex 7
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 8
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 9
+}
+SubProgram "gles " {
+GpuProgramIndex 10
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 11
+}
+SubProgram "gles3 " {
+GpuProgramIndex 12
+}
+SubProgram "glcore " {
+GpuProgramIndex 13
+}
+}
+ }
+ Pass {
+  ZTest Always
+  Cull Off
+  Stencil {
+   Pass Zero
+  }
+  GpuProgramID 464353
+Program "vp" {
+SubProgram "opengl " {
+GpuProgramIndex 0
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 1
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 2
+}
+SubProgram "gles " {
+GpuProgramIndex 3
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 4
+}
+SubProgram "gles3 " {
+GpuProgramIndex 5
+}
+SubProgram "glcore " {
+GpuProgramIndex 6
+}
+}
+Program "fp" {
+SubProgram "opengl " {
+GpuProgramIndex 7
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 8
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 9
+}
+SubProgram "gles " {
+GpuProgramIndex 10
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 11
+}
+SubProgram "gles3 " {
+GpuProgramIndex 12
+}
+SubProgram "glcore " {
+GpuProgramIndex 13
+}
+}
+ }
+}
+Fallback Off
+}

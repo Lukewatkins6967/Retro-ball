@@ -1,0 +1,11 @@
+{
+	"m_BounceCombine": 3,
+	"m_Bounciness": 0.3,
+	"m_CorrespondingSourceObject": { "m_Collection": "sharedassets0.assets", "m_PathID": 0 },
+	"m_DynamicFriction": 0.4,
+	"m_FrictionCombine": 0,
+	"m_HideFlags": 0,
+	"m_Name": "PMatWeaponWood",
+	"m_PrefabInternal": { "m_Collection": "sharedassets0.assets", "m_PathID": 0 },
+	"m_StaticFriction": 0.5
+}

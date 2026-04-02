@@ -1,7 +1,17 @@
-node_modules
-dist
-.vercel
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.vercel/
 *.log
-preview.err
-preview.log
-tsconfig.tsbuildinfo
+*.tmp
+*.cache
+
+# Local extracted / tool-only Unity artifacts that should not be pushed
+combined-app/unity-extract/AssetRipper/
+combined-app/unity-extract/AssetRipper_win_x64.zip
+combined-app/temp-Assembly-CSharp.dll
+
+# Optional bulky local outputs
+combined-app/preview.log
+combined-app/preview.err

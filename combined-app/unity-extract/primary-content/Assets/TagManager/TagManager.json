@@ -1,0 +1,61 @@
+{
+	"m_Layers": [
+		"Default",
+		"TransparentFX",
+		"Ignore Raycast",
+		"",
+		"Water",
+		"UI",
+		"",
+		"",
+		"Gui",
+		"NoPause",
+		"Player",
+		"Ball",
+		"BallDetector",
+		"Ground",
+		"Damage",
+		"Weapon",
+		"HitGroundOnly",
+		"DamageThrown",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		"",
+		""
+	],
+	"m_SortingLayers": [
+		{
+			"m_Locked": false,
+			"m_Name": "Ground",
+			"m_UniqueID": 1968949751
+		},
+		{
+			"m_Locked": false,
+			"m_Name": "Default",
+			"m_UniqueID": 0
+		},
+		{
+			"m_Locked": false,
+			"m_Name": "Game",
+			"m_UniqueID": 1127155337
+		},
+		{
+			"m_Locked": false,
+			"m_Name": "Foreground",
+			"m_UniqueID": 1990928199
+		}
+	],
+	"m_Tags": [
+		"Judge"
+	]
+}

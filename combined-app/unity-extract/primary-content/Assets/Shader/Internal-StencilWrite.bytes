@@ -1,0 +1,30 @@
+Shader "Hidden/Internal-StencilWrite" {
+SubShader { 
+ Pass {
+  GpuProgramID 21876
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 0
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 1
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 2
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 3
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 4
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 5
+}
+}
+ }
+}
+Fallback Off
+}

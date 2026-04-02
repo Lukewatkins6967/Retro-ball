@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1709254077376921
+GameObject:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_Component:
+  - 4: {fileID: 4730242686860875}
+  - 114: {fileID: 114724804207875695}
+  m_Layer: 0
+  m_Name: Commentary
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4730242686860875
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1709254077376921}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: -0, z: -0}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+--- !u!114 &114724804207875695
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1709254077376921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93151ce343767dcea837e8111cdafc92, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  m_currentlyPlayingTrigger: 0
+  m_queuedTrigger: 0
+  m_retardLouisDebugText: 0
+  m_maxQueueTime: 4
+  m_minTimeSinceIdleCommentary: 30
+  m_jumpshotAttemptTwoAudioCue: {fileID: 114724804207875695, guid: c11da172ffc28be4db540ba27966316d, type: 2}
+  m_jumpshotAttemptTwoChance: 0.675
+  m_jumpshotAttemptThreeAudioCue: {fileID: 114724804207875695, guid: 10925a2c8d32d2546a5395817442f2a9, type: 2}
+  m_jumpshotAttemptThreeChance: 0.666
+  m_jumpshotSuccessAudioCue: {fileID: 114724804207875695, guid: 72b52b6019e385a4185af7323137c65d, type: 2}
+  m_jumpshotSuccessChance: 1
+  m_jumpshotMissedAudioCue: {fileID: 114724804207875695, guid: 5dbeec51862e5c94185834e46ff935b7, type: 2}
+  m_jumpshotMissedChance: 0.712
+  m_dunkAttemptAudioCue: {fileID: 114724804207875695, guid: e8570690fe3939f4e88929c868c060c6, type: 2}
+  m_dunkAttemptChance: 0.654
+  m_dunkSuccessAudioCue: {fileID: 114724804207875695, guid: fc2e6d7a0db843f4ea41b86787636df4, type: 2}
+  m_dunkSuccessChance: 1
+  m_idleAudioCue: {fileID: 114724804207875695, guid: 8f4cae48fe4b4d342b27b448bc069032, type: 2}
+  m_idleChance: 0.404
+  m_gameStartAudioCue: {fileID: 114724804207875695, guid: 64d28032ce2905b4ba85ca2fd021c183, type: 2}
+  m_gameStartChance: 1
+  m_gameEndAudioCue: {fileID: 114724804207875695, guid: b044693c76067a740866cb5c3b7eb0c7, type: 2}
+  m_gameEndChance: 1
+  m_changePossessionAudioCue: {fileID: 114724804207875695, guid: 5232d1c6acc4c0c4ea42b835c03c7f12, type: 2}
+  m_changePossessionChance: 0.307
+  m_violenceAudioCue: {fileID: 114724804207875695, guid: f96f93ada2c136942880b078a86c8ebe, type: 2}
+  m_violenceChance: 0.595
+  m_blockViolenceAudioCue: {fileID: 114724804207875695, guid: ddab6f7557972184aaca6555ee059960, type: 2}
+  m_blockViolenceChance: 0.328
+--- !u!1001 &100100000
+Prefab:
+  serializedVersion: 2
+  m_ObjectHideFlags: 1
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 1709254077376921}
+  m_IsPrefabParent: 1

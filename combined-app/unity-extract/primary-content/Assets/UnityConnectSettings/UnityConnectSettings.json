@@ -1,0 +1,22 @@
+{
+	"m_CrashReportingSettings": {
+		"m_Enabled": false,
+		"m_EventUrl": "https://perf-events.cloud.unity3d.com/api/events/crashes"
+	},
+	"m_Enabled": false,
+	"m_HideFlags": 0,
+	"m_TestConfigUrl": "",
+	"m_TestEventUrl": "",
+	"m_TestMode": false,
+	"m_UnityAnalyticsSettings": {
+		"m_Enabled": false,
+		"m_InitializeOnStartup": true,
+		"m_TestConfigUrl": "",
+		"m_TestEventUrl": "",
+		"m_TestMode": false
+	},
+	"m_UnityPurchasingSettings": {
+		"m_Enabled": false,
+		"m_TestMode": false
+	}
+}

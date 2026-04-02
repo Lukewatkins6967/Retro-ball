@@ -1,0 +1,130 @@
+{
+	"m_AtlasName": "",
+	"m_Border": {
+		"m_W": 0,
+		"m_X": 0,
+		"m_Y": 0,
+		"m_Z": 0
+	},
+	"m_CorrespondingSourceObject": { "m_Collection": "sharedassets0.assets", "m_PathID": 0 },
+	"m_Extrude": 1,
+	"m_HideFlags": 0,
+	"m_IsPolygon": false,
+	"m_Name": "paul_roll_3",
+	"m_Offset": {
+		"m_X": 2.0350754,
+		"m_Y": 9.500002
+	},
+	"m_PackingTag": "",
+	"m_Pivot": {
+		"m_X": 0.54247004,
+		"m_Y": 0.7217153
+	},
+	"m_PixelsToUnits": 20,
+	"m_PrefabInternal": { "m_Collection": "sharedassets0.assets", "m_PathID": 0 },
+	"m_RD": {
+		"m_AlphaTexture": { "m_Collection": "sharedassets0.assets", "m_PathID": 0 },
+		"m_Indices": [
+			7,
+			6,
+			4,
+			5,
+			4,
+			6,
+			3,
+			4,
+			5,
+			1,
+			4,
+			3,
+			0,
+			1,
+			3,
+			2,
+			1,
+			0
+		],
+		"m_SettingsRaw": 64,
+		"m_Texture": { "m_Collection": "sharedassets0.assets", "m_PathID": 221 },
+		"m_TextureRect": {
+			"m_Height": 42.847755,
+			"m_Width": 47.917908,
+			"m_X": 6.005971,
+			"m_Y": 1.0761205
+		},
+		"m_TextureRectOffset": {
+			"m_X": 0,
+			"m_Y": 0
+		},
+		"m_UvTransform": {
+			"m_W": 32,
+			"m_X": 20,
+			"m_Y": 32,
+			"m_Z": 20
+		},
+		"m_Vertices": [
+			{
+				"m_Pos": {
+					"m_X": 0.35,
+					"m_Y": 0.55,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": 1.1,
+					"m_Y": -1.55,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": 1.1,
+					"m_Y": -0.15,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": 0.1,
+					"m_Y": 0.6,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": -0.6,
+					"m_Y": -1.55,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": -0.7,
+					"m_Y": 0.6,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": -1.3,
+					"m_Y": 0.25,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": -1.3,
+					"m_Y": -0.45,
+					"m_Z": 0
+				}
+			}
+		]
+	},
+	"m_Rect": {
+		"m_Height": 42.847755,
+		"m_Width": 47.917908,
+		"m_X": 6.005971,
+		"m_Y": 1.0761205
+	}
+}

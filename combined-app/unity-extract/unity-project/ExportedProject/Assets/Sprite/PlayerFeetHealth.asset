@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!213 &21300000
+Sprite:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: PlayerFeetHealth
+  m_Rect:
+    serializedVersion: 2
+    x: 15.07612
+    y: 14.07612
+    width: 235.82796
+    height: 105.84776
+  m_Offset: {x: -132.9901, y: -67}
+  m_Border: {x: 0, y: 0, z: 0, w: 0}
+  m_PixelsToUnits: 160
+  m_Pivot: {x: -0.06392847, y: -0.13298458}
+  m_Extrude: 1
+  m_IsPolygon: 0
+  m_AtlasName:
+  m_PackingTag:
+  m_RD:
+    texture: {fileID: 2800000, guid: 2deaa2680ed3bbe42a4c68168181ae17, type: 3}
+    alphaTexture: {fileID: 0}
+    vertices:
+    - serializedVersion: 2
+      pos: {x: 0.68125, y: -0.05, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.76875, y: -0.20625, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.76875, y: -0.05625, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.5125, y: -0.63125, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.35, y: -0.7125, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.24375, y: -0.7125, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.59375, y: -0.60625, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.69375, y: -0.05, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.70625, y: -0.075, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.70625, y: -0.325, z: 0}
+    indices: 090008000600070006000800000006000700050006000000040005000000030004000000010003000000020001000000
+    textureRect:
+      serializedVersion: 2
+      x: 15.07612
+      y: 14.07612
+      width: 235.82796
+      height: 105.84776
+    textureRectOffset: {x: 0, y: 0}
+    settingsRaw: 64
+    uvTransform: {x: 160, y: 128, z: 160, w: 128}

@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1709254077376921
+GameObject:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_Component:
+  - 4: {fileID: 4730242686860875}
+  - 114: {fileID: 114724804207875695}
+  m_Layer: 0
+  m_Name: KingCobrasRed
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &4730242686860875
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1709254077376921}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.39903998, y: 2.8735838, z: 2.614399}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: -0, z: -0}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+--- !u!114 &114724804207875695
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1709254077376921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d52142a5f2a6b2689f1ef8ce0e3240e, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  m_displayName: King Cobras
+  m_playerPrefab: {fileID: 1709254077376921, guid: 595eaf5477339e147be12facc6c0108d, type: 2}
+  m_playerColor: {r: 0.6392157, g: 0.227451, b: 0.20392159, a: 1}
+  m_lightColor: {r: 0.7607844, g: 0.427451, b: 0.41960788, a: 1}
+  m_teamPlayers:
+  - m_displayName: REDACTED
+    m_playerAnims:
+      m_dead: {fileID: 7400000, guid: 23a4ca5a9a98dac40b9f249b03160d11, type: 2}
+      m_fall: {fileID: 7400000, guid: eb33c6a5594ec624fa746f8f1ab97f38, type: 2}
+      m_hit: {fileID: 7400000, guid: 92e18c5c8867adc408e48c5c061ddbbf, type: 2}
+      m_idle: {fileID: 7400000, guid: d20af95564b9b6c46b71b23462c9b1f7, type: 2}
+      m_jump: {fileID: 7400000, guid: b21ae2b97e8b7424f80ce66b1f6a40bb, type: 2}
+      m_kick: {fileID: 7400000, guid: db2b4af0ac22e7043aa464b9715fecae, type: 2}
+      m_punch: {fileID: 7400000, guid: 9eed742610f71e74f9b2cd53da75285b, type: 2}
+      m_run: {fileID: 7400000, guid: 98276f358b73792469014ccd4453606c, type: 2}
+      m_dodge: {fileID: 7400000, guid: acd39718e2cdb984a98f6844fe668974, type: 2}
+  - m_displayName: REDACTED
+    m_playerAnims:
+      m_dead: {fileID: 7400000, guid: 7f4bc47952bc3d746a306bcb9027f200, type: 2}
+      m_fall: {fileID: 7400000, guid: 13fd8d6976a06b441ad8c8f52135d009, type: 2}
+      m_hit: {fileID: 7400000, guid: df3d757207bd9e94fb784bffa79a9c1a, type: 2}
+      m_idle: {fileID: 7400000, guid: fa566888437b1aa438881750e5df062a, type: 2}
+      m_jump: {fileID: 7400000, guid: 4912ac1f3535bf146ade73e2006d7b0b, type: 2}
+      m_kick: {fileID: 7400000, guid: ae09808a2b71dbf4abcd074a641308b2, type: 2}
+      m_punch: {fileID: 7400000, guid: bbf1bf80aca68f245a201e19c5a64fd6, type: 2}
+      m_run: {fileID: 7400000, guid: f005de687a745f94fbbdb73000afc510, type: 2}
+      m_dodge: {fileID: 7400000, guid: cc2d60efde1098844b5949a98afeb1af, type: 2}
+--- !u!1001 &100100000
+Prefab:
+  serializedVersion: 2
+  m_ObjectHideFlags: 1
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 1709254077376921}
+  m_IsPrefabParent: 1

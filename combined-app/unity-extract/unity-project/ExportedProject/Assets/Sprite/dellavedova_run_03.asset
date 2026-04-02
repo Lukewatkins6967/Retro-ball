@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!213 &21300000
+Sprite:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: dellavedova_run_03
+  m_Rect:
+    serializedVersion: 2
+    x: 23.042908
+    y: 2.0563717
+    width: 16.93034
+    height: 45.867508
+  m_Offset: {x: -31.508078, y: -24.990128}
+  m_Border: {x: 0, y: 0, z: 0, w: 0}
+  m_PixelsToUnits: 20
+  m_Pivot: {x: -1.3610423, y: -0.044832863}
+  m_Extrude: 1
+  m_IsPolygon: 0
+  m_AtlasName:
+  m_PackingTag:
+  m_RD:
+    texture: {fileID: 2800000, guid: ab0a04585bab5ca4fb8b943d0786e069, type: 3}
+    alphaTexture: {fileID: 0}
+    vertices:
+    - serializedVersion: 2
+      pos: {x: 0.4, y: 0.8, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.25, y: -1.5, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.4, y: -1.5, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.35, y: 0.8, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.45, y: 0.45, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.45, y: -1.4, z: 0}
+    indices: 050004000100030001000400000001000300020001000000
+    textureRect:
+      serializedVersion: 2
+      x: 23.042908
+      y: 2.0563717
+      width: 16.93034
+      height: 45.867508
+    textureRectOffset: {x: 0, y: 0}
+    settingsRaw: 64
+    uvTransform: {x: 20, y: 32, z: 20, w: 32}

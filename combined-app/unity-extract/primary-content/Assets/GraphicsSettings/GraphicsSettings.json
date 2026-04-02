@@ -1,0 +1,117 @@
+{
+	"m_AlwaysIncludedShaders": [
+		{ "m_Collection": "globalgamemanagers", "m_PathID": 7 },
+		{ "m_Collection": "globalgamemanagers", "m_PathID": 15104 },
+		{ "m_Collection": "globalgamemanagers", "m_PathID": 15105 },
+		{ "m_Collection": "globalgamemanagers", "m_PathID": 15106 },
+		{ "m_Collection": "globalgamemanagers", "m_PathID": 10770 },
+		{ "m_Collection": "globalgamemanagers", "m_PathID": 10782 },
+		{ "m_Collection": "globalgamemanagers", "m_PathID": 19 },
+		{ "m_Collection": "globalgamemanagers", "m_PathID": 65 },
+		{ "m_Collection": "globalgamemanagers", "m_PathID": 66 },
+		{ "m_Collection": "globalgamemanagers", "m_PathID": 19 },
+		{ "m_Collection": "globalgamemanagers", "m_PathID": 9000 },
+		{ "m_Collection": "globalgamemanagers", "m_PathID": 9001 },
+		{ "m_Collection": "globalgamemanagers", "m_PathID": 9002 },
+		{ "m_Collection": "globalgamemanagers", "m_PathID": 9003 }
+	],
+	"m_Deferred": {
+		"m_Mode": 1,
+		"m_Shader": { "m_Collection": "globalgamemanagers", "m_PathID": 69 }
+	},
+	"m_DeferredReflections": {
+		"m_Mode": 1,
+		"m_Shader": { "m_Collection": "globalgamemanagers", "m_PathID": 74 }
+	},
+	"m_DepthNormals": {
+		"m_Mode": 1,
+		"m_Shader": { "m_Collection": "globalgamemanagers", "m_PathID": 62 }
+	},
+	"m_FogKeepExp": true,
+	"m_FogKeepExp2": true,
+	"m_FogKeepLinear": true,
+	"m_FogStripping": 0,
+	"m_HideFlags": 0,
+	"m_LegacyDeferred": {
+		"m_Mode": 1,
+		"m_Shader": { "m_Collection": "globalgamemanagers", "m_PathID": 63 }
+	},
+	"m_LensFlare": {
+		"m_Mode": 1,
+		"m_Shader": { "m_Collection": "globalgamemanagers", "m_PathID": 102 }
+	},
+	"m_LightHalo": {
+		"m_Mode": 1,
+		"m_Shader": { "m_Collection": "globalgamemanagers", "m_PathID": 105 }
+	},
+	"m_LightmapKeepDirCombined": true,
+	"m_LightmapKeepDirSeparate": true,
+	"m_LightmapKeepDynamicDirCombined": true,
+	"m_LightmapKeepDynamicDirSeparate": true,
+	"m_LightmapKeepDynamicPlain": true,
+	"m_LightmapKeepPlain": true,
+	"m_LightmapStripping": 0,
+	"m_MotionVectors": {
+		"m_Mode": 1,
+		"m_Shader": { "m_Collection": "globalgamemanagers", "m_PathID": 75 }
+	},
+	"m_PreloadedShaders": [],
+	"m_ScreenSpaceShadows": {
+		"m_Mode": 1,
+		"m_Shader": { "m_Collection": "globalgamemanagers", "m_PathID": 64 }
+	},
+	"m_ShaderSettings_Tier1": {
+		"m_StandardShaderQuality": 2,
+		"m_UseCascadedShadowMaps": true,
+		"m_UseReflectionProbeBlending": true,
+		"m_UseReflectionProbeBoxProjection": true
+	},
+	"m_ShaderSettings_Tier2": {
+		"m_StandardShaderQuality": 2,
+		"m_UseCascadedShadowMaps": true,
+		"m_UseReflectionProbeBlending": true,
+		"m_UseReflectionProbeBoxProjection": true
+	},
+	"m_ShaderSettings_Tier3": {
+		"m_StandardShaderQuality": 0,
+		"m_UseCascadedShadowMaps": true,
+		"m_UseReflectionProbeBlending": false,
+		"m_UseReflectionProbeBoxProjection": false
+	},
+	"m_SpritesDefaultMaterial": { "m_Collection": "globalgamemanagers", "m_PathID": 2 },
+	"m_TierSettings": [
+		{
+			"m_Automatic": false,
+			"m_BuildTarget": "Standalone",
+			"m_Settings": {
+				"m_StandardShaderQuality": 2,
+				"m_UseCascadedShadowMaps": true,
+				"m_UseReflectionProbeBlending": true,
+				"m_UseReflectionProbeBoxProjection": true
+			},
+			"m_Tier": 0
+		},
+		{
+			"m_Automatic": false,
+			"m_BuildTarget": "Standalone",
+			"m_Settings": {
+				"m_StandardShaderQuality": 2,
+				"m_UseCascadedShadowMaps": true,
+				"m_UseReflectionProbeBlending": true,
+				"m_UseReflectionProbeBoxProjection": true
+			},
+			"m_Tier": 1
+		},
+		{
+			"m_Automatic": false,
+			"m_BuildTarget": "Standalone",
+			"m_Settings": {
+				"m_StandardShaderQuality": 0,
+				"m_UseCascadedShadowMaps": true,
+				"m_UseReflectionProbeBlending": false,
+				"m_UseReflectionProbeBoxProjection": false
+			},
+			"m_Tier": 2
+		}
+	]
+}

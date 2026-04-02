@@ -1,0 +1,33 @@
+{
+	"m_AfterMethodExecutionOrders": [],
+	"m_AfterUnityMethodExecutionOrders": [
+		0
+	],
+	"m_AssemblyNames": [
+		"UnityEditor.Advertisements"
+	],
+	"m_BeforeMethodExecutionOrders": [],
+	"m_BeforeUnityMethodExecutionOrders": [],
+	"m_ClassInfos": [
+		{
+			"m_AssemblyNameIndex": 0,
+			"m_ClassName": "UnityAdsEditor",
+			"m_IsUnityClass": false,
+			"m_MethodIndex": 0,
+			"m_NamespaceIndex": 0,
+			"m_NumOfMethods": 1
+		}
+	],
+	"m_ClassMethodInfos": [
+		{
+			"m_ClassIndex": 0,
+			"m_MethodName": "EditorOnLoad",
+			"m_OrderNumber": 0
+		}
+	],
+	"m_FullClassNames": [],
+	"m_HideFlags": 0,
+	"m_NamespaceNames": [
+		"UnityEditor.Advertisements"
+	]
+}

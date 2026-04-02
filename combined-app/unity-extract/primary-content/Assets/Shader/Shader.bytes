@@ -1,0 +1,1552 @@
+Shader "Standard" {
+Properties {
+ _Color ("Color", Color) = (1.000000,1.000000,1.000000,1.000000)
+ _MainTex ("Albedo", 2D) = "white" { }
+ _Cutoff ("Alpha Cutoff", Range(0.000000,1.000000)) = 0.500000
+ _Glossiness ("Smoothness", Range(0.000000,1.000000)) = 0.500000
+ _GlossMapScale ("Smoothness Scale", Range(0.000000,1.000000)) = 1.000000
+[Enum(Metallic Alpha,0,Albedo Alpha,1)]  _SmoothnessTextureChannel ("Smoothness texture channel", Float) = 0.000000
+[Gamma]  _Metallic ("Metallic", Range(0.000000,1.000000)) = 0.000000
+ _MetallicGlossMap ("Metallic", 2D) = "white" { }
+[ToggleOff]  _SpecularHighlights ("Specular Highlights", Float) = 1.000000
+[ToggleOff]  _GlossyReflections ("Glossy Reflections", Float) = 1.000000
+ _BumpScale ("Scale", Float) = 1.000000
+ _BumpMap ("Normal Map", 2D) = "bump" { }
+ _Parallax ("Height Scale", Range(0.005000,0.080000)) = 0.020000
+ _ParallaxMap ("Height Map", 2D) = "black" { }
+ _OcclusionStrength ("Strength", Range(0.000000,1.000000)) = 1.000000
+ _OcclusionMap ("Occlusion", 2D) = "white" { }
+ _EmissionColor ("Color", Color) = (0.000000,0.000000,0.000000,1.000000)
+ _EmissionMap ("Emission", 2D) = "white" { }
+ _DetailMask ("Detail Mask", 2D) = "white" { }
+ _DetailAlbedoMap ("Detail Albedo x2", 2D) = "grey" { }
+ _DetailNormalMapScale ("Scale", Float) = 1.000000
+ _DetailNormalMap ("Normal Map", 2D) = "bump" { }
+[Enum(UV0,0,UV1,1)]  _UVSec ("UV Set for secondary textures", Float) = 0.000000
+[HideInInspector]  _Mode ("__mode", Float) = 0.000000
+[HideInInspector]  _SrcBlend ("__src", Float) = 1.000000
+[HideInInspector]  _DstBlend ("__dst", Float) = 0.000000
+[HideInInspector]  _ZWrite ("__zw", Float) = 1.000000
+}
+SubShader { 
+ LOD 300
+ Tags { "RenderType"="Opaque" "PerformanceChecks"="False" }
+ Pass {
+  Name "FORWARD"
+  Tags { "LIGHTMODE"="ForwardBase" "SHADOWSUPPORT"="true" "RenderType"="Opaque" "PerformanceChecks"="False" }
+  ZWrite [_ZWrite]
+  Blend [_SrcBlend] [_DstBlend]
+  GpuProgramID 61372
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 0
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 1
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 2
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 3
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 4
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 5
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 6
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 7
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 8
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 9
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 10
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 11
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 12
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 13
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 14
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 15
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 16
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 17
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 18
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 19
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 20
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 21
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 22
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 23
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 24
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 25
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 26
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 27
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 28
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 29
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 30
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 31
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 32
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 33
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 34
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 35
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 36
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 37
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 38
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 39
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 40
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 41
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 42
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 43
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 44
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 45
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 46
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 47
+}
+}
+ }
+ Pass {
+  Name "FORWARD_DELTA"
+  Tags { "LIGHTMODE"="ForwardAdd" "SHADOWSUPPORT"="true" "RenderType"="Opaque" "PerformanceChecks"="False" }
+  ZWrite Off
+  Blend [_SrcBlend] One
+  GpuProgramID 70942
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 48
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 49
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 50
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 51
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 52
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 53
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 54
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 55
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 56
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 57
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 58
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 59
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 60
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 61
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 62
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 63
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 64
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 65
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 66
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 67
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 68
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 69
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 70
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 71
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 72
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 73
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 74
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 75
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 76
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 77
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 78
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 79
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 80
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 81
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 82
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 83
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 84
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 85
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 86
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 87
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 88
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 89
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 90
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 91
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 92
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 93
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 94
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 95
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 96
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 97
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 98
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 99
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 100
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 101
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 102
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 103
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 104
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 105
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 106
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 107
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 108
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 109
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 110
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 111
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 112
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 113
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 114
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 115
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 116
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 117
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 118
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 119
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 120
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 121
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 122
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 123
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 124
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 125
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 126
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 127
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 128
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 129
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 130
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 131
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 132
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 133
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 134
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 135
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 136
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 137
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 138
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 139
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 140
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 141
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 142
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 143
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 144
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 145
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 146
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 147
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 148
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 149
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 150
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 151
+}
+}
+ }
+ Pass {
+  Name "SHADOWCASTER"
+  Tags { "LIGHTMODE"="SHADOWCASTER" "SHADOWSUPPORT"="true" "RenderType"="Opaque" "PerformanceChecks"="False" }
+  GpuProgramID 144189
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 152
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 153
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 154
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 155
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 156
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 157
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 158
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 159
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 160
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 161
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 162
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 163
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 164
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 165
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 166
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 167
+}
+}
+ }
+ Pass {
+  Name "DEFERRED"
+  Tags { "LIGHTMODE"="Deferred" "RenderType"="Opaque" "PerformanceChecks"="False" }
+  GpuProgramID 203724
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 168
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 169
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 170
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 171
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 172
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 173
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 174
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 175
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 176
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 177
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 178
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 179
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 180
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 181
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 182
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 183
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 184
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 185
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 186
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 187
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 188
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 189
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 190
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 191
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 192
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 193
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 194
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 195
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 196
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 197
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 198
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 199
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 200
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 201
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 202
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 203
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 204
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 205
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 206
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 207
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 208
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 209
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 210
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 211
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 212
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 213
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 214
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 215
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 216
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 217
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 218
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 219
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 220
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 221
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 222
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 223
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 224
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 225
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 226
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 227
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 228
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 229
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 230
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 231
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 232
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 233
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 234
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 235
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 236
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 237
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 238
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 239
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 240
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 241
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 242
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 243
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 244
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 245
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 246
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 247
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 248
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 249
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 250
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 251
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 252
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 253
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 254
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 255
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 256
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 257
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 258
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 259
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 260
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 261
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 262
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 263
+}
+}
+ }
+}
+SubShader { 
+ LOD 150
+ Tags { "RenderType"="Opaque" "PerformanceChecks"="False" }
+ Pass {
+  Name "FORWARD"
+  Tags { "LIGHTMODE"="ForwardBase" "SHADOWSUPPORT"="true" "RenderType"="Opaque" "PerformanceChecks"="False" }
+  ZWrite [_ZWrite]
+  Blend [_SrcBlend] [_DstBlend]
+  GpuProgramID 329169
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 264
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 265
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 266
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 267
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 268
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 269
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 270
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 271
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 272
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 273
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 274
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 275
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 276
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 277
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 278
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 279
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 280
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 281
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 282
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 283
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 284
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 285
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 286
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 287
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 288
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 289
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 290
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 291
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 292
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 293
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 294
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 295
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 296
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 297
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 298
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 299
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 300
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 301
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 302
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 303
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 304
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 305
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 306
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 307
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 308
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 309
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 310
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 311
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 312
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 313
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 314
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 315
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 316
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 317
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 318
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 319
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 320
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 321
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 322
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 323
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 324
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 325
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 326
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 327
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 328
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 329
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 330
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 331
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 332
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 333
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 334
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 335
+}
+}
+ }
+ Pass {
+  Name "FORWARD_DELTA"
+  Tags { "LIGHTMODE"="ForwardAdd" "SHADOWSUPPORT"="true" "RenderType"="Opaque" "PerformanceChecks"="False" }
+  ZWrite Off
+  Blend [_SrcBlend] One
+  GpuProgramID 438143
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 336
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 337
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 338
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 339
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 340
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 341
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 342
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 343
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 344
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 345
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 346
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 347
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 348
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 349
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 350
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 351
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 352
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 353
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 354
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 355
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 356
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 357
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 358
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 359
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 360
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 361
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 362
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 363
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 364
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 365
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 366
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 367
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 368
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 369
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 370
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 371
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 372
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 373
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 374
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 375
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 376
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 377
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 378
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 379
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 380
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 381
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 382
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 383
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 384
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 385
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 386
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 387
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 388
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 389
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 390
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 391
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 392
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 393
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 394
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 395
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 396
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 397
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 398
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 399
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 400
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 401
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 402
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 403
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 404
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 405
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 406
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 407
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 408
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 409
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 410
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 411
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 412
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 413
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 414
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 415
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 416
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 417
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 418
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 419
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 420
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 421
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 422
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 423
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 424
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 425
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 426
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 427
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 428
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 429
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 430
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 431
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 432
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 433
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 434
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 435
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 436
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 437
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 438
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 439
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 440
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 441
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 442
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 443
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 444
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 445
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 446
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 447
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 448
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 449
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 450
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 451
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 452
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 453
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 454
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 455
+}
+}
+ }
+ Pass {
+  Name "SHADOWCASTER"
+  Tags { "LIGHTMODE"="SHADOWCASTER" "SHADOWSUPPORT"="true" "RenderType"="Opaque" "PerformanceChecks"="False" }
+  GpuProgramID 515176
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 456
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 153
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 457
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 458
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 155
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 459
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 460
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 157
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 461
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 462
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 159
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 463
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 464
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 161
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 465
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 466
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 163
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 467
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 468
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 469
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 470
+}
+SubProgram "d3d9 " {
+GpuProgramIndex 471
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 472
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 473
+}
+}
+ }
+}
+CustomEditor "StandardShaderGUI"
+Fallback "VertexLit"
+}

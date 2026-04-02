@@ -1,0 +1,133 @@
+{
+	"m_Areas": [
+		{
+			"m_Cost": 1,
+			"m_Name": "Walkable"
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": "Not Walkable"
+		},
+		{
+			"m_Cost": 2,
+			"m_Name": "Jump"
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		},
+		{
+			"m_Cost": 1,
+			"m_Name": ""
+		}
+	],
+	"m_HideFlags": 0
+}

@@ -1,0 +1,11 @@
+{
+	"m_BounceCombine": 0,
+	"m_Bounciness": 0,
+	"m_CorrespondingSourceObject": { "m_Collection": "sharedassets0.assets", "m_PathID": 0 },
+	"m_DynamicFriction": 0,
+	"m_FrictionCombine": 2,
+	"m_HideFlags": 0,
+	"m_Name": "PMat-NoFriction",
+	"m_PrefabInternal": { "m_Collection": "sharedassets0.assets", "m_PathID": 0 },
+	"m_StaticFriction": 0
+}

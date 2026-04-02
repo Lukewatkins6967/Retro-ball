@@ -1,0 +1,11 @@
+{
+	"m_BounceCombine": 3,
+	"m_Bounciness": 0.7,
+	"m_CorrespondingSourceObject": { "m_Collection": "sharedassets0.assets", "m_PathID": 0 },
+	"m_DynamicFriction": 0.6,
+	"m_FrictionCombine": 0,
+	"m_HideFlags": 0,
+	"m_Name": "Ball",
+	"m_PrefabInternal": { "m_Collection": "sharedassets0.assets", "m_PathID": 0 },
+	"m_StaticFriction": 0.6
+}

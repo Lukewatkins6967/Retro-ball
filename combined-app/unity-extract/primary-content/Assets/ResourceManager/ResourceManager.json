@@ -1,0 +1,15 @@
+{
+	"m_Container": {
+		"spriteanimcontroller": { "m_Collection": "globalgamemanagers", "m_PathID": 2 },
+		"spriteanimplaceholder": { "m_Collection": "globalgamemanagers", "m_PathID": 1 }
+	},
+	"m_DependentAssets": [
+		{
+			"m_Dependencies": [
+				{ "m_Collection": "globalgamemanagers", "m_PathID": 1 }
+			],
+			"m_Object": { "m_Collection": "globalgamemanagers", "m_PathID": 2 }
+		}
+	],
+	"m_HideFlags": 0
+}

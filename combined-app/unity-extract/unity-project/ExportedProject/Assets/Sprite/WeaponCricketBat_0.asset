@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!213 &21300000
+Sprite:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: WeaponCricketBat_0
+  m_Rect:
+    serializedVersion: 2
+    x: 23.07612
+    y: 27.07612
+    width: 31.847757
+    height: 9.847757
+  m_Offset: {x: -6.9999995, y: 1.1739442E-06}
+  m_Border: {x: 0, y: 0, z: 0, w: 0}
+  m_PixelsToUnits: 20
+  m_Pivot: {x: 0.28020433, y: 0.5000001}
+  m_Extrude: 1
+  m_IsPolygon: 0
+  m_AtlasName:
+  m_PackingTag:
+  m_RD:
+    texture: {fileID: 2800000, guid: 68fc613533a44d446a54bf7cbdbb3653, type: 3}
+    alphaTexture: {fileID: 0}
+    vertices:
+    - serializedVersion: 2
+      pos: {x: 1.15, y: 0.25, z: 0}
+    - serializedVersion: 2
+      pos: {x: 1.1, y: -0.25, z: 0}
+    - serializedVersion: 2
+      pos: {x: 1.15, y: -0.15, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.1, y: 0.25, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.25, y: -0.25, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.35, y: 0.2, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.45, y: 0.1, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.45, y: -0.15, z: 0}
+    indices: 070006000400050004000600030004000500010004000300000001000300020001000000
+    textureRect:
+      serializedVersion: 2
+      x: 23.07612
+      y: 27.07612
+      width: 31.847757
+      height: 9.847757
+    textureRectOffset: {x: 0, y: 0}
+    settingsRaw: 64
+    uvTransform: {x: 20, y: 32, z: 20, w: 32}

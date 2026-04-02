@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!213 &21300000
+Sprite:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: WeaponSai_0
+  m_Rect:
+    serializedVersion: 2
+    x: 24.07612
+    y: 25.07612
+    width: 25.847757
+    height: 13.847757
+  m_Offset: {x: -4.999999, y: 8.2539066E-07}
+  m_Border: {x: 0, y: 0, z: 0, w: 0}
+  m_PixelsToUnits: 20
+  m_Pivot: {x: 0.30655965, y: 0.50000006}
+  m_Extrude: 1
+  m_IsPolygon: 0
+  m_AtlasName:
+  m_PackingTag:
+  m_RD:
+    texture: {fileID: 2800000, guid: e4bca8a577c62a14798e2a6d28de4399, type: 3}
+    alphaTexture: {fileID: 0}
+    vertices:
+    - serializedVersion: 2
+      pos: {x: 0.8, y: 0.25, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.9, y: -0.1, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.9, y: 0.05, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.6, y: 0.35, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.5, y: -0.35, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.1, y: -0.35, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.05, y: 0.35, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.3, y: -0.25, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.4, y: 0.2, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.4, y: -0.15, z: 0}
+    indices: 090008000700060007000800050007000600030005000600040005000300010004000300000001000300020001000000
+    textureRect:
+      serializedVersion: 2
+      x: 24.07612
+      y: 25.07612
+      width: 25.847757
+      height: 13.847757
+    textureRectOffset: {x: 0, y: 0}
+    settingsRaw: 64
+    uvTransform: {x: 20, y: 32, z: 20, w: 32}

@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!213 &21300000
+Sprite:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: PlayerFeetRingTop
+  m_Rect:
+    serializedVersion: 2
+    x: 12.07612
+    y: 107.06101
+    width: 230.84775
+    height: 135.86285
+  m_Offset: {x: -127.5, y: -174.99245}
+  m_Border: {x: 0, y: 0, z: 0, w: 0}
+  m_PixelsToUnits: 160
+  m_Pivot: {x: -0.052312057, y: -0.788008}
+  m_Extrude: 1
+  m_IsPolygon: 0
+  m_AtlasName:
+  m_PackingTag:
+  m_RD:
+    texture: {fileID: 2800000, guid: ae4965a68a348b643be082d00ee38373, type: 3}
+    alphaTexture: {fileID: 0}
+    vertices:
+    - serializedVersion: 2
+      pos: {x: 0.41875, y: 0.71875, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.71875, y: -0.13125, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.71875, y: 0.2875, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.325, y: 0.71875, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.725, y: 0.40625, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.725, y: -0.13125, z: 0}
+    indices: 050004000100030001000400000001000300020001000000
+    textureRect:
+      serializedVersion: 2
+      x: 12.07612
+      y: 107.06101
+      width: 230.84775
+      height: 135.86285
+    textureRectOffset: {x: 0, y: 0}
+    settingsRaw: 64
+    uvTransform: {x: 160, y: 128, z: 160, w: 128}

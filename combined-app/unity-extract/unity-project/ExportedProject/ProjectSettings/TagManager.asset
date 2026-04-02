@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Judge
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - 
+  - Gui
+  - NoPause
+  - Player
+  - Ball
+  - BallDetector
+  - Ground
+  - Damage
+  - Weapon
+  - HitGroundOnly
+  - DamageThrown
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Ground
+    uniqueID: 1968949751
+    locked: 0
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: Game
+    uniqueID: 1127155337
+    locked: 0
+  - name: Foreground
+    uniqueID: 1990928199
+    locked: 0

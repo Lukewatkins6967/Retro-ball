@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!213 &21300000
+Sprite:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: paul_roll_1
+  m_Rect:
+    serializedVersion: 2
+    x: 21.07612
+    y: 1.0761205
+    width: 39.847755
+    height: 45.86415
+  m_Offset: {x: -8.999999, y: 7.991804}
+  m_Border: {x: 0, y: 0, z: 0, w: 0}
+  m_PixelsToUnits: 20
+  m_Pivot: {x: 0.2741404, y: 0.6742495}
+  m_Extrude: 1
+  m_IsPolygon: 0
+  m_AtlasName:
+  m_PackingTag:
+  m_RD:
+    texture: {fileID: 2800000, guid: d1b175102c4bb2b47b17dab7a6863dc5, type: 3}
+    alphaTexture: {fileID: 0}
+    vertices:
+    - serializedVersion: 2
+      pos: {x: 1.2, y: 0.3, z: 0}
+    - serializedVersion: 2
+      pos: {x: 1.45, y: -1.55, z: 0}
+    - serializedVersion: 2
+      pos: {x: 1.45, y: -0.6, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.65, y: 0.75, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.2, y: -1.55, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.35, y: -1.25, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.55, y: 0.75, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.55, y: -0.55, z: 0}
+    indices: 070006000500030005000600040005000300010004000300000001000300020001000000
+    textureRect:
+      serializedVersion: 2
+      x: 21.07612
+      y: 1.0761205
+      width: 39.847755
+      height: 45.86415
+    textureRectOffset: {x: 0, y: 0}
+    settingsRaw: 64
+    uvTransform: {x: 20, y: 32, z: 20, w: 32}

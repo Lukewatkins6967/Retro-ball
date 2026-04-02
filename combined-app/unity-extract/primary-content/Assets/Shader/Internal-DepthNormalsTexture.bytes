@@ -1,0 +1,299 @@
+Shader "Hidden/Internal-DepthNormalsTexture" {
+Properties {
+ _MainTex ("", 2D) = "white" { }
+ _Cutoff ("", Float) = 0.500000
+ _Color ("", Color) = (1.000000,1.000000,1.000000,1.000000)
+}
+SubShader { 
+ Tags { "RenderType"="Opaque" }
+ Pass {
+  Tags { "RenderType"="Opaque" }
+  GpuProgramID 6627
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 0
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 1
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 2
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 3
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 4
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 5
+}
+}
+ }
+}
+SubShader { 
+ Tags { "RenderType"="TransparentCutout" }
+ Pass {
+  Tags { "RenderType"="TransparentCutout" }
+  GpuProgramID 75056
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 6
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 7
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 8
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 9
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 10
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 11
+}
+}
+ }
+}
+SubShader { 
+ Tags { "RenderType"="TreeBark" }
+ Pass {
+  Tags { "RenderType"="TreeBark" }
+  GpuProgramID 176497
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 12
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 13
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 14
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 15
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 16
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 17
+}
+}
+ }
+}
+SubShader { 
+ Tags { "RenderType"="TreeLeaf" }
+ Pass {
+  Tags { "RenderType"="TreeLeaf" }
+  GpuProgramID 233981
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 18
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 19
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 20
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 21
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 22
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 23
+}
+}
+ }
+}
+SubShader { 
+ Tags { "DisableBatching"="true" "RenderType"="TreeOpaque" }
+ Pass {
+  Tags { "DisableBatching"="true" "RenderType"="TreeOpaque" }
+  GpuProgramID 301964
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 24
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 25
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 26
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 3
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 4
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 5
+}
+}
+ }
+}
+SubShader { 
+ Tags { "DisableBatching"="true" "RenderType"="TreeTransparentCutout" }
+ Pass {
+  Tags { "DisableBatching"="true" "RenderType"="TreeTransparentCutout" }
+  GpuProgramID 384599
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 27
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 28
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 29
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 21
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 30
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 31
+}
+}
+ }
+ Pass {
+  Tags { "DisableBatching"="true" "RenderType"="TreeTransparentCutout" }
+  Cull Front
+  GpuProgramID 455931
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 32
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 33
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 34
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 21
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 30
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 31
+}
+}
+ }
+}
+SubShader { 
+ Tags { "RenderType"="TreeBillboard" }
+ Pass {
+  Tags { "RenderType"="TreeBillboard" }
+  Cull Off
+  GpuProgramID 483439
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 35
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 36
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 37
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 38
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 39
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 40
+}
+}
+ }
+}
+SubShader { 
+ Tags { "RenderType"="GrassBillboard" }
+ Pass {
+  Tags { "RenderType"="GrassBillboard" }
+  Cull Off
+  GpuProgramID 581678
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 41
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 42
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 43
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 44
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 45
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 46
+}
+}
+ }
+}
+SubShader { 
+ Tags { "RenderType"="Grass" }
+ Pass {
+  Tags { "RenderType"="Grass" }
+  Cull Off
+  GpuProgramID 626990
+Program "vp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 47
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 48
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 49
+}
+}
+Program "fp" {
+SubProgram "d3d9 " {
+GpuProgramIndex 44
+}
+SubProgram "d3d11 " {
+GpuProgramIndex 45
+}
+SubProgram "d3d11_9x " {
+GpuProgramIndex 46
+}
+}
+ }
+}
+Fallback Off
+}

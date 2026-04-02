@@ -1,0 +1,115 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1709254077376921
+GameObject:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_Component:
+  - 4: {fileID: 4730242686860875}
+  - 114: {fileID: 114724804207875695}
+  m_Layer: 0
+  m_Name: SystemGame
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4730242686860875
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1709254077376921}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.0673561, y: 3.1046495, z: 2.9380941}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: -0, z: -0}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+--- !u!114 &114724804207875695
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1709254077376921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9ecb40f54b4719e9d1d5bfe96531123, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  m_cameraPrefab: {fileID: 20724804207875695, guid: b9e0b12f8461cc248a2fdd32f8bdf908, type: 2}
+  m_playerCount: 4
+  m_teamPrefabs:
+  - {fileID: 114724804207875695, guid: 03c61b7ad0198ae41ac691eea5253722, type: 2}
+  - {fileID: 114724804207875695, guid: c37d41a066104a44c88f5409c73488b4, type: 2}
+  m_basketballPrefab: {fileID: 114099118695303065, guid: 69a85839cb67c2d458d772f34dfafb01, type: 2}
+  m_threePointDistance: 6.75
+  m_playDuration: 120
+  m_weaponPrefabs:
+  - {fileID: 114099118695303065, guid: ff5236e98dcf1ef44b908ac8b9ecf390, type: 2}
+  - {fileID: 114099118695303065, guid: 3fb6314ebc1b1fd40ad4d6fd252fe3d8, type: 2}
+  - {fileID: 114099118695303065, guid: 2942160b0b5584a44a73086eaea06b68, type: 2}
+  - {fileID: 114099118695303065, guid: 048c112e8d0b4794f9580fa20ab06f72, type: 2}
+  - {fileID: 114099118695303065, guid: 0f55424d6f1a0b84f9e2cea8f2d2b3cf, type: 2}
+  - {fileID: 114099118695303065, guid: aa0d6c108a1726f4088e1b928e4e5704, type: 2}
+  - {fileID: 114099118695303065, guid: b07e8cbf3eb0e00469bff0a70876d5a0, type: 2}
+  - {fileID: 114099118695303065, guid: de88a4e41d958594ab159a3d42570e34, type: 2}
+  - {fileID: 114099118695303065, guid: 0215f70a65dff974f96a6f959630f427, type: 2}
+  - {fileID: 114099118695303065, guid: ef7d8a0f9b4c70749b841204d954ef55, type: 2}
+  - {fileID: 114099118695303065, guid: 8021d4e07ee402a41bc656c4e9463a39, type: 2}
+  - {fileID: 114099118695303065, guid: 2c43fb159f293b24ab1daddc0feb60c0, type: 2}
+  - {fileID: 114099118695303065, guid: cf6182acab96e9340945508f58ce4281, type: 2}
+  - {fileID: 114099118695303065, guid: d4f3267f39035b34fa0ef96db4e29e20, type: 2}
+  - {fileID: 114099118695303065, guid: 4a85ce57181eba149ad8c32d38ee17ea, type: 2}
+  - {fileID: 114099118695303065, guid: 452b0043b2be6ff46820dd7287a27d84, type: 2}
+  - {fileID: 114099118695303065, guid: ae909bf712c823844aaf624796d71da2, type: 2}
+  - {fileID: 114099118695303065, guid: a577940eb435b224196f02362996cbf6, type: 2}
+  - {fileID: 114099118695303065, guid: a1c9ad4d06d48954d97b10f3615b908b, type: 2}
+  - {fileID: 114099118695303065, guid: f33c5b229eb9f6546bb9ddd8700ba1c1, type: 2}
+  m_weaponSpawnTime:
+    m_min: 20
+    m_max: 60
+    m_hasMax: 1
+    m_hasValue: 0
+  m_weaponMinPlayTimeRemaining: 20
+  m_musicIntro: {fileID: 114724804207875695, guid: 33075e13690865b4db23c3935fb6c999, type: 2}
+  m_music: {fileID: 114724804207875695, guid: 6ca159ed9e4cf9547b3a160ef6170cd0, type: 2}
+  m_crowdAmbience: {fileID: 114724804207875695, guid: 5c4dd84d5ea572342b0c61dbe48d0251, type: 2}
+  m_throwUp: {fileID: 114724804207875695, guid: 7722500bfd7066c4ba357f7b03a87d84, type: 2}
+  m_soundChooseTeam: {fileID: 114724804207875695, guid: 9015ddf083b09a044970fc4ad652f5da, type: 2}
+  m_soundReady: {fileID: 114724804207875695, guid: 16a882a39efbd0047a700f8f30e3e010, type: 2}
+  m_scoreText:
+  - Nice One!
+  - Hoops Good!
+  - Swish!
+  - Nice shot!
+  m_resultText:
+  - Technical KO!
+  - Boomshakalaka!
+  - STOP ASKING FOR GIFS ADRIAN
+  m_scoreEffects:
+  - {fileID: 1709254077376921, guid: f293b3c902fcedb4496029f2849317c6, type: 2}
+  - {fileID: 1709254077376921, guid: 94a4d4eb76ad0084f89aeedef935a57f, type: 2}
+  - {fileID: 1709254077376921, guid: 743027c21487b0b4cb5b2f2179783e50, type: 2}
+  m_introCutscene:
+  - {fileID: 21300000, guid: fe3efd8ba8ec998459cddc3a721b992e, type: 2}
+  - {fileID: 21300000, guid: 06d68fb14cecdf04db2f686912f61fed, type: 2}
+  - {fileID: 21300000, guid: cfa22adf3f7bad4429ff22e1900a170c, type: 2}
+  - {fileID: 21300000, guid: fcac5c47794b0ac448e944c7268e12fc, type: 2}
+  - {fileID: 21300000, guid: d08e0d2a82c969840bd8ad868b258951, type: 2}
+  - {fileID: 21300000, guid: 4d72d77393f217f4a94596401bdcf00e, type: 2}
+  m_cutsceneBlocktime: 0.8
+--- !u!1001 &100100000
+Prefab:
+  serializedVersion: 2
+  m_ObjectHideFlags: 1
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 1709254077376921}
+  m_IsPrefabParent: 1

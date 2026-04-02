@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!213 &21300000
+Sprite:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: mascot
+  m_Rect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 28
+    height: 50
+  m_Offset: {x: -14, y: -25}
+  m_Border: {x: 0, y: 0, z: 0, w: 0}
+  m_PixelsToUnits: 20
+  m_Pivot: {x: 0, y: 0}
+  m_Extrude: 1
+  m_IsPolygon: 0
+  m_AtlasName:
+  m_PackingTag:
+  m_RD:
+    texture: {fileID: 2800000, guid: fa9706aa3eda7a34d9dcd2d4b7702103, type: 3}
+    alphaTexture: {fileID: 0}
+    vertices:
+    - serializedVersion: 2
+      pos: {x: -0.7, y: 1.25, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.7, y: 1.25, z: 0}
+    - serializedVersion: 2
+      pos: {x: -0.7, y: -1.25, z: 0}
+    - serializedVersion: 2
+      pos: {x: 0.7, y: -1.25, z: 0}
+    indices: 000001000200020001000300
+    textureRect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 28
+      height: 50
+    textureRectOffset: {x: 0, y: 0}
+    settingsRaw: 64
+    uvTransform: {x: 20, y: 14, z: 20, w: 25}

@@ -1,0 +1,2870 @@
+:root {
+  --font-ui: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+  --font-display: "Segoe UI", var(--font-ui);
+  --theme-transition: 180ms ease;
+  --bg0: #0b1220;
+  --bg1: #0f1c33;
+  --bg2: #11233f;
+  --panel: rgba(255, 255, 255, 0.92);
+  --panelSolid: #ffffff;
+  --text: #0f172a;
+  --muted: rgba(15, 23, 42, 0.66);
+  --border: rgba(15, 23, 42, 0.12);
+  --lineSoft: rgba(148, 163, 184, 0.22);
+
+  --primary: #2563eb;
+  --primary2: #1d4ed8;
+  --accent: #f59e0b;
+  --good: #16a34a;
+  --bad: #dc2626;
+  --info: #0ea5e9;
+
+  --radius-lg: 18px;
+  --radius-md: 14px;
+  --radius-sm: 12px;
+  --shadow-sm: 0 10px 26px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 18px 44px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 30px 80px rgba(8, 15, 35, 0.34);
+
+  font-family: var(--font-ui);
+  color: var(--text);
+}
+
+:root[data-theme="retroArcade"] {
+  --font-ui: "Press Start 2P", "Courier New", monospace;
+  --font-display: "Press Start 2P", "Courier New", monospace;
+  --bg0: #0a0422;
+  --bg1: #12073a;
+  --bg2: #18094d;
+  --panel: rgba(18, 7, 58, 0.9);
+  --panelSolid: #160a42;
+  --text: #f9fafb;
+  --muted: rgba(226, 232, 240, 0.72);
+  --border: rgba(34, 211, 238, 0.24);
+  --lineSoft: rgba(34, 211, 238, 0.24);
+  --primary: #45f0ff;
+  --primary2: #00a6d6;
+  --accent: #ff9f1c;
+  --good: #4ade80;
+  --bad: #fb7185;
+  --info: #38bdf8;
+  --shadow-sm: 0 12px 34px rgba(34, 211, 238, 0.14);
+  --shadow-md: 0 18px 48px rgba(34, 211, 238, 0.2);
+  --shadow-lg: 0 28px 80px rgba(6, 182, 212, 0.22);
+}
+
+:root[data-theme="darkMode"] {
+  --font-ui: "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-display: "Trebuchet MS", "Segoe UI", sans-serif;
+  --bg0: #020617;
+  --bg1: #0f172a;
+  --bg2: #172033;
+  --panel: rgba(15, 23, 42, 0.9);
+  --panelSolid: #111c31;
+  --text: #e5edf7;
+  --muted: rgba(203, 213, 225, 0.7);
+  --border: rgba(148, 163, 184, 0.2);
+  --lineSoft: rgba(148, 163, 184, 0.18);
+  --primary: #d4a24c;
+  --primary2: #8f6b2f;
+  --accent: #34d399;
+  --good: #6ee7b7;
+  --bad: #f87171;
+  --info: #38bdf8;
+}
+
+:root[data-theme="neonCyber"] {
+  --font-ui: "Orbitron", "Segoe UI", sans-serif;
+  --font-display: "Orbitron", "Segoe UI", sans-serif;
+  --bg0: #050816;
+  --bg1: #091126;
+  --bg2: #120824;
+  --panel: rgba(8, 13, 30, 0.9);
+  --panelSolid: #0b1024;
+  --text: #ecfeff;
+  --muted: rgba(165, 243, 252, 0.74);
+  --border: rgba(34, 211, 238, 0.26);
+  --lineSoft: rgba(217, 70, 239, 0.24);
+  --primary: #22d3ee;
+  --primary2: #0891b2;
+  --accent: #d946ef;
+  --good: #4ade80;
+  --bad: #fb7185;
+  --info: #67e8f9;
+  --shadow-sm: 0 14px 40px rgba(34, 211, 238, 0.12);
+  --shadow-md: 0 20px 58px rgba(217, 70, 239, 0.16);
+  --shadow-lg: 0 32px 88px rgba(217, 70, 239, 0.2);
+}
+
+:root[data-theme="classicSports"] {
+  --font-ui: Georgia, "Times New Roman", serif;
+  --font-display: Georgia, "Times New Roman", serif;
+  --bg0: #f4ede1;
+  --bg1: #efe6d5;
+  --bg2: #e3d4bd;
+  --panel: rgba(255, 251, 244, 0.94);
+  --panelSolid: #fffaf0;
+  --text: #1f2937;
+  --muted: rgba(31, 41, 55, 0.64);
+  --border: rgba(30, 41, 59, 0.14);
+  --lineSoft: rgba(148, 163, 184, 0.22);
+  --primary: #0f4cbd;
+  --primary2: #102d73;
+  --accent: #d14334;
+  --good: #15803d;
+  --bad: #b91c1c;
+  --info: #0f766e;
+}
+
+:root[data-theme="minimalist"] {
+  --font-ui: "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Helvetica Neue", Arial, sans-serif;
+  --bg0: #f3f4f6;
+  --bg1: #eef2f7;
+  --bg2: #dde3eb;
+  --panel: rgba(255, 255, 255, 0.92);
+  --panelSolid: #ffffff;
+  --text: #111827;
+  --muted: rgba(17, 24, 39, 0.56);
+  --border: rgba(17, 24, 39, 0.08);
+  --lineSoft: rgba(148, 163, 184, 0.16);
+  --primary: #111827;
+  --primary2: #374151;
+  --accent: #9ca3af;
+  --good: #16a34a;
+  --bad: #dc2626;
+  --info: #2563eb;
+}
+
+:root[data-theme="classicSports"] body,
+:root[data-theme="minimalist"] body {
+  background:
+    radial-gradient(1200px 800px at 20% 0%, rgba(255, 255, 255, 0.45), transparent 55%),
+    radial-gradient(900px 600px at 85% 20%, rgba(148, 163, 184, 0.18), transparent 45%),
+    linear-gradient(180deg, var(--bg0), var(--bg1) 45%, var(--bg2));
+}
+
+body[data-theme-ready="true"]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+:root[data-theme="retroArcade"] body::before {
+  background:
+    linear-gradient(90deg, rgba(34, 211, 238, 0.06) 0, rgba(34, 211, 238, 0.06) 1px, transparent 1px, transparent 32px),
+    linear-gradient(180deg, rgba(250, 204, 21, 0.04) 0, rgba(250, 204, 21, 0.04) 1px, transparent 1px, transparent 32px),
+    radial-gradient(circle at top left, rgba(250, 204, 21, 0.12), transparent 24%);
+  opacity: 0.92;
+}
+
+:root[data-theme="retroArcade"] body {
+  background:
+    radial-gradient(900px 500px at 18% 8%, rgba(250, 204, 21, 0.18), transparent 48%),
+    radial-gradient(1000px 680px at 80% 12%, rgba(34, 211, 238, 0.18), transparent 46%),
+    linear-gradient(180deg, #08031a 0%, #12073a 52%, #18094d 100%);
+}
+
+:root[data-theme="retroArcade"] .panel,
+:root[data-theme="retroArcade"] .card,
+:root[data-theme="retroArcade"] .panelSolid {
+  border-radius: 10px;
+  border-width: 2px;
+  backdrop-filter: none;
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.12), 0 18px 36px rgba(0, 0, 0, 0.36), 0 0 26px rgba(34, 211, 238, 0.16);
+}
+
+:root[data-theme="retroArcade"] .btn {
+  border-radius: 10px;
+  border-width: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  box-shadow: 0 10px 0 rgba(6, 182, 212, 0.22), 0 0 18px rgba(34, 211, 238, 0.14);
+}
+
+:root[data-theme="retroArcade"] .btn:hover {
+  transform: translateY(-3px) scale(1.01);
+}
+
+:root[data-theme="retroArcade"] .btnPrimary {
+  background: linear-gradient(180deg, #22d3ee, #0891b2);
+  color: #04111d;
+}
+
+:root[data-theme="retroArcade"] .btnSoft,
+:root[data-theme="retroArcade"] .pill,
+:root[data-theme="retroArcade"] .settingsChip {
+  background: rgba(12, 18, 48, 0.82);
+  color: #f8fafc;
+}
+
+:root[data-theme="retroArcade"] .navShell {
+  background: linear-gradient(180deg, rgba(8, 9, 34, 0.96), rgba(16, 10, 56, 0.88));
+  border-width: 2px;
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.14), 0 24px 80px rgba(0, 0, 0, 0.46), 0 0 44px rgba(34, 211, 238, 0.18);
+}
+
+:root[data-theme="retroArcade"] .navBrandBadge {
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.3);
+}
+
+:root[data-theme="darkMode"] body::before {
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 18%);
+  opacity: 0.85;
+}
+
+:root[data-theme="darkMode"] body {
+  background:
+    radial-gradient(900px 700px at 18% -2%, rgba(59, 130, 246, 0.22), transparent 45%),
+    radial-gradient(700px 520px at 88% 16%, rgba(249, 115, 22, 0.14), transparent 38%),
+    linear-gradient(180deg, #020617 0%, #0b1120 45%, #131b2e 100%);
+}
+
+:root[data-theme="darkMode"] .panel,
+:root[data-theme="darkMode"] .card,
+:root[data-theme="darkMode"] .panelSolid {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(17, 28, 49, 0.92));
+  border-color: rgba(148, 163, 184, 0.16);
+  box-shadow: 0 18px 50px rgba(2, 6, 23, 0.42);
+}
+
+:root[data-theme="darkMode"] .btnSoft,
+:root[data-theme="darkMode"] .pill,
+:root[data-theme="darkMode"] .settingsChip {
+  background: rgba(30, 41, 59, 0.82);
+}
+
+:root[data-theme="darkMode"] .navShell {
+  background: linear-gradient(180deg, rgba(2, 6, 23, 0.92), rgba(15, 23, 42, 0.84));
+}
+
+:root[data-theme="neonCyber"] body::before {
+  background:
+    linear-gradient(90deg, rgba(34, 211, 238, 0.07), transparent 22%, rgba(217, 70, 239, 0.06) 68%, transparent 100%),
+    radial-gradient(circle at top left, rgba(34, 211, 238, 0.14), transparent 24%);
+  opacity: 0.9;
+}
+
+:root[data-theme="neonCyber"] body {
+  background:
+    radial-gradient(1000px 620px at 12% 0%, rgba(34, 211, 238, 0.22), transparent 48%),
+    radial-gradient(1000px 760px at 88% 12%, rgba(217, 70, 239, 0.2), transparent 42%),
+    linear-gradient(180deg, #040716 0%, #091126 48%, #130823 100%);
+}
+
+:root[data-theme="neonCyber"] .panel,
+:root[data-theme="neonCyber"] .card,
+:root[data-theme="neonCyber"] .panelSolid {
+  background:
+    linear-gradient(180deg, rgba(7, 12, 31, 0.95), rgba(10, 16, 36, 0.95)),
+    linear-gradient(135deg, rgba(34, 211, 238, 0.04), rgba(217, 70, 239, 0.04));
+  border-color: rgba(34, 211, 238, 0.22);
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.06), 0 18px 52px rgba(3, 7, 18, 0.42), 0 0 32px rgba(217, 70, 239, 0.08);
+}
+
+:root[data-theme="neonCyber"] .btn {
+  border-radius: 12px;
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.08);
+}
+
+:root[data-theme="neonCyber"] .btnPrimary {
+  background: linear-gradient(90deg, #22d3ee, #d946ef);
+  border-color: rgba(103, 232, 249, 0.4);
+  box-shadow: 0 0 22px rgba(34, 211, 238, 0.18);
+}
+
+:root[data-theme="neonCyber"] .navShell {
+  background:
+    linear-gradient(180deg, rgba(5, 10, 24, 0.94), rgba(10, 16, 36, 0.88));
+  border-color: rgba(34, 211, 238, 0.24);
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.06), 0 22px 70px rgba(0, 0, 0, 0.42), 0 0 42px rgba(217, 70, 239, 0.12);
+}
+
+:root[data-theme="neonCyber"] .navBrandTitle,
+:root[data-theme="neonCyber"] .settingsSidebarTitle,
+:root[data-theme="neonCyber"] .faRecapTitle {
+  text-shadow: 0 0 14px rgba(34, 211, 238, 0.18);
+}
+
+:root[data-theme="classicSports"] body::before {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 18%),
+    radial-gradient(circle at top left, rgba(29, 78, 216, 0.08), transparent 24%);
+  opacity: 0.82;
+}
+
+:root[data-theme="classicSports"] .panel,
+:root[data-theme="classicSports"] .card,
+:root[data-theme="classicSports"] .panelSolid {
+  border-radius: 22px;
+  box-shadow: 0 18px 44px rgba(120, 98, 64, 0.18);
+  border-color: rgba(30, 41, 59, 0.1);
+}
+
+:root[data-theme="classicSports"] .navShell {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.96), rgba(244, 237, 225, 0.9));
+  border-color: rgba(29, 78, 216, 0.12);
+  box-shadow: 0 20px 44px rgba(120, 98, 64, 0.16);
+}
+
+:root[data-theme="classicSports"] .navBrandBadge,
+:root[data-theme="classicSports"] .btnPrimary {
+  background: linear-gradient(180deg, #1d4ed8, #1e3a8a);
+}
+
+:root[data-theme="classicSports"] .btnSoft,
+:root[data-theme="classicSports"] .pill,
+:root[data-theme="classicSports"] .settingsChip {
+  background: rgba(255, 251, 244, 0.92);
+  border-color: rgba(30, 41, 59, 0.12);
+}
+
+:root[data-theme="classicSports"] .navBrandTitle,
+:root[data-theme="classicSports"] .settingsSidebarTitle,
+:root[data-theme="classicSports"] .faRecapTitle {
+  letter-spacing: 0.01em;
+}
+
+:root[data-theme="minimalist"] body::before {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 16%),
+    radial-gradient(circle at top left, rgba(17, 24, 39, 0.03), transparent 22%);
+  opacity: 0.78;
+}
+
+:root[data-theme="minimalist"] body {
+  background:
+    radial-gradient(1000px 700px at 12% 0%, rgba(255, 255, 255, 0.62), transparent 44%),
+    linear-gradient(180deg, #f6f7f8 0%, #edf1f4 46%, #dde3e8 100%);
+}
+
+:root[data-theme="minimalist"] .panel,
+:root[data-theme="minimalist"] .card,
+:root[data-theme="minimalist"] .panelSolid {
+  border-radius: 22px;
+  border-color: rgba(17, 24, 39, 0.06);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(8px);
+}
+
+:root[data-theme="minimalist"] .btn {
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+:root[data-theme="minimalist"] .btnPrimary {
+  background: linear-gradient(180deg, #111827, #374151);
+}
+
+:root[data-theme="minimalist"] .btnSoft,
+:root[data-theme="minimalist"] .pill,
+:root[data-theme="minimalist"] .settingsChip {
+  background: rgba(255, 255, 255, 0.88);
+}
+
+:root[data-theme="minimalist"] .navShell {
+  background: rgba(255, 255, 255, 0.86);
+  border-color: rgba(17, 24, 39, 0.06);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+:root[data-theme="retroArcade"] .appGlow,
+:root[data-theme="neonCyber"] .appGlow,
+:root[data-theme="darkMode"] .appGlow,
+:root[data-theme="classicSports"] .appGlow,
+:root[data-theme="minimalist"] .appGlow {
+  opacity: 0.34;
+}
+
+:root[data-theme="retroArcade"] .page {
+  max-width: 1320px;
+}
+
+:root[data-theme="retroArcade"] .heroSurface,
+:root[data-theme="retroArcade"] .scheduleWeekCard,
+:root[data-theme="retroArcade"] .scheduleSummaryCard,
+:root[data-theme="retroArcade"] .scheduleGameCard,
+:root[data-theme="retroArcade"] .tradePartnerCard,
+:root[data-theme="retroArcade"] .tradeScoreCard,
+:root[data-theme="retroArcade"] .tradeRecommendationCard,
+:root[data-theme="retroArcade"] .tradeMessageCard,
+:root[data-theme="retroArcade"] .tradeCounterCard,
+:root[data-theme="retroArcade"] .settingsSidebar,
+:root[data-theme="retroArcade"] .settingsControlCard,
+:root[data-theme="retroArcade"] .faRecapCard,
+:root[data-theme="retroArcade"] .faRecapHero,
+:root[data-theme="retroArcade"] .faRecapItem,
+:root[data-theme="retroArcade"] .faRecapFeedItem {
+  background:
+    linear-gradient(180deg, rgba(9, 10, 38, 0.96), rgba(22, 10, 66, 0.92)),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.08), rgba(250, 204, 21, 0.06));
+  border: 2px solid rgba(34, 211, 238, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(250, 204, 21, 0.14),
+    0 18px 42px rgba(0, 0, 0, 0.34),
+    inset 0 0 0 1px rgba(250, 204, 21, 0.08),
+    0 0 22px rgba(34, 211, 238, 0.14);
+}
+
+:root[data-theme="retroArcade"] .navBtn,
+:root[data-theme="retroArcade"] .settingsCategoryButton,
+:root[data-theme="retroArcade"] .tradeAssetChip,
+:root[data-theme="retroArcade"] .tradeMetaBadge,
+:root[data-theme="retroArcade"] .scheduleMetaPill,
+:root[data-theme="retroArcade"] .statChip,
+:root[data-theme="retroArcade"] .pill {
+  border-width: 2px;
+  border-color: rgba(250, 204, 21, 0.34);
+  background: rgba(10, 15, 42, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.08);
+}
+
+:root[data-theme="retroArcade"] .navBtnActive,
+:root[data-theme="retroArcade"] .settingsCategoryButtonActive,
+:root[data-theme="retroArcade"] .tradePartnerCardActive,
+:root[data-theme="retroArcade"] .tradeAssetRowSelected,
+:root[data-theme="retroArcade"] .tradePickRowSelected,
+:root[data-theme="retroArcade"] .settingsChipActive,
+:root[data-theme="retroArcade"] .settingsThemeCardActive {
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.26), rgba(250, 204, 21, 0.18));
+  border-color: rgba(250, 204, 21, 0.62);
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.2), 0 0 28px rgba(34, 211, 238, 0.18);
+}
+
+:root[data-theme="retroArcade"] .navBrandTitle,
+:root[data-theme="retroArcade"] .settingsSidebarTitle,
+:root[data-theme="retroArcade"] .faRecapTitle,
+:root[data-theme="retroArcade"] .scheduleWeekTitle,
+:root[data-theme="retroArcade"] .tradeColumnTitle {
+  color: #fef08a;
+  text-shadow: 0 0 14px rgba(250, 204, 21, 0.18);
+}
+
+:root[data-theme="retroArcade"] .scheduleTeamLogo,
+:root[data-theme="retroArcade"] .tradePartnerLogo {
+  border: 2px solid rgba(250, 204, 21, 0.34);
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.16);
+}
+
+:root[data-theme="darkMode"] .heroSurface,
+:root[data-theme="darkMode"] .scheduleWeekCard,
+:root[data-theme="darkMode"] .scheduleSummaryCard,
+:root[data-theme="darkMode"] .scheduleGameCard,
+:root[data-theme="darkMode"] .tradePartnerCard,
+:root[data-theme="darkMode"] .tradeScoreCard,
+:root[data-theme="darkMode"] .tradeRecommendationCard,
+:root[data-theme="darkMode"] .tradeMessageCard,
+:root[data-theme="darkMode"] .tradeCounterCard,
+:root[data-theme="darkMode"] .settingsSidebar,
+:root[data-theme="darkMode"] .settingsControlCard,
+:root[data-theme="darkMode"] .faRecapCard,
+:root[data-theme="darkMode"] .faRecapHero,
+:root[data-theme="darkMode"] .faRecapItem,
+:root[data-theme="darkMode"] .faRecapFeedItem {
+  background:
+    linear-gradient(180deg, rgba(9, 15, 28, 0.96), rgba(17, 28, 49, 0.92)),
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.06), transparent 34%);
+  border-color: rgba(96, 165, 250, 0.12);
+  box-shadow: 0 18px 48px rgba(2, 6, 23, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme="darkMode"] .navShell {
+  backdrop-filter: blur(18px);
+}
+
+:root[data-theme="darkMode"] .navBtn,
+:root[data-theme="darkMode"] .settingsCategoryButton,
+:root[data-theme="darkMode"] .tradeAssetChip,
+:root[data-theme="darkMode"] .tradeMetaBadge,
+:root[data-theme="darkMode"] .scheduleMetaPill,
+:root[data-theme="darkMode"] .statChip,
+:root[data-theme="darkMode"] .pill {
+  background: rgba(30, 41, 59, 0.78);
+  border-color: rgba(148, 163, 184, 0.16);
+}
+
+:root[data-theme="darkMode"] .navBtnActive,
+:root[data-theme="darkMode"] .settingsCategoryButtonActive,
+:root[data-theme="darkMode"] .tradePartnerCardActive,
+:root[data-theme="darkMode"] .tradeAssetRowSelected,
+:root[data-theme="darkMode"] .tradePickRowSelected,
+:root[data-theme="darkMode"] .settingsChipActive,
+:root[data-theme="darkMode"] .settingsThemeCardActive {
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.2), rgba(30, 41, 59, 0.9));
+  border-color: rgba(96, 165, 250, 0.34);
+  box-shadow: 0 20px 44px rgba(2, 6, 23, 0.36);
+}
+
+:root[data-theme="darkMode"] .scheduleWeekTitle,
+:root[data-theme="darkMode"] .tradeColumnTitle,
+:root[data-theme="darkMode"] .settingsSidebarTitle,
+:root[data-theme="darkMode"] .faRecapTitle {
+  letter-spacing: 0.01em;
+}
+
+:root[data-theme="neonCyber"] .page {
+  max-width: 1360px;
+}
+
+:root[data-theme="neonCyber"] .heroSurface,
+:root[data-theme="neonCyber"] .scheduleWeekCard,
+:root[data-theme="neonCyber"] .scheduleSummaryCard,
+:root[data-theme="neonCyber"] .scheduleGameCard,
+:root[data-theme="neonCyber"] .tradePartnerCard,
+:root[data-theme="neonCyber"] .tradeScoreCard,
+:root[data-theme="neonCyber"] .tradeRecommendationCard,
+:root[data-theme="neonCyber"] .tradeMessageCard,
+:root[data-theme="neonCyber"] .tradeCounterCard,
+:root[data-theme="neonCyber"] .settingsSidebar,
+:root[data-theme="neonCyber"] .settingsControlCard,
+:root[data-theme="neonCyber"] .faRecapCard,
+:root[data-theme="neonCyber"] .faRecapHero,
+:root[data-theme="neonCyber"] .faRecapItem,
+:root[data-theme="neonCyber"] .faRecapFeedItem {
+  background:
+    linear-gradient(180deg, rgba(6, 11, 27, 0.96), rgba(12, 16, 38, 0.94)),
+    linear-gradient(135deg, rgba(34, 211, 238, 0.06), rgba(217, 70, 239, 0.05));
+  border-color: rgba(34, 211, 238, 0.24);
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.08),
+    0 20px 58px rgba(3, 7, 18, 0.5),
+    0 0 30px rgba(217, 70, 239, 0.12);
+}
+
+:root[data-theme="neonCyber"] .navBtn,
+:root[data-theme="neonCyber"] .settingsCategoryButton,
+:root[data-theme="neonCyber"] .tradeAssetChip,
+:root[data-theme="neonCyber"] .tradeMetaBadge,
+:root[data-theme="neonCyber"] .scheduleMetaPill,
+:root[data-theme="neonCyber"] .statChip,
+:root[data-theme="neonCyber"] .pill {
+  background: rgba(9, 16, 38, 0.84);
+  border-color: rgba(34, 211, 238, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(217, 70, 239, 0.05);
+}
+
+:root[data-theme="neonCyber"] .navBtnActive,
+:root[data-theme="neonCyber"] .settingsCategoryButtonActive,
+:root[data-theme="neonCyber"] .tradePartnerCardActive,
+:root[data-theme="neonCyber"] .tradeAssetRowSelected,
+:root[data-theme="neonCyber"] .tradePickRowSelected,
+:root[data-theme="neonCyber"] .settingsChipActive,
+:root[data-theme="neonCyber"] .settingsThemeCardActive {
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.18), rgba(217, 70, 239, 0.16));
+  border-color: rgba(103, 232, 249, 0.44);
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.1), 0 0 24px rgba(217, 70, 239, 0.14);
+}
+
+:root[data-theme="neonCyber"] .navBrandBadge,
+:root[data-theme="neonCyber"] .scheduleTeamLogo,
+:root[data-theme="neonCyber"] .tradePartnerLogo {
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.16);
+}
+
+:root[data-theme="neonCyber"] .settingsSidebarTitle,
+:root[data-theme="neonCyber"] .faRecapTitle,
+:root[data-theme="neonCyber"] .scheduleWeekTitle,
+:root[data-theme="neonCyber"] .tradeColumnTitle {
+  color: #a5f3fc;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+:root[data-theme="classicSports"] .heroSurface,
+:root[data-theme="classicSports"] .scheduleWeekCard,
+:root[data-theme="classicSports"] .scheduleSummaryCard,
+:root[data-theme="classicSports"] .scheduleGameCard,
+:root[data-theme="classicSports"] .tradePartnerCard,
+:root[data-theme="classicSports"] .tradeScoreCard,
+:root[data-theme="classicSports"] .tradeRecommendationCard,
+:root[data-theme="classicSports"] .tradeMessageCard,
+:root[data-theme="classicSports"] .tradeCounterCard,
+:root[data-theme="classicSports"] .settingsSidebar,
+:root[data-theme="classicSports"] .settingsControlCard,
+:root[data-theme="classicSports"] .faRecapCard,
+:root[data-theme="classicSports"] .faRecapHero,
+:root[data-theme="classicSports"] .faRecapItem,
+:root[data-theme="classicSports"] .faRecapFeedItem {
+  background:
+    linear-gradient(180deg, rgba(255, 251, 244, 0.98), rgba(245, 237, 223, 0.94)),
+    linear-gradient(90deg, rgba(29, 78, 216, 0.03), rgba(220, 38, 38, 0.03));
+  border-color: rgba(30, 41, 59, 0.1);
+  box-shadow: 0 18px 40px rgba(120, 98, 64, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+:root[data-theme="classicSports"] .navShell::after,
+:root[data-theme="classicSports"] .heroSurface::before,
+:root[data-theme="classicSports"] .scheduleWeekCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 18%);
+  opacity: 0.7;
+}
+
+:root[data-theme="classicSports"] .heroSurface,
+:root[data-theme="classicSports"] .scheduleWeekCard,
+:root[data-theme="classicSports"] .navShell {
+  position: relative;
+  overflow: hidden;
+}
+
+:root[data-theme="classicSports"] .navBtn,
+:root[data-theme="classicSports"] .settingsCategoryButton,
+:root[data-theme="classicSports"] .tradeAssetChip,
+:root[data-theme="classicSports"] .tradeMetaBadge,
+:root[data-theme="classicSports"] .scheduleMetaPill,
+:root[data-theme="classicSports"] .statChip,
+:root[data-theme="classicSports"] .pill {
+  background: rgba(255, 250, 240, 0.94);
+  border-color: rgba(29, 78, 216, 0.14);
+}
+
+:root[data-theme="classicSports"] .navBtnActive,
+:root[data-theme="classicSports"] .settingsCategoryButtonActive,
+:root[data-theme="classicSports"] .tradePartnerCardActive,
+:root[data-theme="classicSports"] .tradeAssetRowSelected,
+:root[data-theme="classicSports"] .tradePickRowSelected,
+:root[data-theme="classicSports"] .settingsChipActive,
+:root[data-theme="classicSports"] .settingsThemeCardActive {
+  background: linear-gradient(180deg, rgba(29, 78, 216, 0.12), rgba(220, 38, 38, 0.06));
+  border-color: rgba(29, 78, 216, 0.28);
+}
+
+:root[data-theme="classicSports"] .settingsSidebarTitle,
+:root[data-theme="classicSports"] .faRecapTitle,
+:root[data-theme="classicSports"] .scheduleWeekTitle,
+:root[data-theme="classicSports"] .tradeColumnTitle,
+:root[data-theme="classicSports"] .navBrandTitle {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+:root[data-theme="minimalist"] .page {
+  max-width: 1240px;
+}
+
+:root[data-theme="minimalist"] .heroSurface,
+:root[data-theme="minimalist"] .scheduleWeekCard,
+:root[data-theme="minimalist"] .scheduleSummaryCard,
+:root[data-theme="minimalist"] .scheduleGameCard,
+:root[data-theme="minimalist"] .tradePartnerCard,
+:root[data-theme="minimalist"] .tradeScoreCard,
+:root[data-theme="minimalist"] .tradeRecommendationCard,
+:root[data-theme="minimalist"] .tradeMessageCard,
+:root[data-theme="minimalist"] .tradeCounterCard,
+:root[data-theme="minimalist"] .settingsSidebar,
+:root[data-theme="minimalist"] .settingsControlCard,
+:root[data-theme="minimalist"] .faRecapCard,
+:root[data-theme="minimalist"] .faRecapHero,
+:root[data-theme="minimalist"] .faRecapItem,
+:root[data-theme="minimalist"] .faRecapFeedItem {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(17, 24, 39, 0.05);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(18px);
+}
+
+:root[data-theme="minimalist"] .navShell,
+:root[data-theme="minimalist"] .heroSurface,
+:root[data-theme="minimalist"] .settingsSidebar {
+  backdrop-filter: blur(22px);
+}
+
+:root[data-theme="minimalist"] .navBtn,
+:root[data-theme="minimalist"] .settingsCategoryButton,
+:root[data-theme="minimalist"] .tradeAssetChip,
+:root[data-theme="minimalist"] .tradeMetaBadge,
+:root[data-theme="minimalist"] .scheduleMetaPill,
+:root[data-theme="minimalist"] .statChip,
+:root[data-theme="minimalist"] .pill {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(17, 24, 39, 0.06);
+}
+
+:root[data-theme="minimalist"] .navBtnActive,
+:root[data-theme="minimalist"] .settingsCategoryButtonActive,
+:root[data-theme="minimalist"] .tradePartnerCardActive,
+:root[data-theme="minimalist"] .tradeAssetRowSelected,
+:root[data-theme="minimalist"] .tradePickRowSelected,
+:root[data-theme="minimalist"] .settingsChipActive,
+:root[data-theme="minimalist"] .settingsThemeCardActive {
+  background: rgba(17, 24, 39, 0.06);
+  border-color: rgba(17, 24, 39, 0.12);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+:root[data-theme="minimalist"] .settingsSidebarTitle,
+:root[data-theme="minimalist"] .faRecapTitle,
+:root[data-theme="minimalist"] .scheduleWeekTitle,
+:root[data-theme="minimalist"] .tradeColumnTitle,
+:root[data-theme="minimalist"] .navBrandTitle {
+  letter-spacing: -0.03em;
+}
+
+:root[data-theme="retroArcade"] body[data-theme-ready="true"]::after {
+  opacity: 0.6;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 35%, rgba(255, 255, 255, 0.03) 65%, transparent 100%),
+    repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.24) 0, rgba(0, 0, 0, 0.24) 2px, transparent 2px, transparent 7px);
+}
+
+:root[data-theme="darkMode"] body[data-theme-ready="true"]::after {
+  opacity: 0.5;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(212, 162, 76, 0.16), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%);
+}
+
+:root[data-theme="neonCyber"] body[data-theme-ready="true"]::after {
+  opacity: 0.62;
+  background:
+    linear-gradient(120deg, rgba(34, 211, 238, 0.07), transparent 28%, rgba(217, 70, 239, 0.08) 72%, transparent 100%),
+    repeating-linear-gradient(135deg, rgba(34, 211, 238, 0.08) 0, rgba(34, 211, 238, 0.08) 2px, transparent 2px, transparent 18px);
+}
+
+:root[data-theme="classicSports"] body[data-theme-ready="true"]::after {
+  opacity: 0.42;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 22%),
+    repeating-linear-gradient(90deg, rgba(15, 76, 189, 0.05) 0, rgba(15, 76, 189, 0.05) 1px, transparent 1px, transparent 26px);
+}
+
+:root[data-theme="minimalist"] body[data-theme-ready="true"]::after {
+  opacity: 0.38;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.58), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 18%);
+}
+
+:root[data-theme="retroArcade"] .navShell,
+:root[data-theme="retroArcade"] .heroSurface,
+:root[data-theme="retroArcade"] .settingsThemeCard {
+  position: relative;
+  overflow: hidden;
+}
+
+:root[data-theme="retroArcade"] .navShell {
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+}
+
+:root[data-theme="retroArcade"] .navShell::after,
+:root[data-theme="retroArcade"] .heroSurface::before,
+:root[data-theme="retroArcade"] .settingsThemeCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(69, 240, 255, 0.08), transparent 26%, rgba(255, 159, 28, 0.12) 72%, transparent 100%);
+}
+
+:root[data-theme="retroArcade"] .navBtn,
+:root[data-theme="retroArcade"] .settingsThemeCard {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+
+:root[data-theme="retroArcade"] .navBrandBadge {
+  transform: rotate(-4deg);
+  border-radius: 12px;
+}
+
+:root[data-theme="darkMode"] .navShell,
+:root[data-theme="darkMode"] .heroSurface,
+:root[data-theme="darkMode"] .settingsSidebar,
+:root[data-theme="darkMode"] .settingsControlCard,
+:root[data-theme="darkMode"] .settingsThemeCard {
+  border-color: rgba(212, 162, 76, 0.18);
+  box-shadow: 0 22px 50px rgba(2, 6, 23, 0.45), inset 0 1px 0 rgba(255, 248, 220, 0.06);
+}
+
+:root[data-theme="darkMode"] .navShell,
+:root[data-theme="darkMode"] .heroSurface {
+  background:
+    radial-gradient(circle at top right, rgba(212, 162, 76, 0.14), transparent 32%),
+    linear-gradient(180deg, rgba(5, 10, 20, 0.96), rgba(12, 19, 34, 0.92));
+}
+
+:root[data-theme="darkMode"] .btnPrimary,
+:root[data-theme="darkMode"] .navBrandBadge {
+  background: linear-gradient(180deg, #d4a24c, #8f6b2f);
+  color: #130f07;
+}
+
+:root[data-theme="darkMode"] .navBrandTitle,
+:root[data-theme="darkMode"] .scheduleWeekTitle,
+:root[data-theme="darkMode"] .tradeColumnTitle,
+:root[data-theme="darkMode"] .settingsSidebarTitle {
+  color: #f3d9a3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+:root[data-theme="darkMode"] .navBtn,
+:root[data-theme="darkMode"] .settingsCategoryButton,
+:root[data-theme="darkMode"] .settingsThemeCard {
+  border-radius: 20px;
+}
+
+:root[data-theme="neonCyber"] .navShell,
+:root[data-theme="neonCyber"] .heroSurface,
+:root[data-theme="neonCyber"] .settingsThemeCard {
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 22px 100%, 0 calc(100% - 22px));
+}
+
+:root[data-theme="neonCyber"] .navShell::after,
+:root[data-theme="neonCyber"] .heroSurface::before,
+:root[data-theme="neonCyber"] .settingsThemeCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(34, 211, 238, 0.12), transparent 34%, rgba(217, 70, 239, 0.12) 100%);
+}
+
+:root[data-theme="neonCyber"] .navBtn,
+:root[data-theme="neonCyber"] .settingsCategoryButton,
+:root[data-theme="neonCyber"] .settingsThemeCard {
+  border-radius: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+:root[data-theme="classicSports"] .navShell,
+:root[data-theme="classicSports"] .heroSurface,
+:root[data-theme="classicSports"] .settingsThemeCard {
+  position: relative;
+  overflow: hidden;
+}
+
+:root[data-theme="classicSports"] .navShell::after,
+:root[data-theme="classicSports"] .heroSurface::before,
+:root[data-theme="classicSports"] .settingsThemeCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 18%),
+    repeating-linear-gradient(90deg, rgba(15, 76, 189, 0.05) 0, rgba(15, 76, 189, 0.05) 2px, transparent 2px, transparent 30px);
+}
+
+:root[data-theme="classicSports"] .navBrandBadge,
+:root[data-theme="classicSports"] .btnPrimary {
+  background: linear-gradient(180deg, #0f4cbd, #102d73);
+}
+
+:root[data-theme="classicSports"] .navBtn,
+:root[data-theme="classicSports"] .settingsCategoryButton,
+:root[data-theme="classicSports"] .settingsThemeCard {
+  border-radius: 12px;
+  box-shadow: 0 12px 24px rgba(120, 98, 64, 0.14);
+}
+
+:root[data-theme="minimalist"] .navShell,
+:root[data-theme="minimalist"] .heroSurface,
+:root[data-theme="minimalist"] .settingsSidebar,
+:root[data-theme="minimalist"] .settingsControlCard,
+:root[data-theme="minimalist"] .settingsThemeCard {
+  border-color: rgba(15, 23, 42, 0.05);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+}
+
+:root[data-theme="minimalist"] .navBrandBadge {
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+:root[data-theme="minimalist"] .navBtn,
+:root[data-theme="minimalist"] .settingsCategoryButton,
+:root[data-theme="minimalist"] .settingsThemeCard {
+  border-radius: 24px;
+  box-shadow: none;
+}
+
+:root[data-theme="minimalist"] .navBrandTitle,
+:root[data-theme="minimalist"] .scheduleWeekTitle,
+:root[data-theme="minimalist"] .tradeColumnTitle,
+:root[data-theme="minimalist"] .settingsSidebarTitle {
+  font-weight: 800;
+}
+
+.navBtnSettings {
+  min-width: 48px;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.settingsShell {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.settingsSidebar {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.05), rgba(37, 99, 235, 0.05));
+  border: 1px solid var(--border);
+}
+
+.settingsSidebarKicker,
+.settingsSectionTitle,
+.faRecapKicker {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.settingsSidebarTitle,
+.faRecapTitle {
+  margin-top: 8px;
+  font-size: 22px;
+  line-height: 1.08;
+  font-weight: 950;
+}
+
+.settingsCategoryList,
+.settingsSection,
+.settingsThemeGrid,
+.settingsChipGroup,
+.faRecapShell,
+.faRecapGrid,
+.faRecapList,
+.faRecapFeed {
+  display: grid;
+  gap: 12px;
+}
+
+.settingsCategoryButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.settingsCategoryButtonActive {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(14, 165, 233, 0.08));
+  border-color: rgba(37, 99, 235, 0.24);
+  box-shadow: var(--shadow-sm);
+}
+
+.settingsCategoryIcon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.08);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.settingsThemePreview,
+.settingsDifficultyNote,
+.settingsControlCard,
+.faRecapCard {
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
+  padding: 14px;
+}
+
+.settingsThemePreviewName {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 900;
+  margin-top: 6px;
+}
+
+.settingsThemePreviewEmoji,
+.settingsThemeCardEmoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settingsThemePreviewEmoji {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.10);
+  font-size: 18px;
+}
+
+.settingsThemePreviewDescription,
+.settingsControlDescription,
+.settingsThemeDescription,
+.faRecapSubtitle,
+.faRecapItemMeta {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.settingsContent {
+  display: grid;
+  gap: 14px;
+}
+
+.settingsThemeGrid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.settingsThemeCard {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  text-align: left;
+  background: var(--panel);
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.settingsThemeCard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.settingsThemeCardActive {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(37, 99, 235, 0.32);
+}
+
+.settingsThemeCardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  font-weight: 900;
+}
+
+.settingsThemeCardTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settingsThemeCardEmoji {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.08);
+  font-size: 16px;
+}
+
+.settingsThemeCheck {
+  font-size: 11px;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.settingsThemeSwatches {
+  display: flex;
+  gap: 8px;
+}
+
+.settingsThemeSwatches span {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.settingsThemeCard-modern .settingsThemeSwatches span:nth-child(1) { background: #2563eb; }
+.settingsThemeCard-modern .settingsThemeSwatches span:nth-child(2) { background: #f59e0b; }
+.settingsThemeCard-modern .settingsThemeSwatches span:nth-child(3) { background: #ffffff; }
+.settingsThemeCard-modern .settingsThemeCardEmoji { background: rgba(37, 99, 235, 0.10); }
+.settingsThemeCard-retroArcade .settingsThemeSwatches span:nth-child(1) { background: #22d3ee; }
+.settingsThemeCard-retroArcade .settingsThemeSwatches span:nth-child(2) { background: #facc15; }
+.settingsThemeCard-retroArcade .settingsThemeSwatches span:nth-child(3) { background: #160a42; }
+.settingsThemeCard-retroArcade .settingsThemeCardEmoji { background: rgba(34, 211, 238, 0.12); }
+.settingsThemeCard-darkMode .settingsThemeSwatches span:nth-child(1) { background: #d4a24c; }
+.settingsThemeCard-darkMode .settingsThemeSwatches span:nth-child(2) { background: #34d399; }
+.settingsThemeCard-darkMode .settingsThemeSwatches span:nth-child(3) { background: #111c31; }
+.settingsThemeCard-darkMode .settingsThemeCardEmoji { background: rgba(212, 162, 76, 0.12); }
+.settingsThemeCard-neonCyber .settingsThemeSwatches span:nth-child(1) { background: #22d3ee; }
+.settingsThemeCard-neonCyber .settingsThemeSwatches span:nth-child(2) { background: #d946ef; }
+.settingsThemeCard-neonCyber .settingsThemeSwatches span:nth-child(3) { background: #0b1024; }
+.settingsThemeCard-neonCyber .settingsThemeCardEmoji { background: rgba(34, 211, 238, 0.12); }
+.settingsThemeCard-classicSports .settingsThemeSwatches span:nth-child(1) { background: #0f4cbd; }
+.settingsThemeCard-classicSports .settingsThemeSwatches span:nth-child(2) { background: #d14334; }
+.settingsThemeCard-classicSports .settingsThemeSwatches span:nth-child(3) { background: #fffaf0; }
+.settingsThemeCard-classicSports .settingsThemeCardEmoji { background: rgba(15, 76, 189, 0.10); }
+.settingsThemeCard-minimalist .settingsThemeSwatches span:nth-child(1) { background: #111827; }
+.settingsThemeCard-minimalist .settingsThemeSwatches span:nth-child(2) { background: #9ca3af; }
+.settingsThemeCard-minimalist .settingsThemeSwatches span:nth-child(3) { background: #ffffff; }
+.settingsThemeCard-minimalist .settingsThemeCardEmoji { background: rgba(15, 23, 42, 0.06); }
+
+.settingsControlHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.settingsControlTitle,
+.faRecapSectionTitle,
+.faRecapItemTitle {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.settingsControlValue,
+.faRecapContract {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--primary);
+}
+
+.settingsChipGroup {
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+}
+
+.settingsChip {
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.settingsChipActive {
+  background: linear-gradient(180deg, var(--primary), var(--primary2));
+  color: white;
+  border-color: transparent;
+}
+
+.settingsToggle {
+  width: 60px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.12);
+  position: relative;
+  cursor: pointer;
+}
+
+.settingsToggleKnob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+  transition: transform var(--theme-transition);
+}
+
+.settingsToggleActive {
+  background: linear-gradient(180deg, var(--primary), var(--primary2));
+}
+
+.settingsToggleActive .settingsToggleKnob {
+  transform: translateX(26px);
+}
+
+.settingsRange {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+.faRecapHero {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 16px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(14, 165, 233, 0.06));
+  border: 1px solid rgba(37, 99, 235, 0.18);
+}
+
+.faRecapGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.faRecapItem,
+.faRecapDepthRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--lineSoft);
+}
+
+.faRecapFeedItem {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--lineSoft);
+  animation: settingsSlideIn 220ms ease-out;
+}
+
+.faRecapFeedTag {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.faRecapDepthStats {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+}
+
+@keyframes settingsSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .settingsShell,
+  .faRecapGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(1200px 800px at 20% 0%, rgba(37, 99, 235, 0.35), transparent 55%),
+    radial-gradient(900px 600px at 85% 20%, rgba(245, 158, 11, 0.22), transparent 45%),
+    linear-gradient(180deg, var(--bg0), var(--bg1) 45%, var(--bg2));
+  color: var(--text);
+  font-family: var(--font-ui);
+  transition: background var(--theme-transition), color var(--theme-transition);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.04), transparent 22%),
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.06), transparent 26%);
+  opacity: 0.75;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  transition: background var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition), box-shadow var(--theme-transition), transform 120ms ease;
+}
+
+.appShell {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: clip;
+}
+
+.appGlow {
+  position: fixed;
+  width: 320px;
+  height: 320px;
+  border-radius: 999px;
+  filter: blur(18px);
+  opacity: 0.22;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.appGlowLeft {
+  top: 90px;
+  left: -120px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.65), transparent 70%);
+}
+
+.appGlowRight {
+  top: 180px;
+  right: -120px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.48), transparent 70%);
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 18px 40px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(14px);
+  transition: background var(--theme-transition), border-color var(--theme-transition), box-shadow var(--theme-transition);
+}
+
+.panelSolid {
+  background: var(--panelSolid);
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 14px;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background var(--theme-transition), color var(--theme-transition);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(37, 99, 235, 0.22);
+}
+
+.heroSurface {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 255, 0.9)),
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 42%);
+}
+
+.heroSurface::after {
+  content: "";
+  position: absolute;
+  inset: auto -90px -110px auto;
+  width: 260px;
+  height: 260px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.18), transparent 68%);
+  pointer-events: none;
+}
+
+.playerCardInteractive {
+  cursor: pointer;
+}
+
+.playerCardInteractive:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 52px rgba(37, 99, 235, 0.16);
+  border-color: rgba(37, 99, 235, 0.28);
+}
+
+.btn {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  padding: 10px 16px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease,
+    border-color 120ms ease, opacity 120ms ease;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.12);
+  border-color: rgba(37, 99, 235, 0.25);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btnPrimary {
+  background: linear-gradient(180deg, var(--primary), var(--primary2));
+  color: white;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.btnPrimary:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.btnSoft {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.22);
+  color: var(--primary2);
+}
+
+.btnGhost {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.08);
+  color: var(--text);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.grid1 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
+}
+
+.progressTrack {
+  height: 10px;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progressBar {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.95), rgba(14, 165, 233, 0.85));
+  border-radius: 999px;
+}
+
+.staminaTrack {
+  height: 10px;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.staminaFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 140ms ease;
+}
+
+.statRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.statChip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--lineSoft);
+}
+
+.statChipLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.statChipValue {
+  font-size: 20px;
+  font-weight: 950;
+  color: var(--text);
+}
+
+.navRoot {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 16px 12px 10px;
+  background: linear-gradient(180deg, rgba(11, 18, 32, 0.94), rgba(11, 18, 32, 0.72), rgba(11, 18, 32, 0));
+  backdrop-filter: blur(14px);
+}
+
+.navShell {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(8, 15, 35, 0.78), rgba(15, 28, 51, 0.52));
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  box-shadow: var(--shadow-lg);
+}
+
+.navBrandBlock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navBrandBadge {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 15px;
+  background: linear-gradient(180deg, rgba(37, 99, 235, 1), rgba(29, 78, 216, 1));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  box-shadow: 0 18px 44px rgba(37, 99, 235, 0.25);
+}
+
+.navBrandBadge::after {
+  content: "✨";
+  position: absolute;
+  right: -7px;
+  bottom: -6px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
+  font-size: 11px;
+}
+
+:root[data-theme="retroArcade"] .navBrandBadge::after { content: "🕹️"; }
+:root[data-theme="darkMode"] .navBrandBadge::after { content: "🌒"; }
+:root[data-theme="neonCyber"] .navBrandBadge::after { content: "⚡"; }
+:root[data-theme="classicSports"] .navBrandBadge::after { content: "🏆"; }
+:root[data-theme="minimalist"] .navBrandBadge::after { content: "☁️"; }
+
+.navBrandTitle {
+  color: #fff;
+  font-weight: 900;
+  font-size: 14px;
+  line-height: 1.1;
+}
+
+.navBrandSubtitle {
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.navActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.navStatusPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.navLinks {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.navBtn {
+  padding: 10px 14px;
+  font-weight: 900;
+}
+
+.navBtnActive {
+  box-shadow: 0 18px 38px rgba(37, 99, 235, 0.24);
+}
+
+.navBtnDanger {
+  border-color: rgba(220, 38, 38, 0.22);
+  background: rgba(220, 38, 38, 0.06);
+  color: rgba(220, 38, 38, 0.95);
+}
+
+.sectionTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.scheduleHeroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.85fr);
+  gap: 16px;
+}
+
+.scheduleWeekCard {
+  padding: 18px;
+}
+
+.scheduleWeekKicker {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary2);
+}
+
+.scheduleWeekTitle {
+  margin-top: 10px;
+  font-size: 30px;
+  font-weight: 1000;
+  line-height: 1.04;
+}
+
+.scheduleSummaryCard {
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(23, 37, 84, 0.9));
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scheduleSummaryTitle {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.scheduleSummaryItem {
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scheduleSummaryItem:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.scheduleList {
+  display: grid;
+  gap: 14px;
+}
+
+.scheduleGameCard {
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(248, 250, 252, 0.82));
+}
+
+.scheduleGameTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.scheduleMatchup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+
+.scheduleTeamCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.scheduleTeamLogo {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 1000;
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.14);
+}
+
+.scheduleTeamText {
+  min-width: 0;
+}
+
+.scheduleTeamLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.scheduleTeamName {
+  margin-top: 4px;
+  font-size: 17px;
+  font-weight: 950;
+  line-height: 1.15;
+}
+
+.scheduleVs {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  color: var(--primary2);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scheduleMetaRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.scheduleMetaPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--lineSoft);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.scheduleActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.scheduleProgressText {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.emptyState {
+  padding: 22px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px dashed rgba(148, 163, 184, 0.32);
+}
+
+.tradePartnerGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.tradePartnerCard {
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 248, 255, 0.86));
+}
+
+.tradePartnerCardActive {
+  border-color: rgba(37, 99, 235, 0.28);
+  box-shadow: 0 24px 52px rgba(37, 99, 235, 0.14);
+}
+
+.tradePartnerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tradePartnerName {
+  font-size: 17px;
+  font-weight: 950;
+  line-height: 1.15;
+}
+
+.tradePartnerLogo {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 1000;
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.16);
+}
+
+.tradePartnerMeta {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tradeMetaBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--lineSoft);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.tradeOverviewGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.72fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.tradeScoreCard {
+  padding: 18px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.94));
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tradeScoreLabel {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.tradeScoreValue {
+  margin-top: 8px;
+  font-size: 42px;
+  font-weight: 1000;
+  line-height: 1;
+}
+
+.tradeScoreStatus {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.tradeValueRow {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.tradeBuilderGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.78fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.tradeCenterRail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 96px;
+}
+
+.tradeColumnHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tradeColumnTitle {
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1.15;
+}
+
+.tradeAssetList {
+  display: grid;
+  gap: 10px;
+  max-height: 560px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.tradeAssetRow {
+  display: block;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.88));
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.tradeAssetRow:hover {
+  border-color: rgba(37, 99, 235, 0.22);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.tradeAssetRowSelected {
+  border-color: rgba(22, 163, 74, 0.28);
+  box-shadow: 0 18px 34px rgba(22, 163, 74, 0.10);
+}
+
+.tradeAssetMain {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.tradeAssetName {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.tradeAssetPos {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  color: var(--primary2);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.tradeAssetStats {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.tradeAssetRatings {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.tradePickSection {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--lineSoft);
+}
+
+.tradeSubheader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.tradePickList {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.tradePickRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.78);
+  cursor: pointer;
+}
+
+.tradePickRowSelected {
+  border-color: rgba(37, 99, 235, 0.24);
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.tradePickRowDisabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tradeSummarySection {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.03);
+  border: 1px solid var(--lineSoft);
+}
+
+.tradeChipWrap {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tradeAssetChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.tradeRecommendationCard {
+  padding: 14px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.08), rgba(14, 165, 233, 0.05));
+  border: 1px solid rgba(37, 99, 235, 0.14);
+}
+
+.tradeMessageCard {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--lineSoft);
+  line-height: 1.5;
+}
+
+.tradeCounterCard {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(37,99,235,0.08);
+  border: 1px solid rgba(37,99,235,0.18);
+}
+
+.tradeCounterGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.tradeCounterLabel {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.tradeConfirmHero {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 14px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.94));
+  color: #fff;
+}
+
+.rotationSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.rotationSummaryTile {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--lineSoft);
+}
+
+.gameHudGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.85fr);
+  gap: 14px;
+}
+
+.gameRotationGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.gameRotationCard {
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(15, 23, 42, 0.03);
+}
+
+.gameBroadcastRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.gameBroadcastCard {
+  flex: 1 1 420px;
+  padding: 16px 18px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(18, 30, 48, 0.88), rgba(7, 12, 20, 0.82));
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.28);
+}
+
+.gameBroadcastKicker {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(125, 211, 252, 0.88);
+}
+
+.gameBroadcastTitle {
+  margin-top: 8px;
+  font-size: 30px;
+  font-weight: 1000;
+  line-height: 1.02;
+  color: #f8fafc;
+}
+
+.gameBroadcastMeta {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gameBroadcastMetaPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(226, 232, 240, 0.88);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.gameScoreStack {
+  display: grid;
+  gap: 10px;
+  min-width: 260px;
+}
+
+.gameMiniScore {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(226, 232, 240, 0.88));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
+}
+
+.gameMiniScoreTeam {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  text-align: center;
+  min-width: 0;
+}
+
+.gameMiniScoreLabel {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.gameMiniScoreTeam strong {
+  font-size: 28px;
+  line-height: 1;
+  color: var(--text);
+}
+
+.gameMiniScoreDivider {
+  font-size: 22px;
+  font-weight: 1000;
+  color: rgba(15, 23, 42, 0.44);
+}
+
+.gamePanelCard {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(241, 245, 249, 0.92));
+}
+
+.gameOpponentCard {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.94));
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gameFeedHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.gameFeedList {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.gameFeedItem {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.gameLowerDeck {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 14px;
+}
+
+.gameControlCorner,
+.gameHowToCard {
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.22);
+}
+
+.gameControlCorner {
+  padding: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 38%),
+    linear-gradient(180deg, rgba(10, 16, 26, 0.98), rgba(8, 14, 24, 0.94));
+  color: #f8fafc;
+}
+
+.gameHowToCard {
+  padding: 18px;
+  background:
+    radial-gradient(circle at top left, rgba(251, 191, 36, 0.14), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.94));
+  color: var(--text);
+}
+
+.gameControlHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.gameControlKicker {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(125, 211, 252, 0.9);
+}
+
+.gameHowToCard .gameControlKicker {
+  color: rgba(180, 83, 9, 0.86);
+}
+
+.gameControlTitle {
+  margin-top: 8px;
+  font-size: 24px;
+  font-weight: 1000;
+  line-height: 1.05;
+}
+
+.gameControlStatus {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(226, 232, 240, 0.88);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.gameControlSubtext {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(226, 232, 240, 0.8);
+}
+
+.gameControlGrid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.gameControlTile {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gameControlKeys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gameKeycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gameControlTileTitle {
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #f8fafc;
+}
+
+.gameControlTileDetail {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(226, 232, 240, 0.76);
+}
+
+.gameHowToList {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.gameHowToStep {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.gameHowToIndex {
+  min-width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 1000;
+  letter-spacing: 0.08em;
+}
+
+.gameHowToStepTitle {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.gameHowToStepDetail {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgba(15, 23, 42, 0.72);
+}
+
+.gameFinalPanel {
+  order: 5;
+  margin-top: 14px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  padding: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+.gameFullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  overflow-y: auto;
+  padding: 16px 18px 22px;
+  background:
+    radial-gradient(900px 520px at 18% 0%, rgba(59, 130, 246, 0.2), transparent 58%),
+    radial-gradient(720px 420px at 85% 12%, rgba(239, 68, 68, 0.16), transparent 52%),
+    linear-gradient(180deg, rgba(4, 8, 14, 0.96), rgba(8, 14, 24, 0.98));
+}
+
+.gameFullscreenGlow {
+  position: fixed;
+  width: 320px;
+  height: 320px;
+  border-radius: 999px;
+  filter: blur(18px);
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+.gameFullscreenGlowLeft {
+  top: -40px;
+  left: -110px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.72), transparent 70%);
+}
+
+.gameFullscreenGlowRight {
+  top: 80px;
+  right: -110px;
+  background: radial-gradient(circle, rgba(248, 113, 113, 0.68), transparent 70%);
+}
+
+.gameTopHudBar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 1440px;
+  margin: 0 auto;
+  min-height: calc(100vh - 38px);
+  padding: 14px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(10, 16, 26, 0.88), rgba(7, 12, 20, 0.82));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+}
+
+.gameTopHudBar .muted {
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.gamePanelCard .muted,
+.gameFinalPanel .muted {
+  color: rgba(15, 23, 42, 0.66);
+}
+
+.gameOpponentCard .muted {
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.gameOptionsButton {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  z-index: 1105;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(10, 16, 24, 0.86);
+  color: #f8fafc;
+  padding: 10px 16px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+}
+
+.gameCanvasShell {
+  position: relative;
+  order: 2;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 26%),
+    linear-gradient(180deg, rgba(5, 10, 18, 0.98), rgba(2, 6, 12, 0.98));
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.28);
+}
+
+.gameStageCanvas {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  max-height: min(82vh, 980px);
+  object-fit: contain;
+  image-rendering: auto;
+  background: linear-gradient(180deg, #09111c, #142338);
+}
+
+.gameTopHudBar > .gameHudGrid {
+  order: 3;
+  margin-top: 0;
+}
+
+.gameTopHudBar > .gameLowerDeck {
+  order: 4;
+}
+
+.gameCanvasShell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.14)),
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.16), transparent 38%);
+}
+
+.gameOptionsScrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1110;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 72px 20px 20px;
+  background: rgba(2, 6, 12, 0.58);
+  backdrop-filter: blur(8px);
+}
+
+.gameOptionsPanel {
+  width: min(360px, calc(100vw - 24px));
+  border-radius: 22px;
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(8, 14, 24, 0.98), rgba(15, 23, 42, 0.96));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.38);
+  color: #f8fafc;
+}
+
+.gameOptionsTitle {
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.gameOptionsBody {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.gameOptionsMeta {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(226, 232, 240, 0.88);
+  font-size: 13px;
+}
+
+/* Keep live gameplay visually fixed even when the site theme changes. */
+.appShellGameplayLock .gameFullscreen {
+  background:
+    radial-gradient(900px 520px at 18% 0%, rgba(59, 130, 246, 0.2), transparent 58%),
+    radial-gradient(720px 420px at 85% 12%, rgba(239, 68, 68, 0.16), transparent 52%),
+    linear-gradient(180deg, rgba(4, 8, 14, 0.96), rgba(8, 14, 24, 0.98));
+  color: #f8fafc;
+}
+
+.appShellGameplayLock .gameFullscreenGlowLeft {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.72), transparent 70%);
+}
+
+.appShellGameplayLock .gameFullscreenGlowRight {
+  background: radial-gradient(circle, rgba(248, 113, 113, 0.68), transparent 70%);
+}
+
+.appShellGameplayLock .gameTopHudBar {
+  background: linear-gradient(180deg, rgba(10, 16, 26, 0.88), rgba(7, 12, 20, 0.82));
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.4);
+  color: #f8fafc;
+}
+
+.appShellGameplayLock .gameTopHudBar .muted,
+.appShellGameplayLock .gameOpponentCard .muted,
+.appShellGameplayLock .gameBroadcastMeta,
+.appShellGameplayLock .gameFeedMeta {
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.appShellGameplayLock .gameCanvasShell {
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 26%),
+    linear-gradient(180deg, rgba(5, 10, 18, 0.98), rgba(2, 6, 12, 0.98));
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.28);
+}
+
+.appShellGameplayLock .gameStageCanvas {
+  background: linear-gradient(180deg, #09111c, #142338);
+}
+
+.appShellGameplayLock .gameBroadcastCard,
+.appShellGameplayLock .gameOpponentCard {
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.92), rgba(15, 23, 42, 0.86));
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+  color: #f8fafc;
+}
+
+.appShellGameplayLock .gameMiniScore,
+.appShellGameplayLock .gameControlGroup,
+.appShellGameplayLock .gameHowToCard,
+.appShellGameplayLock .gameOptionsMeta {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(226, 232, 240, 0.88);
+}
+
+.appShellGameplayLock .gamePanelCard,
+.appShellGameplayLock .gameFinalPanel,
+.appShellGameplayLock .gameFeedItem {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 18px 44px rgba(2, 6, 23, 0.18);
+  color: #0f172a;
+}
+
+.appShellGameplayLock .gamePanelCard .muted,
+.appShellGameplayLock .gameFinalPanel .muted,
+.appShellGameplayLock .gameFeedItem .muted,
+.appShellGameplayLock .gameHowToCard .muted {
+  color: rgba(15, 23, 42, 0.66);
+}
+
+.appShellGameplayLock .gameBroadcastKicker,
+.appShellGameplayLock .gameControlKicker,
+.appShellGameplayLock .gameMiniScoreLabel {
+  color: #93c5fd;
+}
+
+.appShellGameplayLock .gameBroadcastTitle,
+.appShellGameplayLock .gameMiniScoreTeam strong,
+.appShellGameplayLock .gameControlTitle,
+.appShellGameplayLock .gameFinalTitle {
+  color: #f8fafc;
+}
+
+.appShellGameplayLock .gameOptionsButton {
+  background: rgba(10, 16, 24, 0.86);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+  color: #f8fafc;
+}
+
+.appShellGameplayLock .gameOptionsScrim {
+  background: rgba(2, 6, 12, 0.58);
+  backdrop-filter: blur(8px);
+}
+
+.appShellGameplayLock .gameOptionsPanel {
+  background: linear-gradient(180deg, rgba(8, 14, 24, 0.98), rgba(15, 23, 42, 0.96));
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.38);
+  color: #f8fafc;
+}
+
+.appShellGameplayLock .gameOptionsPanel .btn,
+.appShellGameplayLock .gameOptionsPanel .btnSoft,
+.appShellGameplayLock .gameOptionsPanel .btnPrimary {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  box-shadow: none;
+}
+
+.appShellGameplayLock .gameOptionsPanel .btnPrimary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-color: rgba(147, 197, 253, 0.5);
+}
+
+@media (max-width: 720px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+
+  .page {
+    padding: 22px 14px 34px;
+  }
+
+  .navShell {
+    border-radius: 18px;
+    padding: 12px;
+  }
+
+  .scheduleHeroGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .scheduleMatchup {
+    grid-template-columns: 1fr;
+  }
+
+  .scheduleVs {
+    justify-self: start;
+  }
+
+  .tradePartnerGrid,
+  .tradeOverviewGrid,
+  .tradeBuilderGrid,
+  .tradeCounterGrid,
+  .rotationSummaryGrid,
+  .gameLowerDeck,
+  .gameHudGrid,
+  .gameRotationGrid,
+  .gameControlGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .gameFullscreen {
+    padding: 12px;
+  }
+
+  .gameTopHudBar {
+    min-height: calc(100vh - 24px);
+    padding: 14px;
+  }
+
+  .gameBroadcastRow {
+    flex-direction: column;
+  }
+
+  .gameScoreStack {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .gameBroadcastTitle {
+    font-size: 24px;
+  }
+
+  .gameOptionsButton {
+    top: 14px;
+    right: 14px;
+  }
+
+  .gameStageCanvas {
+    max-height: 60vh;
+  }
+
+  .gameControlTitle {
+    font-size: 21px;
+  }
+
+  .gameOptionsScrim {
+    padding: 64px 12px 12px;
+  }
+
+  .tradeCenterRail {
+    position: static;
+  }
+
+  .tradeAssetList {
+    max-height: none;
+  }
+}

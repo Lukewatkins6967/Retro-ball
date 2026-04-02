@@ -1,0 +1,160 @@
+{
+	"m_AtlasName": "",
+	"m_Border": {
+		"m_W": 0,
+		"m_X": 0,
+		"m_Y": 0,
+		"m_Z": 0
+	},
+	"m_CorrespondingSourceObject": { "m_Collection": "sharedassets0.assets", "m_PathID": 0 },
+	"m_Extrude": 1,
+	"m_HideFlags": 0,
+	"m_IsPolygon": false,
+	"m_Name": "green_roll_0",
+	"m_Offset": {
+		"m_X": -6.4999976,
+		"m_Y": 11.4875965
+	},
+	"m_PackingTag": "",
+	"m_Pivot": {
+		"m_X": 0.33268023,
+		"m_Y": 0.84945846
+	},
+	"m_PixelsToUnits": 20,
+	"m_PrefabInternal": { "m_Collection": "sharedassets0.assets", "m_PathID": 0 },
+	"m_RD": {
+		"m_AlphaTexture": { "m_Collection": "sharedassets0.assets", "m_PathID": 0 },
+		"m_Indices": [
+			10,
+			9,
+			7,
+			8,
+			7,
+			9,
+			6,
+			7,
+			8,
+			5,
+			7,
+			6,
+			0,
+			5,
+			6,
+			4,
+			5,
+			0,
+			3,
+			4,
+			0,
+			1,
+			3,
+			0,
+			2,
+			1,
+			0
+		],
+		"m_SettingsRaw": 64,
+		"m_Texture": { "m_Collection": "sharedassets0.assets", "m_PathID": 53 },
+		"m_TextureRect": {
+			"m_Height": 32.872566,
+			"m_Width": 38.847755,
+			"m_X": 19.07612,
+			"m_Y": 4.0761204
+		},
+		"m_TextureRectOffset": {
+			"m_X": 0,
+			"m_Y": 0
+		},
+		"m_UvTransform": {
+			"m_W": 32,
+			"m_X": 20,
+			"m_Y": 32,
+			"m_Z": 20
+		},
+		"m_Vertices": [
+			{
+				"m_Pos": {
+					"m_X": 1.2,
+					"m_Y": 0.25,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": 1.3,
+					"m_Y": -0.7,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": 1.3,
+					"m_Y": 0,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": 0.75,
+					"m_Y": -1.3,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": 0.4,
+					"m_Y": -1.25,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": 0.25,
+					"m_Y": -1.4,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": -0.05,
+					"m_Y": 0.25,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": -0.45,
+					"m_Y": -1.4,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": -0.5,
+					"m_Y": -0.1,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": -0.65,
+					"m_Y": -0.9,
+					"m_Z": 0
+				}
+			},
+			{
+				"m_Pos": {
+					"m_X": -0.65,
+					"m_Y": -1.2,
+					"m_Z": 0
+				}
+			}
+		]
+	},
+	"m_Rect": {
+		"m_Height": 32.872566,
+		"m_Width": 38.847755,
+		"m_X": 19.07612,
+		"m_Y": 4.0761204
+	}
+}

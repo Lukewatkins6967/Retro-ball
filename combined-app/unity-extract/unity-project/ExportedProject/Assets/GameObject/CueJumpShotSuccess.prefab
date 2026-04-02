@@ -1,0 +1,411 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1709254077376921
+GameObject:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_Component:
+  - 4: {fileID: 4730242686860875}
+  - 114: {fileID: 114724804207875695}
+  m_Layer: 0
+  m_Name: CueJumpShotSuccess
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4730242686860875
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1709254077376921}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.0673561, y: 3.1046495, z: 2.9380941}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: -0, z: -0}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+--- !u!114 &114724804207875695
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1709254077376921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80cdb37c1969ac3d32ba6d487242bbb3, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  m_type: 4
+  m_volume:
+    m_min: 1
+    m_max: 1
+    m_hasMax: 0
+    m_hasValue: 0
+  m_pitch:
+    m_min: 1
+    m_max: 1
+    m_hasMax: 0
+    m_hasValue: 0
+  m_priority: 128
+  m_chance: 1
+  m_alsoPlay: {fileID: 0}
+  m_reverbPreset: 0
+  m_distortionLevel: 0
+  m_echoFilter: {fileID: 0}
+  m_lowPassFilter: {fileID: 0}
+  m_highPassFilter: {fileID: 0}
+  m_chorusFilter: {fileID: 0}
+  m_startDelay:
+    m_min: 0
+    m_max: 0
+    m_hasMax: 0
+    m_hasValue: 0
+  m_sounds:
+  - m_sound: {fileID: 8300000, guid: a355797298e4ea94bad9bc507bd7d206, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 24caf136f66af22479e37d2a6feef6e6, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 6a1e08d7302c4854da28f7dfc5eaea45, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: bc2f687581da1b447b5e05dc4845598f, type: 3}
+    m_weight: 50
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 5546f9a52cc38fc4b878cefba5fd83a0, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: c89930f8b9c5ba143ac1e99302aa5434, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 9abb4619bcd42e4439216c8666416d47, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 96eca18e5fe92fc44b70c674989a4924, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 865abf7c765939e4f9722137e08a93a1, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 18e23e9120dff3041937e3d958377c3c, type: 3}
+    m_weight: 50
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: e6e71040b9b14304bbe385645eb7eeba, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 0d09696862c28de4d84a9831b9aa5ef8, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 3ca5e231beb6140449705e2dd92fb222, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 0e6138a08f5aab2448a1b6a5762ea732, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 512ca7ddcf0284d4eabb9806c7d2f4aa, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 30fa3e6ae25732a409be219399cb83ee, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 9d81a51ebf59bbd4fa52fa88033591ce, type: 3}
+    m_weight: 50
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 94fafccc5cecb964bbd38ec3d1258a27, type: 3}
+    m_weight: 25
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: cda246a4a929d2d499026786bd63cb91, type: 3}
+    m_weight: 50
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: d57d225513869784e899daa706c1efb1, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: 28d2082f7f4ca1544a35694463b0a817, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  - m_sound: {fileID: 8300000, guid: d08b90a8afb561040b114dfd279e4464, type: 3}
+    m_weight: 100
+    m_loop: 0
+    m_volume:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_pitch:
+      m_min: 1
+      m_max: 1
+      m_hasMax: 0
+      m_hasValue: 0
+    m_startTime: 0
+    m_endTime: 0
+  m_totalWeight: 1925
+  m_noDuplicateTime: -1
+--- !u!1001 &100100000
+Prefab:
+  serializedVersion: 2
+  m_ObjectHideFlags: 1
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 1709254077376921}
+  m_IsPrefabParent: 1
