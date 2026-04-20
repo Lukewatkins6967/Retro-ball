@@ -61,6 +61,7 @@ type Entity = {
   healthRegenDelayMs: number;
   screenTargetId: string | null;
   screenAnchor: Vec2;
+  rollTarget: Vec2;
   categories: {
     shooting: number;
     speed: number;
@@ -349,6 +350,7 @@ function teamAverages(team: TeamState, state: MatchState) {
         healthRegenDelayMs: 0,
         screenTargetId: null,
         screenAnchor: { x: 0, y: 0 },
+        rollTarget: { x: 0, y: 0 },
         categories: { ...player.prospect.categories },
       });
       acc.shooting += profile.shooting * fatigue;
@@ -760,10 +762,11 @@ function beginScreen(entity: Entity, targetId: string, anchor: Vec2) {
   entity.screenAnchor = { ...anchor };
 }
 
-function beginRoll(entity: Entity) {
+function beginRoll(entity: Entity, target: Vec2) {
   entity.screenMs = 0;
   entity.screenTargetId = null;
-  entity.rollMs = Math.max(entity.rollMs, 1380);
+  entity.rollTarget = { ...target };
+  entity.rollMs = Math.max(entity.rollMs, 1760);
 }
 
 function screenAnchorFor(state: MatchState, ballHandler: Entity, screener: Entity, defender: Entity | null, basket: Vec2) {
@@ -783,21 +786,12 @@ function screenAnchorFor(state: MatchState, ballHandler: Entity, screener: Entit
   );
 }
 
-function screenReleaseTargetFor(state: MatchState, screener: Entity, ballHandler: Entity, basket: Vec2) {
-  const profile = entitySkillBlend(state, screener);
+function screenRollTargetFor(state: MatchState, screener: Entity, ballHandler: Entity, basket: Vec2) {
   const approachSign = screener.team === 'user' ? -1 : 1;
   const sideBias = screener.screenAnchor.y >= state.court.height * 0.5 ? 1 : -1;
-  const popWindow = profile.shooting * 0.44 + profile.playmaking * 0.18;
-  const rollWindow = insideFinishRating(profile) * 0.56 + profile.rebounding * 0.18 + profile.athleticism * 0.18 + profile.size * 0.08;
-  if (popWindow > rollWindow + 0.55) {
-    return courtClampPosition(state, {
-      x: basket.x + approachSign * 92,
-      y: clamp(ballHandler.pos.y + sideBias * 76, 82, state.court.height - 82),
-    });
-  }
   return courtClampPosition(state, {
-    x: basket.x + approachSign * 30,
-    y: clamp(lerp(ballHandler.pos.y, basket.y, 0.72) + sideBias * 34, 84, state.court.height - 84),
+    x: basket.x + approachSign * 18,
+    y: clamp(lerp(ballHandler.pos.y, basket.y, 0.78) + sideBias * 16, 92, state.court.height - 92),
   });
 }
 
@@ -874,16 +868,23 @@ function applyExperimentalOffBallAction(
       entity.vel = scale(entity.vel, 0.2);
     }
     if (entity.screenMs <= 160 || dist(ballHandler.pos, attackBasket) < 128) {
-      beginRoll(entity);
+      beginRoll(entity, screenRollTargetFor(state, entity, ballHandler, attackBasket));
     }
     return true;
   }
 
   if (entity.rollMs > 0) {
-    const releaseTarget = screenReleaseTargetFor(state, entity, ballHandler, attackBasket);
+    const releaseTarget = entity.rollTarget;
     const dir = normalize(sub(releaseTarget, entity.pos));
+    const toHandler = normalize(sub(ballHandler.pos, entity.pos));
+    const targetDistance = dist(entity.pos, releaseTarget);
     if (len2(dir) > 0.01) entity.facing = dir;
-    entity.vel = scale(dir, dist(entity.pos, releaseTarget) < 18 ? speed * 0.44 : speed * 1.08);
+    if (targetDistance > 18) {
+      entity.vel = scale(dir, speed * (targetDistance > 62 ? 1.16 : 0.98));
+    } else {
+      if (len2(toHandler) > 0.01) entity.facing = toHandler;
+      entity.vel = scale(toHandler, entity.rollMs > 540 ? speed * 0.12 : speed * 0.28);
+    }
     return true;
   }
 
@@ -900,6 +901,7 @@ function applyExperimentalOffBallAction(
 
   const anchor = screenAnchorFor(state, ballHandler, entity, defender, attackBasket);
   beginScreen(entity, defender.id, anchor);
+  entity.rollTarget = screenRollTargetFor(state, entity, ballHandler, attackBasket);
   const dir = normalize(sub(anchor, entity.pos));
   if (len2(dir) > 0.01) entity.facing = dir;
   entity.vel = scale(dir, speed);
@@ -935,6 +937,7 @@ function applyEntityPlayer(entity: Entity, player: TeamPlayer) {
   entity.healthRegenDelayMs = 0;
   entity.screenTargetId = null;
   entity.screenAnchor = { ...entity.pos };
+  entity.rollTarget = { ...entity.pos };
 }
 
 function closeGameIntensity(state: MatchState) {
@@ -1082,6 +1085,7 @@ function cloneMatchState(state: MatchState): MatchState {
       facing: { ...entity.facing },
       dashDir: { ...entity.dashDir },
       screenAnchor: { ...entity.screenAnchor },
+      rollTarget: { ...entity.rollTarget },
       categories: { ...entity.categories },
     })),
     ball: cloneBallState(state.ball),
@@ -1330,6 +1334,9 @@ function resolveEntityCollisions(state: MatchState) {
           const defenderDir = len2(defender.vel) > 0.01 ? normalize(defender.vel) : toScreen;
           const hitAngle = dot(defenderDir, toScreen);
           if (hitAngle > 0.12) {
+            const baskets = basketTargets(state);
+            const ballHandler = getEntity(state, state.ball.ownerId);
+            const attackBasket = screener.team === 'user' ? baskets.user : baskets.ai;
             const screenerProfile = entitySkillBlend(state, screener);
             const defenderProfile = entitySkillBlend(state, defender);
             const bodyStonewall = clamp(0.18 + (screenerProfile.size / 10) * 0.18 + (screenerProfile.defense / 10) * 0.08, 0.18, 0.48);
@@ -1338,7 +1345,7 @@ function resolveEntityCollisions(state: MatchState) {
             defender.stunMs = Math.max(defender.stunMs, 110 + screenerProfile.size * 8 + screenerProfile.defense * 5);
             defender.impactMs = Math.max(defender.impactMs, 180);
             screener.impactMs = Math.max(screener.impactMs, 130);
-            beginRoll(screener);
+            beginRoll(screener, screenRollTargetFor(state, screener, ballHandler, attackBasket));
             addEvent(state, { tone: 'blue', text: 'SCREEN HIT', x: screener.pos.x, y: screener.pos.y - 18 });
           }
         }
@@ -1596,6 +1603,7 @@ export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?
       healthRegenDelayMs: 0,
       screenTargetId: null,
       screenAnchor: { x: 0, y: 0 },
+      rollTarget: { x: 0, y: 0 },
       categories: { ...userBall.prospect.categories },
     },
     {
@@ -1626,6 +1634,7 @@ export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?
       healthRegenDelayMs: 0,
       screenTargetId: null,
       screenAnchor: { x: 0, y: 0 },
+      rollTarget: { x: 0, y: 0 },
       categories: { ...userOff.prospect.categories },
     },
     {
@@ -1656,6 +1665,7 @@ export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?
       healthRegenDelayMs: 0,
       screenTargetId: null,
       screenAnchor: { x: 0, y: 0 },
+      rollTarget: { x: 0, y: 0 },
       categories: { ...aiBall.prospect.categories },
     },
     {
@@ -1686,6 +1696,7 @@ export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?
       healthRegenDelayMs: 0,
       screenTargetId: null,
       screenAnchor: { x: 0, y: 0 },
+      rollTarget: { x: 0, y: 0 },
       categories: { ...aiOff.prospect.categories },
     },
   ];
@@ -1771,6 +1782,7 @@ function resetPositions(state: MatchState, possessionTeam: EntityTeam) {
     entity.actionCooldownMs = 0;
     entity.screenTargetId = null;
     entity.screenAnchor = { ...entity.pos };
+    entity.rollTarget = { ...entity.pos };
   }
 }
 
