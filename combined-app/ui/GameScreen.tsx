@@ -412,12 +412,12 @@ const CONTROL_CORNER_HINTS = [
   {
     keys: ['CLICK', 'P', 'L'],
     title: 'Lead pass',
-    detail: 'Pass into open space with Click or P, or hit L when the roller is diving to throw a lob.',
+    detail: 'Pass with Click or P, and press L only when your teammate is really sprinting at the rim for the lob.',
   },
   {
     keys: ['R'],
     title: 'Call pick and roll',
-    detail: 'Ask your teammate to come set the screen, then attack the lane or hit the roller.',
+    detail: 'Press R to call your teammate into the screen, then attack or hit the roll window.',
   },
   {
     keys: ['SHIFT'],
@@ -1534,15 +1534,15 @@ export default function GameScreen(props: GameScreenProps) {
   const currentMatchLabel = props.matchLabel ?? `${userDisplayName} vs ${aiDisplayName}`;
   const livePrimaryActionText = userOwnsBall(matchRef.current)
     ? props.settings.experimentalGameplay
-      ? 'Experimental gameplay is live: tap Call Pick and Roll or press R to bring your teammate over, then use Throw Lob or L when the roller dives. Space still handles jumpers and rim finishes.'
+      ? 'Experimental gameplay is live: press R to call the pick and roll, then press L only when your teammate is actually streaking to the rim. Space still handles jumpers and rim finishes.'
       : 'Primary action is hot: Space gives you a jumper by default, but if you drive all the way to the rim it now turns into a real dunk window while Click or P still throws a lead pass.'
     : props.settings.experimentalGameplay
-      ? 'Experimental gameplay is live: Space contests shots and rebounds, and once you win the ball back you can call the screen yourself instead of waiting on it.'
+      ? 'Experimental gameplay is live: Space contests shots and rebounds, and once you win the ball back you can press R to call the screen yourself.'
       : 'Primary action is defensive: Space contests shots and attacks rebounds while Click or P stays ready for the outlet pass.';
   const controlHints = props.settings.experimentalGameplay
     ? CONTROL_CORNER_HINTS.map((hint) =>
         hint.title === 'Lead pass'
-          ? { ...hint, detail: 'Lead passes near the rim can become lobs, and a rolling teammate can turn them into alley-oops.' }
+          ? { ...hint, detail: 'Press L for a lob only after the roller is really charging at the rim, otherwise stay with Click or P.' }
           : hint,
       )
     : CONTROL_CORNER_HINTS;
@@ -1554,7 +1554,7 @@ export default function GameScreen(props: GameScreenProps) {
         },
         {
           title: 'Throw lobs to space',
-          detail: 'Click or press P toward the rim when the roller is diving to unlock alley-oop chances instead of a flat pass.',
+          detail: 'Press L only once the roller is really driving toward the hoop, otherwise it stays a normal pass instead of forcing a lob.',
         },
         {
           title: 'Still own the timing battle',

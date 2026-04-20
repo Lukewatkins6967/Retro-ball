@@ -840,6 +840,14 @@ function lobWindowProfile(
   };
 }
 
+function isRunningToBasket(entity: Entity, basket: Vec2) {
+  const toBasket = normalize(sub(basket, entity.pos));
+  const moveDir = len2(entity.vel) > 24 ? normalize(entity.vel) : len2(entity.facing) > 0.01 ? normalize(entity.facing) : { x: 0, y: 0 };
+  const forwardAngle = dot(moveDir, toBasket);
+  const speed = len2(entity.vel);
+  return entity.rollMs > 0 && speed > 88 && forwardAngle > 0.58;
+}
+
 function applyExperimentalOffBallAction(
   state: MatchState,
   entity: Entity,
@@ -2269,12 +2277,13 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
       const receiverTarget = input.passTarget ? input.passTarget : receiver.pos;
         const passPlan = passOutcomeProfile(state, passer, receiver, receiverTarget, 'ai');
         const lobProfile = experimentalGameplay ? lobWindowProfile(state, passer, receiver, userBasket, 'ai', receiverTarget) : null;
+        const receiverRunningToBasket = isRunningToBasket(receiver, userBasket);
         const throwLob = Boolean(
           experimentalGameplay &&
             input.lobPressed &&
             lobProfile &&
             lobProfile.lobWindow > 0.52 &&
-            (receiver.rollMs > 0 || dist(receiverTarget, userBasket) < 156 || dist(receiver.pos, userBasket) < 144),
+            receiverRunningToBasket,
       );
       const interceptChance = throwLob ? Math.min(0.52, passPlan.interceptChance + 0.015) : passPlan.interceptChance;
       if (passPlan.interceptor && Math.random() < interceptChance) {
