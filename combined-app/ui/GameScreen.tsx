@@ -410,9 +410,14 @@ const CONTROL_CORNER_HINTS = [
     detail: 'Drive deep and hit Space to trigger the dunk window, or use it as your normal shot and defensive contest button.',
   },
   {
-    keys: ['CLICK', 'P'],
+    keys: ['CLICK', 'P', 'L'],
     title: 'Lead pass',
-    detail: 'Pass into open space to start fast breaks instead of forcing the ball straight at a teammate.',
+    detail: 'Pass into open space with Click or P, or hit L when the roller is diving to throw a lob.',
+  },
+  {
+    keys: ['R'],
+    title: 'Call pick and roll',
+    detail: 'Ask your teammate to come set the screen, then attack the lane or hit the roller.',
   },
   {
     keys: ['SHIFT'],
@@ -459,6 +464,14 @@ function userOwnsBall(match: MatchState | null) {
 function triggerPrimaryAction(match: MatchState | null, input: PlayerInput) {
   input.jumpPressed = true;
   if (userOwnsBall(match)) input.shootPressed = true;
+}
+
+function triggerCallScreen(input: PlayerInput) {
+  input.callScreenPressed = true;
+}
+
+function triggerLob(input: PlayerInput) {
+  input.lobPressed = true;
 }
 
 function buildHudSnapshot(state: MatchState): HudSnapshot {
@@ -633,6 +646,8 @@ export default function GameScreen(props: GameScreenProps) {
     shootPressed: false,
     passPressed: false,
     passTarget: undefined,
+    callScreenPressed: false,
+    lobPressed: false,
     dodgePressed: false,
     jumpPressed: false,
     karatePressed: false,
@@ -785,6 +800,8 @@ export default function GameScreen(props: GameScreenProps) {
           'KeyE',
           'KeyF',
           'KeyP',
+          'KeyR',
+          'KeyL',
         ].includes(e.code)
       ) {
         e.preventDefault();
@@ -795,9 +812,11 @@ export default function GameScreen(props: GameScreenProps) {
         return;
       }
       setMovementKey(e.code, true);
-      if (['Space', 'KeyP', 'ShiftLeft', 'ShiftRight', 'KeyQ', 'KeyE', 'KeyF'].includes(e.code) && e.repeat) return;
+      if (['Space', 'KeyP', 'ShiftLeft', 'ShiftRight', 'KeyQ', 'KeyE', 'KeyF', 'KeyR', 'KeyL'].includes(e.code) && e.repeat) return;
       if (e.code === 'Space') triggerPrimaryAction(matchRef.current, inputRef.current);
       if (e.code === 'KeyP') inputRef.current.passPressed = true;
+      if (e.code === 'KeyR') triggerCallScreen(inputRef.current);
+      if (e.code === 'KeyL') triggerLob(inputRef.current);
       if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') inputRef.current.dodgePressed = true;
       if (e.code === 'KeyQ') inputRef.current.jumpPressed = true;
       if (e.code === 'KeyE' || e.code === 'KeyF') inputRef.current.karatePressed = true;
@@ -851,12 +870,16 @@ export default function GameScreen(props: GameScreenProps) {
       const shootPressed = input.shootPressed;
       const passPressed = input.passPressed;
       const passTarget = input.passTarget;
+      const callScreenPressed = input.callScreenPressed;
+      const lobPressed = input.lobPressed;
       const dodgePressed = input.dodgePressed;
       const jumpPressed = input.jumpPressed;
       const karatePressed = input.karatePressed;
       input.shootPressed = false;
       input.passPressed = false;
       input.passTarget = undefined;
+      input.callScreenPressed = false;
+      input.lobPressed = false;
       input.dodgePressed = false;
       input.jumpPressed = false;
       input.karatePressed = false;
@@ -869,6 +892,8 @@ export default function GameScreen(props: GameScreenProps) {
           shootPressed,
           passPressed,
           passTarget,
+          callScreenPressed,
+          lobPressed,
           dodgePressed,
           jumpPressed,
           karatePressed,
@@ -1509,10 +1534,10 @@ export default function GameScreen(props: GameScreenProps) {
   const currentMatchLabel = props.matchLabel ?? `${userDisplayName} vs ${aiDisplayName}`;
   const livePrimaryActionText = userOwnsBall(matchRef.current)
     ? props.settings.experimentalGameplay
-      ? 'Experimental gameplay is live: Space still handles jumpers and rim finishes, while Click or P can turn a good lead pass into a lob or alley-oop once your teammate sets the screen and rolls.'
+      ? 'Experimental gameplay is live: tap Call Pick and Roll or press R to bring your teammate over, then use Throw Lob or L when the roller dives. Space still handles jumpers and rim finishes.'
       : 'Primary action is hot: Space gives you a jumper by default, but if you drive all the way to the rim it now turns into a real dunk window while Click or P still throws a lead pass.'
     : props.settings.experimentalGameplay
-      ? 'Experimental gameplay is live: Space contests shots and rebounds, and once you win the ball back your teammate will screen, roll, and open up lob windows.'
+      ? 'Experimental gameplay is live: Space contests shots and rebounds, and once you win the ball back you can call the screen yourself instead of waiting on it.'
       : 'Primary action is defensive: Space contests shots and attacks rebounds while Click or P stays ready for the outlet pass.';
   const controlHints = props.settings.experimentalGameplay
     ? CONTROL_CORNER_HINTS.map((hint) =>
@@ -1551,6 +1576,16 @@ export default function GameScreen(props: GameScreenProps) {
   const handleAbandon = () => {
     setOptionsOpen(false);
     props.onAbandon();
+  };
+
+  const handleCallScreen = () => {
+    unlockAudio();
+    triggerCallScreen(inputRef.current);
+  };
+
+  const handleThrowLob = () => {
+    unlockAudio();
+    triggerLob(inputRef.current);
   };
 
   return (
@@ -1705,6 +1740,16 @@ export default function GameScreen(props: GameScreenProps) {
               <div className="gameControlStatus">{hud?.controlledName ? `Control: ${hud.controlledName}` : 'Live control swap'}</div>
             </div>
             <div className="gameControlSubtext">{livePrimaryActionText}</div>
+            {props.settings.experimentalGameplay ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 14 }}>
+                <button className="btn btnSoft" style={{ padding: '12px 14px', fontWeight: 900 }} onClick={handleCallScreen}>
+                  Call Pick and Roll
+                </button>
+                <button className="btn btnSoft" style={{ padding: '12px 14px', fontWeight: 900 }} onClick={handleThrowLob}>
+                  Throw Lob
+                </button>
+              </div>
+            ) : null}
             <div className="gameControlGrid">
               {controlHints.map((hint) => (
                 <div key={hint.title} className="gameControlTile">

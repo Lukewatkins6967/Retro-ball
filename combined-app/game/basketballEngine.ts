@@ -126,6 +126,7 @@ export type MatchState = {
   playerStatsByEntityId: Record<string, PlayerInGameStats>;
   staminaByPlayerId: Record<string, number>;
   substitutionCooldownMs: Record<EntityTeam, number>;
+  experimentalPlayCooldownMs: Record<EntityTeam, number>;
   staminaPulseMs: number;
 };
 
@@ -138,6 +139,8 @@ export type PlayerInput = {
   shootPressed: boolean;
   passPressed: boolean;
   passTarget?: Vec2;
+  callScreenPressed: boolean;
+  lobPressed: boolean;
   dodgePressed: boolean;
   jumpPressed: boolean;
   karatePressed: boolean;
@@ -844,6 +847,7 @@ function applyExperimentalOffBallAction(
   defender: Entity | null,
   attackBasket: Vec2,
   speed: number,
+  allowNewScreen = true,
 ) {
   if (entity.id === ballHandler.id) return false;
 
@@ -875,7 +879,7 @@ function applyExperimentalOffBallAction(
     return true;
   }
 
-  if (!defender) return false;
+  if (!allowNewScreen || !defender) return false;
 
   const handlerPressure = clamp(1 - dist(defender.pos, ballHandler.pos) / 108, 0, 1);
   const screenWindow =
@@ -892,6 +896,10 @@ function applyExperimentalOffBallAction(
   if (len2(dir) > 0.01) entity.facing = dir;
   entity.vel = scale(dir, speed);
   return true;
+}
+
+function getOffBallTeammate(state: MatchState, team: EntityTeam, ballHandlerId: string) {
+  return state.entities.find((entity) => entity.team === team && entity.id !== ballHandlerId && isEntityAvailable(entity)) ?? null;
 }
 
 function ensureStatLine(state: MatchState, playerId: string) {
@@ -1076,6 +1084,7 @@ function cloneMatchState(state: MatchState): MatchState {
     ),
     staminaByPlayerId: { ...state.staminaByPlayerId },
     substitutionCooldownMs: { ...state.substitutionCooldownMs },
+    experimentalPlayCooldownMs: { ...state.experimentalPlayCooldownMs },
   };
 }
 
@@ -1408,6 +1417,8 @@ function buildAutoUserInput(state: MatchState): PlayerInput {
     shootPressed: false,
     passPressed: false,
     passTarget: undefined,
+    callScreenPressed: false,
+    lobPressed: false,
     dodgePressed: false,
     jumpPressed: false,
     karatePressed: false,
@@ -1522,6 +1533,17 @@ export function simulateRestOfMatch(state: MatchState): MatchResult {
     finalScore: { ...simState.score },
     playerStatsByEntityId: simState.playerStatsByEntityId,
   };
+}
+
+function buildManualScreenCall(state: MatchState, team: EntityTeam, ballHandler: Entity, attackBasket: Vec2, defenderTeam: EntityTeam) {
+  const screener = getOffBallTeammate(state, team, ballHandler.id);
+  if (!screener) return false;
+  const defender = closestOpponent(state, ballHandler.id, defenderTeam)?.entity ?? null;
+  if (!defender) return false;
+  const anchor = screenAnchorFor(state, ballHandler, screener, defender, attackBasket);
+  beginScreen(screener, defender.id, anchor);
+  addEvent(state, { tone: 'blue', text: 'PICK CALLED', x: screener.pos.x, y: screener.pos.y - 18 });
+  return true;
 }
 
 export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?: number; courtHeight?: number }): MatchState {
@@ -1684,6 +1706,7 @@ export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?
     playerStatsByEntityId: {},
     staminaByPlayerId,
     substitutionCooldownMs: { user: 0, ai: 0 },
+    experimentalPlayCooldownMs: { user: 0, ai: 0 },
     staminaPulseMs: 0,
   };
 
@@ -1775,6 +1798,8 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
   state.timeLeftMs = Math.max(0, state.timeLeftMs - dtMs);
   state.substitutionCooldownMs.user = Math.max(0, state.substitutionCooldownMs.user - dtMs);
   state.substitutionCooldownMs.ai = Math.max(0, state.substitutionCooldownMs.ai - dtMs);
+  state.experimentalPlayCooldownMs.user = Math.max(0, state.experimentalPlayCooldownMs.user - dtMs);
+  state.experimentalPlayCooldownMs.ai = Math.max(0, state.experimentalPlayCooldownMs.ai - dtMs);
   state.staminaPulseMs += dtMs;
   updateEntityTimers(state, dtMs);
 
@@ -1836,6 +1861,10 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
       if (input.karatePressed) attemptKarateMove(state, userControlled, 'ai');
     }
 
+    if (experimentalGameplay && input.callScreenPressed && userHasBall && ballPossessor) {
+      buildManualScreenCall(state, 'user', ballPossessor, userBasket, 'ai');
+    }
+
     for (const entity of state.entities) {
       if (entity.team !== 'user') continue;
       const profile = entitySkillBlend(state, entity);
@@ -1890,7 +1919,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
       if (experimentalGameplay && userHasBall && ballPossessor) {
         const onBallDefender = closestOpponent(state, ballPossessor.id, 'ai')?.entity ?? null;
         const screenSpeed = 148 * (0.46 + (profile.speed / 10) * 0.32 + (profile.playmaking / 10) * 0.18 + (profile.athleticism / 10) * 0.12) * staminaBoost * burst;
-        if (applyExperimentalOffBallAction(state, entity, ballPossessor, onBallDefender, userBasket, screenSpeed)) {
+        if (applyExperimentalOffBallAction(state, entity, ballPossessor, onBallDefender, userBasket, screenSpeed, false)) {
           continue;
         }
       }
@@ -2105,6 +2134,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
             lobTarget: { ...aiBasket },
           };
           addEvent(state, { tone: 'gold', text: 'LOB!', x: teammate.pos.x, y: teammate.pos.y });
+          state.experimentalPlayCooldownMs.ai = 4200 + Math.random() * 2200;
           entity.vel = { x: 0, y: 0 };
           continue;
         }
@@ -2154,7 +2184,12 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
           if (experimentalGameplay) {
             const onBallDefender = closestOpponent(state, carrier.id, 'user')?.entity ?? null;
             const screenSpeed = 156 * (0.44 + (profile.speed / 10) * 0.32 + (profile.playmaking / 10) * 0.14 + (profile.athleticism / 10) * 0.12) * staminaBoost * burst;
-            if (applyExperimentalOffBallAction(state, entity, carrier, onBallDefender, aiBasket, screenSpeed)) {
+            const allowAiScreen = state.experimentalPlayCooldownMs.ai <= 0 && Math.random() < 0.009 + Math.max(0, aiAggression - 1) * 0.008;
+            if (applyExperimentalOffBallAction(state, entity, carrier, onBallDefender, aiBasket, screenSpeed, allowAiScreen)) {
+              if (allowAiScreen && entity.screenMs > 0) {
+                state.experimentalPlayCooldownMs.ai = 3400 + Math.random() * 1800;
+                addEvent(state, { tone: 'blue', text: 'AI CALLS SCREEN', x: entity.pos.x, y: entity.pos.y - 18 });
+              }
               continue;
             }
           }
@@ -2227,18 +2262,19 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
     else if (owner) state.ball = createLooseBall(owner.pos, { x: (Math.random() - 0.5) * 150, y: (Math.random() - 0.5) * 150 }, { pickupDelayMs: 360, lastTouchTeam: owner.team, source: 'turnover' });
   }
 
-  if (input.passPressed && userHasBall && state.ball.kind === 'possession' && userControlled && ballPossessor?.id === userControlled.id) {
+  if ((input.passPressed || input.lobPressed) && userHasBall && state.ball.kind === 'possession' && userControlled && ballPossessor?.id === userControlled.id) {
     const passer = ballPossessor!;
     const receiver = state.entities.find((entity) => entity.team === 'user' && entity.id !== passer.id);
     if (receiver) {
       const receiverTarget = input.passTarget ? input.passTarget : receiver.pos;
-      const passPlan = passOutcomeProfile(state, passer, receiver, receiverTarget, 'ai');
-      const lobProfile = experimentalGameplay ? lobWindowProfile(state, passer, receiver, userBasket, 'ai', receiverTarget) : null;
-      const throwLob = Boolean(
-        experimentalGameplay &&
-          lobProfile &&
-          lobProfile.lobWindow > 0.74 &&
-          (receiver.rollMs > 0 || dist(receiverTarget, userBasket) < 132 || dist(receiver.pos, userBasket) < 124),
+        const passPlan = passOutcomeProfile(state, passer, receiver, receiverTarget, 'ai');
+        const lobProfile = experimentalGameplay ? lobWindowProfile(state, passer, receiver, userBasket, 'ai', receiverTarget) : null;
+        const throwLob = Boolean(
+          experimentalGameplay &&
+            input.lobPressed &&
+            lobProfile &&
+            lobProfile.lobWindow > 0.52 &&
+            (receiver.rollMs > 0 || dist(receiverTarget, userBasket) < 156 || dist(receiver.pos, userBasket) < 144),
       );
       const interceptChance = throwLob ? Math.min(0.52, passPlan.interceptChance + 0.015) : passPlan.interceptChance;
       if (passPlan.interceptor && Math.random() < interceptChance) {

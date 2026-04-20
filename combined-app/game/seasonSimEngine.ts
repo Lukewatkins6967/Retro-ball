@@ -96,7 +96,18 @@ function getClosestOpponent(pos: { x: number; y: number }, entities: Array<{ tea
 }
 
 function computeUserDecisionInput(match: any, nowMs: number, decisionState: { lastDecisionAt: number; cooldownMs: number }) {
-  const input: PlayerInput = { moveX: 0, moveY: 0, shootPressed: false, passPressed: false, passTarget: undefined };
+  const input: PlayerInput = {
+    moveX: 0,
+    moveY: 0,
+    shootPressed: false,
+    passPressed: false,
+    passTarget: undefined,
+    callScreenPressed: false,
+    lobPressed: false,
+    dodgePressed: false,
+    jumpPressed: false,
+    karatePressed: false,
+  };
 
   if (match.ball.kind !== 'possession') {
     // No control when not in possession.
