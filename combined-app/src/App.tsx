@@ -549,6 +549,13 @@ export default function App() {
         major: false,
         delta: 0.1,
       },
+      {
+        id: 'seed-49',
+        createdAt: Date.now() + 26,
+        description: 'Playoff stability pass: postseason matchups now advance the bracket more reliably, and tied live or simulated games automatically continue into overtime until there is a winner.',
+        major: false,
+        delta: 0.1,
+      },
     ];
 
     try {

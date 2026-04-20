@@ -17,6 +17,7 @@ type HudPlayer = {
 type HudSnapshot = {
   score: { user: number; ai: number };
   timeLabel: string;
+  overtimeLabel?: string;
   userActive: HudPlayer[];
   aiActive: HudPlayer[];
   userBench: HudPlayer[];
@@ -194,9 +195,11 @@ function getBallPos(state: MatchState): { x: number; y: number; zArc?: number } 
   if (ball.kind === 'pass') {
     const t = ball.duration ? Math.min(1, ball.t / ball.duration) : 0;
     const ease = t * (2 - t);
+    const zArc = ball.arcHeight > 0 ? Math.sin(t * Math.PI) * ball.arcHeight : 0;
     return {
       x: ball.start.x + (ball.end.x - ball.start.x) * ease,
       y: ball.start.y + (ball.end.y - ball.start.y) * ease,
+      zArc,
     };
   }
   if (ball.kind === 'shot') {
@@ -498,6 +501,7 @@ function buildHudSnapshot(state: MatchState): HudSnapshot {
   const seconds = Math.floor((state.timeLeftMs % 60000) / 1000)
     .toString()
     .padStart(2, '0');
+  const overtimeLabel = state.overtimeNumber > 0 ? `OT${state.overtimeNumber}` : undefined;
   const ballOwnerName =
     state.ball.kind === 'possession' ? state.entities.find((entity) => entity.id === state.ball.ownerId)?.name : undefined;
   const controlledName =
@@ -515,6 +519,7 @@ function buildHudSnapshot(state: MatchState): HudSnapshot {
   return {
     score: state.score,
     timeLabel: `${minutes}:${seconds}`,
+    overtimeLabel,
     userActive,
     aiActive,
     userBench,
@@ -992,7 +997,8 @@ export default function GameScreen(props: GameScreenProps) {
     const seconds = Math.floor((state.timeLeftMs % 60000) / 1000)
       .toString()
       .padStart(2, '0');
-    ctx.fillText(`Clock ${Math.floor(state.timeLeftMs / 60000)}:${seconds}`, 14, 48);
+    const overtimePrefix = state.overtimeNumber > 0 ? `OT${state.overtimeNumber} ` : '';
+    ctx.fillText(`Clock ${overtimePrefix}${Math.floor(state.timeLeftMs / 60000)}:${seconds}`, 14, 48);
     if (state.ball.kind === 'possession') {
       const owner = state.entities.find((entity) => entity.id === state.ball.ownerId);
       if (owner) {
@@ -1243,6 +1249,15 @@ export default function GameScreen(props: GameScreenProps) {
       ctx.fillStyle = '#fb7185';
       ctx.fillRect(entity.pos.x - 24, drawY - 39, 48 * healthRatio, 5);
 
+      if (entity.screenMs > 0 || entity.rollMs > 0) {
+        ctx.save();
+        ctx.font = '700 10px "Trebuchet MS", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = entity.screenMs > 0 ? 'rgba(255,245,157,0.94)' : 'rgba(153,246,228,0.94)';
+        ctx.fillText(entity.screenMs > 0 ? 'SCREEN' : 'ROLL', entity.pos.x, drawY - 47);
+        ctx.restore();
+      }
+
       if (entity.impactMs > 0) {
         ctx.strokeStyle = entity.team === 'user' ? 'rgba(90,174,255,0.42)' : 'rgba(255,107,107,0.42)';
         ctx.lineWidth = 5;
@@ -1463,6 +1478,7 @@ export default function GameScreen(props: GameScreenProps) {
       .padStart(2, '0');
     const owner = state.ball.kind === 'possession' ? state.entities.find((entity) => entity.id === state.ball.ownerId) : null;
     const possessionText = owner ? ` | BALL ${shortenLabel(owner.name.toUpperCase(), 16)}` : '';
+    const overtimePrefix = state.overtimeNumber > 0 ? `OT${state.overtimeNumber} ` : '';
 
     ctx.save();
     ctx.textAlign = 'center';
@@ -1475,7 +1491,7 @@ export default function GameScreen(props: GameScreenProps) {
     ctx.fillText(`${state.score.user} - ${state.score.ai}`, width / 2, scoreboardY + 44);
     ctx.font = '12px Trebuchet MS';
     ctx.fillStyle = 'rgba(226,232,240,0.88)';
-    ctx.fillText(`CLOCK ${Math.floor(state.timeLeftMs / 60000)}:${seconds}${possessionText}`, width / 2, scoreboardY + 63);
+    ctx.fillText(`CLOCK ${overtimePrefix}${Math.floor(state.timeLeftMs / 60000)}:${seconds}${possessionText}`, width / 2, scoreboardY + 63);
     ctx.restore();
     ctx.restore();
   }
@@ -1492,8 +1508,35 @@ export default function GameScreen(props: GameScreenProps) {
 
   const currentMatchLabel = props.matchLabel ?? `${userDisplayName} vs ${aiDisplayName}`;
   const livePrimaryActionText = userOwnsBall(matchRef.current)
-    ? 'Primary action is hot: Space gives you a jumper by default, but if you drive all the way to the rim it now turns into a real dunk window while Click or P still throws a lead pass.'
-    : 'Primary action is defensive: Space contests shots and attacks rebounds while Click or P stays ready for the outlet pass.';
+    ? props.settings.experimentalGameplay
+      ? 'Experimental gameplay is live: Space still handles jumpers and rim finishes, while Click or P can turn a good lead pass into a lob or alley-oop once your teammate sets the screen and rolls.'
+      : 'Primary action is hot: Space gives you a jumper by default, but if you drive all the way to the rim it now turns into a real dunk window while Click or P still throws a lead pass.'
+    : props.settings.experimentalGameplay
+      ? 'Experimental gameplay is live: Space contests shots and rebounds, and once you win the ball back your teammate will screen, roll, and open up lob windows.'
+      : 'Primary action is defensive: Space contests shots and attacks rebounds while Click or P stays ready for the outlet pass.';
+  const controlHints = props.settings.experimentalGameplay
+    ? CONTROL_CORNER_HINTS.map((hint) =>
+        hint.title === 'Lead pass'
+          ? { ...hint, detail: 'Lead passes near the rim can become lobs, and a rolling teammate can turn them into alley-oops.' }
+          : hint,
+      )
+    : CONTROL_CORNER_HINTS;
+  const howToPlaySteps = props.settings.experimentalGameplay
+    ? [
+        {
+          title: 'Use the screen window',
+          detail: 'Drag the defender into your teammate, then hit the roll lane before the help can recover.',
+        },
+        {
+          title: 'Throw lobs to space',
+          detail: 'Click or press P toward the rim when the roller is diving to unlock alley-oop chances instead of a flat pass.',
+        },
+        {
+          title: 'Still own the timing battle',
+          detail: 'Screens help, but Space timing and strong positioning still decide dunks, blocks, and late rebounds.',
+        },
+      ]
+    : HOW_TO_PLAY_STEPS;
 
   const handleSimulateRest = () => {
     const match = matchRef.current;
@@ -1537,7 +1580,7 @@ export default function GameScreen(props: GameScreenProps) {
               <span className="gameBroadcastMetaPill">{aiDisplayName}</span>
               {hud ? (
                 <>
-                  <span className="gameBroadcastMetaPill">{hud.timeLabel}</span>
+                  <span className="gameBroadcastMetaPill">{hud.overtimeLabel ? `${hud.overtimeLabel} ` : ''}{hud.timeLabel}</span>
                   <span className="gameBroadcastMetaPill">{hud.ballOwnerName ? `Ball: ${hud.ballOwnerName}` : 'Tip-off live'}</span>
                 </>
               ) : (
@@ -1663,7 +1706,7 @@ export default function GameScreen(props: GameScreenProps) {
             </div>
             <div className="gameControlSubtext">{livePrimaryActionText}</div>
             <div className="gameControlGrid">
-              {CONTROL_CORNER_HINTS.map((hint) => (
+              {controlHints.map((hint) => (
                 <div key={hint.title} className="gameControlTile">
                   <div className="gameControlKeys">
                     {hint.keys.map((key) => (
@@ -1681,7 +1724,7 @@ export default function GameScreen(props: GameScreenProps) {
             <div className="gameControlKicker">How To Play</div>
             <div className="gameControlTitle">Win The Floor Battle</div>
             <div className="gameHowToList">
-              {HOW_TO_PLAY_STEPS.map((step, index) => (
+              {howToPlaySteps.map((step, index) => (
                 <div key={step.title} className="gameHowToStep">
                   <div className="gameHowToIndex">0{index + 1}</div>
                   <div>

@@ -221,6 +221,12 @@ export default function SettingsPanel(props: {
                 description="Let the engine rotate fresh players automatically."
                 onChange={(value) => update('autoSubstitutions', value)}
               />
+              <ToggleRow
+                title="Experimental Gameplay"
+                value={props.settings.experimentalGameplay}
+                description="Turns on live test features like automatic screens, pick-and-roll reads, lob passes, and alley-oop finishes in non-sim games."
+                onChange={(value) => update('experimentalGameplay', value)}
+              />
               <SliderRow
                 title="Arcade vs Simulation Balance"
                 value={props.settings.arcadeBalance}

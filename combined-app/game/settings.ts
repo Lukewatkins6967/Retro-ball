@@ -11,6 +11,7 @@ export type GameSettings = {
   difficulty: DifficultyPreset;
   gameSpeed: GameSpeedPreset;
   autoSubstitutions: boolean;
+  experimentalGameplay: boolean;
   arcadeBalance: number;
   staminaImpact: StaminaImpactPreset;
   salaryCapStrictness: SalaryCapPreset;
@@ -27,6 +28,7 @@ export const defaultGameSettings: GameSettings = {
   difficulty: 'normal',
   gameSpeed: 'normal',
   autoSubstitutions: true,
+  experimentalGameplay: false,
   arcadeBalance: 58,
   staminaImpact: 'medium',
   salaryCapStrictness: 'hard',
@@ -53,6 +55,7 @@ export function normalizeGameSettings(raw: unknown): GameSettings {
     difficulty: asEnum(candidate.difficulty, defaultGameSettings.difficulty, ['easy', 'normal', 'hard', 'extreme']),
     gameSpeed: asEnum(candidate.gameSpeed, defaultGameSettings.gameSpeed, ['slow', 'normal', 'fast']),
     autoSubstitutions: typeof candidate.autoSubstitutions === 'boolean' ? candidate.autoSubstitutions : defaultGameSettings.autoSubstitutions,
+    experimentalGameplay: typeof candidate.experimentalGameplay === 'boolean' ? candidate.experimentalGameplay : defaultGameSettings.experimentalGameplay,
     arcadeBalance: clamp(Number.isFinite(candidate.arcadeBalance) ? Number(candidate.arcadeBalance) : defaultGameSettings.arcadeBalance, 0, 100),
     staminaImpact: asEnum(candidate.staminaImpact, defaultGameSettings.staminaImpact, ['low', 'medium', 'high']),
     salaryCapStrictness: asEnum(candidate.salaryCapStrictness, defaultGameSettings.salaryCapStrictness, ['soft', 'hard']),
@@ -187,4 +190,8 @@ export function getAiAggressionMultiplier(settings = getCurrentSettings()) {
 
 export function getVolumeScale(kind: 'sfx' | 'music', settings = getCurrentSettings()) {
   return (kind === 'sfx' ? settings.sfxVolume : settings.musicVolume) / 100;
+}
+
+export function isExperimentalGameplayEnabled(settings = getCurrentSettings()) {
+  return settings.experimentalGameplay;
 }

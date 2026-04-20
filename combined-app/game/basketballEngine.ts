@@ -1,7 +1,7 @@
 import type { PlayerInGameStats, TeamPlayer, TeamState } from './types';
 import { getPlayerGameplayModifiers, getTeamGameplayModifiers } from './personality';
 import { overallToTenScale } from './ratings';
-import { getAiAggressionMultiplier, getArcadeBalanceBias, getCurrentSettings, getDifficultyTuning } from './settings';
+import { getAiAggressionMultiplier, getArcadeBalanceBias, getCurrentSettings, getDifficultyTuning, isExperimentalGameplayEnabled } from './settings';
 import { chooseSubstitution, decayStamina, fatigueMultiplier, recoverBenchStamina } from './stamina';
 
 export type MatchStatus = 'running' | 'ended';
@@ -49,6 +49,8 @@ type Entity = {
   jumpMs: number;
   dunkMs: number;
   blockMs: number;
+  screenMs: number;
+  rollMs: number;
   dodgeMs: number;
   stunMs: number;
   impactMs: number;
@@ -57,6 +59,8 @@ type Entity = {
   health: number;
   maxHealth: number;
   healthRegenDelayMs: number;
+  screenTargetId: string | null;
+  screenAnchor: Vec2;
   categories: {
     shooting: number;
     speed: number;
@@ -77,6 +81,9 @@ type BallState =
       duration: number;
       passAccuracy: number;
       offset: Vec2;
+      arcHeight: number;
+      isLob?: boolean;
+      lobTarget?: Vec2;
     }
   | {
       kind: 'shot';
@@ -91,6 +98,7 @@ type BallState =
       hitChance: number;
       points: number;
       isDunk?: boolean;
+      isPoster?: boolean;
     }
   | {
       kind: 'loose';
@@ -111,6 +119,7 @@ export type MatchState = {
   ball: BallState;
   score: { user: number; ai: number };
   timeLeftMs: number;
+  overtimeNumber: number;
   resetTimerMs: number;
   lastScoringTeam: EntityTeam | null;
   events: MatchEvent[];
@@ -119,6 +128,9 @@ export type MatchState = {
   substitutionCooldownMs: Record<EntityTeam, number>;
   staminaPulseMs: number;
 };
+
+const REGULATION_LENGTH_MS = 120_000;
+const OVERTIME_LENGTH_MS = 45_000;
 
 export type PlayerInput = {
   moveX: number;
@@ -157,12 +169,20 @@ function normalize(v: Vec2): Vec2 {
   return { x: v.x / l, y: v.y / l };
 }
 
+function dot(a: Vec2, b: Vec2) {
+  return a.x * b.x + a.y * b.y;
+}
+
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
 function dist(a: Vec2, b: Vec2) {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function perpendicular(v: Vec2): Vec2 {
+  return { x: -v.y, y: v.x };
 }
 
 function clonePlayer(player: TeamPlayer): TeamPlayer {
@@ -314,6 +334,8 @@ function teamAverages(team: TeamState, state: MatchState) {
         jumpMs: 0,
         dunkMs: 0,
         blockMs: 0,
+        screenMs: 0,
+        rollMs: 0,
         dodgeMs: 0,
         stunMs: 0,
         impactMs: 0,
@@ -322,6 +344,8 @@ function teamAverages(team: TeamState, state: MatchState) {
         health: 10,
         maxHealth: 10,
         healthRegenDelayMs: 0,
+        screenTargetId: null,
+        screenAnchor: { x: 0, y: 0 },
         categories: { ...player.prospect.categories },
       });
       acc.shooting += profile.shooting * fatigue;
@@ -614,9 +638,77 @@ function blockRejectionVelocity(state: MatchState, blocker: Entity, shooter: Ent
   };
 }
 
+function insideFinishRating(profile: ReturnType<typeof entitySkillBlend>) {
+  return clamp(profile.size * 0.34 + profile.athleticism * 0.28 + profile.overall * 0.18 + profile.speed * 0.12 + profile.shooting * 0.08, 1, 10);
+}
+
+function jumpContestTimingScore(jumpMs: number) {
+  if (!jumpMs) return 0;
+  const total = 420;
+  const progress = 1 - clamp(jumpMs / total, 0, 1);
+  return clamp(1 - Math.abs(progress - 0.34) / 0.42, 0, 1);
+}
+
+function rimContestProfile(state: MatchState, attacker: Entity, defender: Entity, basket: Vec2) {
+  const attackToBasket = normalize(sub(basket, attacker.pos));
+  const attackerToDefender = normalize(sub(defender.pos, attacker.pos));
+  const attackerDistance = dist(attacker.pos, defender.pos);
+  const lanePoint = projectPointToSegment(defender.pos, attacker.pos, basket);
+  const laneDistance = dist(defender.pos, lanePoint.point);
+  const defenderProfile = entitySkillBlend(state, defender);
+  const defenderPlayer = findPlayer(state[defender.team], defender.id);
+  const defenderMods = defenderPlayer ? getPlayerGameplayModifiers(defenderPlayer, state[defender.team], liveGameContext(state)) : null;
+  const defenderTeamMods = getTeamGameplayModifiers(state[defender.team]);
+  const lineUp = clamp(1 - laneDistance / 44, 0, 1);
+  const frontAngle = clamp((dot(attackerToDefender, attackToBasket) + 1) / 2, 0, 1);
+  const rimDepth = clamp(1 - dist(defender.pos, basket) / 92, 0, 1);
+  const bodyUp = clamp(1 - attackerDistance / 64, 0, 1);
+  const blockCloseness = clamp(1 - attackerDistance / 52, 0, 1);
+  const jumpTiming = jumpContestTimingScore(defender.jumpMs);
+  const anticipation = clamp(0.02 + (defenderMods?.reactionBoost ?? 0) * 0.26 + defenderTeamMods.reactionBoost * 0.18 + jumpTiming * 0.14, 0, 0.24);
+  const blockPositioning = clamp(blockCloseness * 0.42 + lineUp * 0.3 + frontAngle * 0.16 + rimDepth * 0.12, 0, 1.6);
+  const contestWindow = clamp(
+    lineUp * 0.28 +
+      frontAngle * 0.24 +
+      rimDepth * 0.16 +
+      bodyUp * 0.08 +
+      (defenderProfile.defense / 10) * 0.22 +
+      (defenderProfile.size / 10) * 0.16 +
+      (defenderProfile.athleticism / 10) * 0.12 +
+      anticipation,
+    0,
+    1.8,
+  );
+  return { lineUp, frontAngle, rimDepth, bodyUp, blockCloseness, jumpTiming, blockPositioning, contestWindow, defenderProfile };
+}
+
+function posterFinishProfile(state: MatchState, attacker: Entity, defender: Entity, basket: Vec2) {
+  const attackerProfile = entitySkillBlend(state, attacker);
+  const attackerPlayer = findPlayer(state[attacker.team], attacker.id);
+  const attackerMods = attackerPlayer ? getPlayerGameplayModifiers(attackerPlayer, state[attacker.team], liveGameContext(state)) : null;
+  const contest = rimContestProfile(state, attacker, defender, basket);
+  const powerFinish = insideFinishRating(attackerProfile);
+  const heightEdge = clamp((attackerProfile.size - contest.defenderProfile.size) / 10, -0.45, 0.45);
+  const powerEdge = clamp((powerFinish - insideFinishRating(contest.defenderProfile)) / 10, -0.45, 0.45);
+  const posterWindow = clamp(
+    (powerFinish / 10) * 0.44 +
+      Math.max(0, heightEdge) * 0.22 +
+      Math.max(0, powerEdge) * 0.18 +
+      contest.bodyUp * 0.16 +
+      contest.lineUp * 0.12 +
+      (attackerMods?.shotBoost ?? 0) * 0.22 -
+      (contest.defenderProfile.defense / 10) * 0.12,
+    0,
+    1.5,
+  );
+  return { powerFinish, heightEdge, powerEdge, posterWindow, contest, attackerProfile };
+}
+
 function dunkWindowProfile(state: MatchState, entity: Entity, basket: Vec2, defenderTeam: EntityTeam) {
   const defender = closestOpponent(state, entity.id, defenderTeam);
   const profile = entitySkillBlend(state, entity);
+  const insideFinish = insideFinishRating(profile);
+  const defenderProfile = defender?.entity ? entitySkillBlend(state, defender.entity) : null;
   const distance = dist(entity.pos, basket);
   const pressure = clamp(1 - (defender?.d ?? 132) / 104, 0, 1);
   const laneTraffic = laneTrafficScore(state, entity.pos, basket, defenderTeam, entity.id);
@@ -632,6 +724,7 @@ function dunkWindowProfile(state: MatchState, entity: Entity, basket: Vec2, defe
     0,
     1,
   );
+  const heightEdge = clamp(((profile.size - (defenderProfile?.size ?? 5)) / 10 + 0.4), 0, 1);
   const windowScore = clamp(
     (1 - distance / 148) * 0.64 +
       (1 - pressure) * 0.18 +
@@ -639,7 +732,9 @@ function dunkWindowProfile(state: MatchState, entity: Entity, basket: Vec2, defe
       facingScore * 0.08 +
       movingScore * 0.08 +
       speedScore * 0.1 +
-      athleteScore * 0.16,
+      athleteScore * 0.16 +
+      (insideFinish / 10) * 0.14 +
+      heightEdge * 0.1,
     0,
     1.6,
   );
@@ -649,9 +744,154 @@ function dunkWindowProfile(state: MatchState, entity: Entity, basket: Vec2, defe
     distance,
     pressure,
     laneTraffic,
-    canDunk: distance < 138 && pressure < 0.78 && laneTraffic < 1.08 && facingScore > 0.38,
+    canDunk: distance < 142 && pressure < 0.82 && laneTraffic < 1.12 && facingScore > 0.34 && (insideFinish > 5.1 || athleteScore > 0.54),
     windowScore,
+    insideFinish,
   };
+}
+
+function beginScreen(entity: Entity, targetId: string, anchor: Vec2) {
+  entity.screenMs = Math.max(entity.screenMs, 760);
+  entity.rollMs = 0;
+  entity.screenTargetId = targetId;
+  entity.screenAnchor = { ...anchor };
+}
+
+function beginRoll(entity: Entity) {
+  entity.screenMs = 0;
+  entity.screenTargetId = null;
+  entity.rollMs = Math.max(entity.rollMs, 1380);
+}
+
+function screenAnchorFor(state: MatchState, ballHandler: Entity, screener: Entity, defender: Entity | null, basket: Vec2) {
+  const attackDirRaw = normalize(sub(basket, ballHandler.pos));
+  const attackDir = len2(attackDirRaw) > 0.01 ? attackDirRaw : { x: basket.x >= ballHandler.pos.x ? 1 : -1, y: 0 };
+  const shoulderDir = normalize(perpendicular(attackDir));
+  const sideBias = defender ? Math.sign(defender.pos.y - ballHandler.pos.y) || (screener.slotIndex === 0 ? -1 : 1) : screener.slotIndex === 0 ? -1 : 1;
+  const base = defender
+    ? { x: lerp(ballHandler.pos.x, defender.pos.x, 0.58), y: lerp(ballHandler.pos.y, defender.pos.y, 0.58) }
+    : add(ballHandler.pos, scale(attackDir, 18));
+  return courtClampPosition(
+    state,
+    add(
+      add(base, scale(shoulderDir, sideBias * 16)),
+      scale(attackDir, -6),
+    ),
+  );
+}
+
+function screenReleaseTargetFor(state: MatchState, screener: Entity, ballHandler: Entity, basket: Vec2) {
+  const profile = entitySkillBlend(state, screener);
+  const approachSign = screener.team === 'user' ? -1 : 1;
+  const sideBias = screener.screenAnchor.y >= state.court.height * 0.5 ? 1 : -1;
+  const popWindow = profile.shooting * 0.44 + profile.playmaking * 0.18;
+  const rollWindow = insideFinishRating(profile) * 0.56 + profile.rebounding * 0.18 + profile.athleticism * 0.18 + profile.size * 0.08;
+  if (popWindow > rollWindow + 0.55) {
+    return courtClampPosition(state, {
+      x: basket.x + approachSign * 92,
+      y: clamp(ballHandler.pos.y + sideBias * 76, 82, state.court.height - 82),
+    });
+  }
+  return courtClampPosition(state, {
+    x: basket.x + approachSign * 30,
+    y: clamp(lerp(ballHandler.pos.y, basket.y, 0.72) + sideBias * 34, 84, state.court.height - 84),
+  });
+}
+
+function lobWindowProfile(
+  state: MatchState,
+  passer: Entity,
+  receiver: Entity,
+  basket: Vec2,
+  defenderTeam: EntityTeam,
+  receiverTarget: Vec2,
+) {
+  const passerProfile = entitySkillBlend(state, passer);
+  const receiverProfile = entitySkillBlend(state, receiver);
+  const dunkWindow = dunkWindowProfile(state, receiver, basket, defenderTeam);
+  const receiverDefender = closestTeamToPoint(state, receiver.pos, defenderTeam, passer.id);
+  const rimDistance = Math.min(dist(receiver.pos, basket), dist(receiverTarget, basket));
+  const receiverPressure = clamp(1 - (receiverDefender?.d ?? 146) / 112, 0, 1);
+  const airspace = clamp(1 - laneTrafficScore(state, passer.pos, basket, defenderTeam, passer.id) / 1.35, 0, 1);
+  const passerTouch = clamp((passerProfile.playmaking * 0.58 + passerProfile.hands * 0.2 + passerProfile.overall * 0.22) / 10, 0, 1.15);
+  const catchTouch = clamp((insideFinishRating(receiverProfile) * 0.42 + receiverProfile.hands * 0.18 + receiverProfile.athleticism * 0.22 + receiverProfile.size * 0.18) / 10, 0, 1.2);
+  const rollBoost = receiver.rollMs > 0 ? 0.22 : 0;
+  const catchWindow = clamp(1 - rimDistance / 154, 0, 1);
+  const lobWindow = clamp(
+    catchWindow * 0.34 +
+      (dunkWindow.windowScore / 1.6) * 0.34 +
+      airspace * 0.14 +
+      passerTouch * 0.12 +
+      catchTouch * 0.14 +
+      rollBoost -
+      receiverPressure * 0.16,
+    0,
+    1.5,
+  );
+  return {
+    rimDistance,
+    receiverPressure,
+    lobWindow,
+    dunkWindow,
+    arcHeight: clamp(54 + (1 - clamp(dist(passer.pos, receiver.pos) / 340, 0, 1)) * 26 + rollBoost * 48, 54, 92),
+  };
+}
+
+function applyExperimentalOffBallAction(
+  state: MatchState,
+  entity: Entity,
+  ballHandler: Entity,
+  defender: Entity | null,
+  attackBasket: Vec2,
+  speed: number,
+) {
+  if (entity.id === ballHandler.id) return false;
+
+  if (entity.screenMs > 0) {
+    entity.screenAnchor = screenAnchorFor(state, ballHandler, entity, defender, attackBasket);
+    const anchor = entity.screenAnchor;
+    const anchorDist = dist(entity.pos, anchor);
+    if (anchorDist > 18) {
+      const dir = normalize(sub(anchor, entity.pos));
+      if (len2(dir) > 0.01) entity.facing = dir;
+      entity.vel = scale(dir, speed * (anchorDist > 54 ? 1.06 : 0.72));
+    } else {
+      const faceTarget = defender?.pos ?? ballHandler.pos;
+      const dir = normalize(sub(faceTarget, entity.pos));
+      if (len2(dir) > 0.01) entity.facing = dir;
+      entity.vel = scale(entity.vel, 0.2);
+    }
+    if (entity.screenMs <= 160 || dist(ballHandler.pos, attackBasket) < 128) {
+      beginRoll(entity);
+    }
+    return true;
+  }
+
+  if (entity.rollMs > 0) {
+    const releaseTarget = screenReleaseTargetFor(state, entity, ballHandler, attackBasket);
+    const dir = normalize(sub(releaseTarget, entity.pos));
+    if (len2(dir) > 0.01) entity.facing = dir;
+    entity.vel = scale(dir, dist(entity.pos, releaseTarget) < 18 ? speed * 0.44 : speed * 1.08);
+    return true;
+  }
+
+  if (!defender) return false;
+
+  const handlerPressure = clamp(1 - dist(defender.pos, ballHandler.pos) / 108, 0, 1);
+  const screenWindow =
+    dist(ballHandler.pos, attackBasket) > 118 &&
+    dist(ballHandler.pos, attackBasket) < 320 &&
+    dist(entity.pos, ballHandler.pos) < 248 &&
+    handlerPressure > 0.14;
+
+  if (!screenWindow) return false;
+
+  const anchor = screenAnchorFor(state, ballHandler, entity, defender, attackBasket);
+  beginScreen(entity, defender.id, anchor);
+  const dir = normalize(sub(anchor, entity.pos));
+  if (len2(dir) > 0.01) entity.facing = dir;
+  entity.vel = scale(dir, speed);
+  return true;
 }
 
 function ensureStatLine(state: MatchState, playerId: string) {
@@ -667,6 +907,8 @@ function applyEntityPlayer(entity: Entity, player: TeamPlayer) {
   entity.jumpMs = 0;
   entity.dunkMs = 0;
   entity.blockMs = 0;
+  entity.screenMs = 0;
+  entity.rollMs = 0;
   entity.dodgeMs = 0;
   entity.stunMs = 0;
   entity.impactMs = 0;
@@ -675,6 +917,8 @@ function applyEntityPlayer(entity: Entity, player: TeamPlayer) {
   entity.maxHealth = 10;
   entity.health = entity.maxHealth;
   entity.healthRegenDelayMs = 0;
+  entity.screenTargetId = null;
+  entity.screenAnchor = { ...entity.pos };
 }
 
 function closeGameIntensity(state: MatchState) {
@@ -788,6 +1032,9 @@ function cloneBallState(ball: BallState): BallState {
       duration: ball.duration,
       passAccuracy: ball.passAccuracy,
       offset: { ...ball.offset },
+      arcHeight: ball.arcHeight,
+      isLob: ball.isLob,
+      lobTarget: ball.lobTarget ? { ...ball.lobTarget } : undefined,
     };
   }
   return {
@@ -803,6 +1050,7 @@ function cloneBallState(ball: BallState): BallState {
     hitChance: ball.hitChance,
     points: ball.points,
     isDunk: ball.isDunk,
+    isPoster: ball.isPoster,
   };
 }
 
@@ -817,6 +1065,7 @@ function cloneMatchState(state: MatchState): MatchState {
       vel: { ...entity.vel },
       facing: { ...entity.facing },
       dashDir: { ...entity.dashDir },
+      screenAnchor: { ...entity.screenAnchor },
       categories: { ...entity.categories },
     })),
     ball: cloneBallState(state.ball),
@@ -889,6 +1138,9 @@ function beginDunk(state: MatchState, entity: Entity, basket: Vec2) {
   }
   entity.jumpMs = Math.max(entity.jumpMs, 460);
   entity.dunkMs = Math.max(entity.dunkMs, 360);
+  entity.screenMs = 0;
+  entity.rollMs = 0;
+  entity.screenTargetId = null;
   entity.impactMs = Math.max(entity.impactMs, 220);
   entity.actionCooldownMs = Math.max(entity.actionCooldownMs, 320);
   drainPlayerStamina(state, entity, 1.8);
@@ -1003,6 +1255,8 @@ function updateEntityTimers(state: MatchState, dtMs: number) {
     entity.jumpMs = Math.max(0, entity.jumpMs - dtMs);
     entity.dunkMs = Math.max(0, entity.dunkMs - dtMs);
     entity.blockMs = Math.max(0, entity.blockMs - dtMs);
+    entity.screenMs = Math.max(0, entity.screenMs - dtMs);
+    entity.rollMs = Math.max(0, entity.rollMs - dtMs);
     entity.dodgeMs = Math.max(0, entity.dodgeMs - dtMs);
     entity.stunMs = Math.max(0, entity.stunMs - dtMs);
     entity.impactMs = Math.max(0, entity.impactMs - dtMs);
@@ -1018,10 +1272,14 @@ function updateEntityTimers(state: MatchState, dtMs: number) {
     if (!entity.koMs && entity.healthRegenDelayMs === 0 && entity.health < entity.maxHealth) {
       entity.health = clamp(entity.health + dtMs / 1800, 0, entity.maxHealth);
     }
+    if (entity.screenMs === 0) {
+      entity.screenTargetId = null;
+    }
   }
 }
 
 function resolveEntityCollisions(state: MatchState) {
+  const experimentalGameplay = isExperimentalGameplayEnabled();
   for (let i = 0; i < state.entities.length; i += 1) {
     for (let j = i + 1; j < state.entities.length; j += 1) {
       const a = state.entities[i];
@@ -1044,6 +1302,28 @@ function resolveEntityCollisions(state: MatchState) {
           owner.vel = scale(owner.vel, 0.88);
           owner.impactMs = Math.max(owner.impactMs, 90);
           defender.impactMs = Math.max(defender.impactMs, 110);
+        }
+      }
+
+      if (experimentalGameplay && state.ball.kind === 'possession' && a.team !== b.team) {
+        const screener = state.ball.ownerId === a.id || state.ball.ownerId === b.id ? null : a.screenMs > 0 ? a : b.screenMs > 0 ? b : null;
+        const defender = screener === a ? b : screener === b ? a : null;
+        if (screener && defender && (screener.screenTargetId == null || screener.screenTargetId === defender.id)) {
+          const toScreen = normalize(sub(screener.pos, defender.pos));
+          const defenderDir = len2(defender.vel) > 0.01 ? normalize(defender.vel) : toScreen;
+          const hitAngle = dot(defenderDir, toScreen);
+          if (hitAngle > 0.12) {
+            const screenerProfile = entitySkillBlend(state, screener);
+            const defenderProfile = entitySkillBlend(state, defender);
+            const bodyStonewall = clamp(0.18 + (screenerProfile.size / 10) * 0.18 + (screenerProfile.defense / 10) * 0.08, 0.18, 0.48);
+            const slipRate = clamp(0.56 - (defenderProfile.speed / 10) * 0.18 - (defenderProfile.defense / 10) * 0.14, 0.18, 0.48);
+            defender.vel = scale(defender.vel, Math.min(bodyStonewall, slipRate));
+            defender.stunMs = Math.max(defender.stunMs, 110 + screenerProfile.size * 8 + screenerProfile.defense * 5);
+            defender.impactMs = Math.max(defender.impactMs, 180);
+            screener.impactMs = Math.max(screener.impactMs, 130);
+            beginRoll(screener);
+            addEvent(state, { tone: 'blue', text: 'SCREEN HIT', x: screener.pos.x, y: screener.pos.y - 18 });
+          }
         }
       }
     }
@@ -1223,7 +1503,7 @@ function buildAutoUserInput(state: MatchState): PlayerInput {
 
 export function simulateRestOfMatch(state: MatchState): MatchResult {
   const simState = cloneMatchState(state);
-  const maxTicks = 2400;
+  const maxTicks = 4800;
   for (let tick = 0; tick < maxTicks; tick += 1) {
     const result = updateMatch(simState, buildAutoUserInput(simState), 80);
     if ((result as MatchResult).status === 'ended') {
@@ -1231,7 +1511,11 @@ export function simulateRestOfMatch(state: MatchState): MatchResult {
     }
   }
 
-  const winner = simState.score.user === simState.score.ai ? 'draw' : simState.score.user > simState.score.ai ? 'user' : 'ai';
+  if (simState.score.user === simState.score.ai) {
+    if (Math.random() < 0.5) simState.score.user += 2;
+    else simState.score.ai += 2;
+  }
+  const winner = simState.score.user > simState.score.ai ? 'user' : 'ai';
   return {
     status: 'ended',
     winner,
@@ -1270,6 +1554,8 @@ export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?
       jumpMs: 0,
       dunkMs: 0,
       blockMs: 0,
+      screenMs: 0,
+      rollMs: 0,
       dodgeMs: 0,
       stunMs: 0,
       impactMs: 0,
@@ -1278,6 +1564,8 @@ export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?
       health: 10,
       maxHealth: 10,
       healthRegenDelayMs: 0,
+      screenTargetId: null,
+      screenAnchor: { x: 0, y: 0 },
       categories: { ...userBall.prospect.categories },
     },
     {
@@ -1296,6 +1584,8 @@ export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?
       jumpMs: 0,
       dunkMs: 0,
       blockMs: 0,
+      screenMs: 0,
+      rollMs: 0,
       dodgeMs: 0,
       stunMs: 0,
       impactMs: 0,
@@ -1304,6 +1594,8 @@ export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?
       health: 10,
       maxHealth: 10,
       healthRegenDelayMs: 0,
+      screenTargetId: null,
+      screenAnchor: { x: 0, y: 0 },
       categories: { ...userOff.prospect.categories },
     },
     {
@@ -1322,6 +1614,8 @@ export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?
       jumpMs: 0,
       dunkMs: 0,
       blockMs: 0,
+      screenMs: 0,
+      rollMs: 0,
       dodgeMs: 0,
       stunMs: 0,
       impactMs: 0,
@@ -1330,6 +1624,8 @@ export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?
       health: 10,
       maxHealth: 10,
       healthRegenDelayMs: 0,
+      screenTargetId: null,
+      screenAnchor: { x: 0, y: 0 },
       categories: { ...aiBall.prospect.categories },
     },
     {
@@ -1348,6 +1644,8 @@ export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?
       jumpMs: 0,
       dunkMs: 0,
       blockMs: 0,
+      screenMs: 0,
+      rollMs: 0,
       dodgeMs: 0,
       stunMs: 0,
       impactMs: 0,
@@ -1356,6 +1654,8 @@ export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?
       health: 10,
       maxHealth: 10,
       healthRegenDelayMs: 0,
+      screenTargetId: null,
+      screenAnchor: { x: 0, y: 0 },
       categories: { ...aiOff.prospect.categories },
     },
   ];
@@ -1376,7 +1676,8 @@ export function createMatch(user: TeamState, ai: TeamState, opts?: { courtWidth?
     entities,
     ball: { kind: 'possession', ownerId: userBall.id },
     score: { user: 0, ai: 0 },
-    timeLeftMs: 120_000,
+    timeLeftMs: REGULATION_LENGTH_MS,
+    overtimeNumber: 0,
     resetTimerMs: 0,
     lastScoringTeam: null,
     events: [],
@@ -1431,16 +1732,41 @@ function resetPositions(state: MatchState, possessionTeam: EntityTeam) {
     entity.jumpMs = 0;
     entity.dunkMs = 0;
     entity.blockMs = 0;
+    entity.screenMs = 0;
+    entity.rollMs = 0;
     entity.dodgeMs = 0;
     entity.stunMs = 0;
     entity.impactMs = 0;
     entity.actionCooldownMs = 0;
+    entity.screenTargetId = null;
+    entity.screenAnchor = { ...entity.pos };
   }
+}
+
+function startOvertime(state: MatchState) {
+  state.overtimeNumber += 1;
+  state.timeLeftMs = OVERTIME_LENGTH_MS;
+  state.resetTimerMs = 0;
+  state.lastScoringTeam = null;
+  const possessionTeam: EntityTeam = state.overtimeNumber % 2 === 1 ? 'user' : 'ai';
+  resetPositions(state, possessionTeam);
+  const candidates = state.entities
+    .filter((entity) => entity.team === possessionTeam && isEntityAvailable(entity))
+    .sort((a, b) => b.categories.playmaking - a.categories.playmaking);
+  const owner = candidates[0] ?? null;
+  if (owner) state.ball = { kind: 'possession', ownerId: owner.id };
+  addEvent(state, {
+    tone: 'gold',
+    text: `OVERTIME ${state.overtimeNumber}`,
+    x: state.court.width * 0.5,
+    y: state.court.height * 0.22,
+  });
 }
 
 export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number): MatchState | MatchResult {
   if (state.status !== 'running') {
-    return { status: 'ended', winner: 'draw', finalScore: state.score, playerStatsByEntityId: state.playerStatsByEntityId };
+    const winner = state.score.user === state.score.ai ? 'draw' : state.score.user > state.score.ai ? 'user' : 'ai';
+    return { status: 'ended', winner, finalScore: state.score, playerStatsByEntityId: state.playerStatsByEntityId };
   }
 
   const now = performance.now();
@@ -1459,8 +1785,12 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
     state.staminaPulseMs -= 1000;
   }
 
-  if (state.timeLeftMs <= 0 || state.score.user >= 21 || state.score.ai >= 21) {
-    const winner = state.score.user === state.score.ai ? 'draw' : state.score.user > state.score.ai ? 'user' : 'ai';
+  if (state.timeLeftMs <= 0 && state.score.user === state.score.ai) {
+    startOvertime(state);
+  }
+
+  if ((state.timeLeftMs <= 0 && state.score.user !== state.score.ai) || state.score.user >= 21 || state.score.ai >= 21) {
+    const winner = state.score.user > state.score.ai ? 'user' : 'ai';
     state.status = 'ended';
     return { status: 'ended', winner, finalScore: state.score, playerStatsByEntityId: state.playerStatsByEntityId };
   }
@@ -1495,6 +1825,10 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
     const move = normalize({ x: input.moveX, y: input.moveY });
     const userControlled = getControlledUserEntity(state);
     const liveBallPos = ballPosition(state);
+    const experimentalGameplay = isExperimentalGameplayEnabled();
+    const basketTargetMap = basketTargets(state);
+    const aiBasket = basketTargetMap.ai;
+    const userBasket = basketTargetMap.user;
 
     if (userControlled) {
       if (input.jumpPressed) beginJump(state, userControlled);
@@ -1544,7 +1878,22 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
         continue;
       }
 
+      if (experimentalGameplay && entity.rollMs > 0 && state.ball.kind === 'pass' && state.ball.receiverId === entity.id) {
+        const releaseTarget = state.ball.lobTarget ?? userBasket;
+        const dir = normalize(sub(releaseTarget, entity.pos));
+        if (len2(dir) > 0.01) entity.facing = dir;
+        entity.vel = scale(dir, 176 * (0.44 + (profile.speed / 10) * 0.3 + (profile.athleticism / 10) * 0.18 + (profile.playmaking / 10) * 0.12) * staminaBoost * burst);
+        continue;
+      }
+
       const homeY = state.court.height * 0.5 + (entity.slotIndex === 0 ? -88 : 88);
+      if (experimentalGameplay && userHasBall && ballPossessor) {
+        const onBallDefender = closestOpponent(state, ballPossessor.id, 'ai')?.entity ?? null;
+        const screenSpeed = 148 * (0.46 + (profile.speed / 10) * 0.32 + (profile.playmaking / 10) * 0.18 + (profile.athleticism / 10) * 0.12) * staminaBoost * burst;
+        if (applyExperimentalOffBallAction(state, entity, ballPossessor, onBallDefender, userBasket, screenSpeed)) {
+          continue;
+        }
+      }
       const supportTarget = userHasBall
         ? { x: clamp(liveBallPos.x - 110, state.court.width * 0.56, state.court.width - 100), y: homeY }
         : { x: clamp(liveBallPos.x + 36, state.court.width * 0.5, state.court.width - 100), y: liveBallPos.y + (entity.slotIndex === 0 ? -52 : 52) };
@@ -1560,9 +1909,6 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
     const difficulty = getDifficultyTuning();
     const aiAggression = Math.max(0.78, getAiAggressionMultiplier() + difficulty.aiAggressionBoost);
     const arcadeBias = getArcadeBalanceBias();
-    const basketTargetMap = basketTargets(state);
-    const aiBasket = basketTargetMap.ai;
-    const userBasket = basketTargetMap.user;
     const availableAI = state.entities.filter((entity) => entity.team === 'ai' && isEntityAvailable(entity));
     const availableUser = state.entities.filter((entity) => entity.team === 'user' && isEntityAvailable(entity));
     const aiLooseBallHunterId =
@@ -1587,6 +1933,14 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
       }
       if (entity.stunMs > 0) {
         entity.vel = scale(entity.vel, 0.8);
+        continue;
+      }
+
+      if (experimentalGameplay && entity.rollMs > 0 && state.ball.kind === 'pass' && state.ball.receiverId === entity.id) {
+        const releaseTarget = state.ball.lobTarget ?? aiBasket;
+        const dir = normalize(sub(releaseTarget, entity.pos));
+        if (len2(dir) > 0.01) entity.facing = dir;
+        entity.vel = scale(dir, 180 * (0.44 + (profile.speed / 10) * 0.3 + (profile.athleticism / 10) * 0.18 + (profile.playmaking / 10) * 0.12) * staminaBoost * burst);
         continue;
       }
 
@@ -1624,6 +1978,9 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
         const teammateShotQuality = teammate ? shotQualityScore(state, teammate, aiBasket, 'user') : 0;
         const passWindow = teammate ? passWindowScore(state, entity, teammate, 'user') : 0;
         const dunkWindow = dunkWindowProfile(state, entity, aiBasket, 'user');
+        const rimContest = nearUser ? rimContestProfile(state, entity, nearUser.entity, aiBasket) : null;
+        const posterFinish = nearUser ? posterFinishProfile(state, entity, nearUser.entity, aiBasket) : null;
+        const lobProfile = experimentalGameplay && teammate ? lobWindowProfile(state, entity, teammate, aiBasket, 'user', teammate.pos) : null;
         const driveTarget = {
           x: aiBasket.x + 28,
           y: clamp(
@@ -1642,7 +1999,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
         const driveTraffic = laneTrafficScore(state, entity.pos, driveTarget, 'user', entity.id);
         const dunkIntent =
           dunkWindow.canDunk &&
-          (dunkWindow.distance < 108 || (dunkWindow.windowScore > 0.84 && pressure < 0.6)) &&
+          (dunkWindow.distance < 118 || (dunkWindow.windowScore > 0.76 && pressure < 0.72)) &&
           Math.random() < (0.016 + dunkWindow.windowScore * 0.02) * (0.94 + aiAggression * 0.12 + arcadeBias * 0.08);
         const shootIntent =
           d < 320 &&
@@ -1654,6 +2011,12 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
           passWindow > 0.32 &&
           (teammateShotQuality > selfShotQuality + 0.1 || (pressure > 0.48 && driveTraffic > 0.72) || (aiLowShooting > 0.25 && teammateShotQuality >= selfShotQuality)) &&
           Math.random() < 0.004 + passWindow * 0.016 + pressure * 0.008 + Math.max(0, aiAggression - 1) * 0.004;
+        const lobIntent =
+          teammate &&
+          lobProfile &&
+          lobProfile.lobWindow > 0.76 &&
+          (teammate.rollMs > 0 || lobProfile.rimDistance < 130) &&
+          Math.random() < 0.004 + lobProfile.lobWindow * 0.015 + Math.max(0, aiAggression - 1) * 0.005;
 
         if (pressure > 0.52 && driveTraffic > 0.66 && Math.random() < 0.03 + Math.max(0, aiAggression - 1) * 0.015) {
           beginDodge(state, entity, { x: -1, y: nearUser && nearUser.entity.pos.y > entity.pos.y ? -0.85 : 0.85 });
@@ -1667,21 +2030,33 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
           const shooterSkill = attackerProfile.shooting * staminaBoost;
           const distFactor = clamp(d / 520, 0, 1);
           const isDunk = dunkIntent || (entity.jumpMs > 0 && d < 118);
+          const isPoster = isDunk && Boolean(posterFinish && posterFinish.posterWindow > 0.7 && posterFinish.contest.bodyUp > 0.3 && posterFinish.contest.frontAngle > 0.5);
           const points = isDunk ? 2 : isThreePointShot(state, entity.pos, aiBasket) ? 3 : 2;
           const baseHitChance = clamp(
             0.08 + (shooterSkill / 10) * 0.68 * attackMulAI + (attackerProfile.overall / 10) * 0.08 - (defenderSkill / 10) * 0.3 * defenseMulUser - distFactor * 0.22 + difficulty.aiShotBoost + arcadeBias * 0.018,
             0.04,
             0.9,
           );
-          const hitChance = isDunk ? clamp(baseHitChance + 0.28, 0.58, 0.98) : baseHitChance;
+          const hitChance = isDunk
+            ? clamp(baseHitChance + 0.18 + (posterFinish?.posterWindow ?? 0) * 0.18 - (rimContest?.contestWindow ?? 0) * 0.06, 0.54, 0.99)
+            : clamp(baseHitChance - (rimContest?.contestWindow ?? 0) * 0.03, 0.04, 0.9);
+          const nearRimFactor = clamp(1 - d / 150, 0, 1);
+          const blockExecution =
+            (rimContest?.blockPositioning ?? 0) *
+            (rimContest?.jumpTiming ?? 0) *
+            (0.35 + (rimContest?.frontAngle ?? 0) * 0.35 + (rimContest?.lineUp ?? 0) * 0.3);
           const blockChance = clamp(
-            0.05 +
-              ((defenderSkill - shooterSkill) / 10) * 0.28 * defenseMulUser +
-              ((defenderProfile?.size ?? 5) / 10) * 0.08 +
-              (defender?.entity.jumpMs ? 0.08 : 0) +
-              (isDunk ? 0.08 : 0),
-            0.02,
-            0.62,
+            0.001 +
+              nearRimFactor * 0.008 +
+              blockExecution *
+                (0.12 +
+                  ((defenderSkill - shooterSkill) / 10) * 0.1 * defenseMulUser +
+                  ((defenderProfile?.size ?? 5) / 10) * 0.08 +
+                  ((defenderProfile?.defense ?? 5) / 10) * 0.06 +
+                  (isDunk ? 0.04 : 0)) +
+              (isDunk ? (posterFinish?.posterWindow ?? 0) * 0.2 + Math.max(0, posterFinish?.heightEdge ?? 0) * 0.08 : 0),
+            0.001,
+            0.46,
           );
           if (isDunk) beginDunk(state, entity, aiBasket);
           else if (!entity.jumpMs) beginJump(state, entity);
@@ -1698,8 +2073,38 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
             hitChance,
             points,
             isDunk,
+            isPoster,
           };
-          addEvent(state, { tone: 'gold', text: isDunk ? 'DUNK' : points === 3 ? 'DEEP SHOT' : 'SHOT', x: entity.pos.x, y: entity.pos.y });
+          addEvent(state, { tone: 'gold', text: isPoster ? 'POSTER DUNK' : isDunk ? 'DUNK' : points === 3 ? 'DEEP SHOT' : 'SHOT', x: entity.pos.x, y: entity.pos.y });
+          entity.vel = { x: 0, y: 0 };
+          continue;
+        }
+
+        if (teammate && lobProfile && lobIntent && state.resetTimerMs === 0) {
+          const passPlan = passOutcomeProfile(state, entity, teammate, aiBasket, 'user');
+          if (passPlan.interceptor && Math.random() < Math.min(0.52, passPlan.interceptChance + 0.015)) {
+            const defenderStats = state.playerStatsByEntityId[passPlan.interceptor.entity.id];
+            if (defenderStats) defenderStats.steals += 1;
+            state.ball = { kind: 'possession', ownerId: passPlan.interceptor.entity.id };
+            addEvent(state, { tone: 'red', text: 'LOB PICKED!', x: passPlan.interceptor.entity.pos.x, y: passPlan.interceptor.entity.pos.y });
+            entity.vel = { x: 0, y: 0 };
+            continue;
+          }
+          state.ball = {
+            kind: 'pass',
+            passerId: entity.id,
+            receiverId: teammate.id,
+            start: { ...entity.pos },
+            end: { ...aiBasket },
+            t: 0,
+            duration: passPlan.duration + 90,
+            passAccuracy: clamp(passPlan.passAccuracy - 0.02 + lobProfile.lobWindow * 0.015, 0.78, 0.99),
+            offset: { x: 0, y: 0 },
+            arcHeight: lobProfile.arcHeight,
+            isLob: true,
+            lobTarget: { ...aiBasket },
+          };
+          addEvent(state, { tone: 'gold', text: 'LOB!', x: teammate.pos.x, y: teammate.pos.y });
           entity.vel = { x: 0, y: 0 };
           continue;
         }
@@ -1726,6 +2131,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
             duration: passPlan.duration,
             passAccuracy: passPlan.passAccuracy,
             offset,
+            arcHeight: 0,
           };
           addEvent(state, { tone: 'blue', text: 'PASS', x: teammate.pos.x, y: teammate.pos.y });
           entity.vel = { x: 0, y: 0 };
@@ -1745,6 +2151,13 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
       if (aiHasBall && state.ball.kind === 'possession') {
         const carrier = ballPossessor;
         if (carrier) {
+          if (experimentalGameplay) {
+            const onBallDefender = closestOpponent(state, carrier.id, 'user')?.entity ?? null;
+            const screenSpeed = 156 * (0.44 + (profile.speed / 10) * 0.32 + (profile.playmaking / 10) * 0.14 + (profile.athleticism / 10) * 0.12) * staminaBoost * burst;
+            if (applyExperimentalOffBallAction(state, entity, carrier, onBallDefender, aiBasket, screenSpeed)) {
+              continue;
+            }
+          }
           const supportTarget = {
             x: clamp(carrier.pos.x + 92, aiBasket.x + 104, state.court.width - 96),
             y: clamp(carrier.pos.y + (entity.slotIndex === 0 ? -78 : 78), 76, state.court.height - 76),
@@ -1789,6 +2202,13 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
         if (len2(dir) > 0.01) entity.facing = dir;
         const speed = 168 * (0.42 + (profile.speed / 10) * 0.24 + (profile.defense / 10) * 0.24 + (profile.athleticism / 10) * 0.1) * (0.9 + aiLowDefense * 0.25) * staminaBoost * burst;
         entity.vel = scale(entity.dodgeMs > 0 ? entity.dashDir : dir, speed);
+        if (userHasBall && state.ball.kind === 'possession' && target.id === state.ball.ownerId && entity.jumpMs <= 0) {
+          const blockRead = rimContestProfile(state, target, entity, userBasket);
+          const atRim = dist(target.pos, userBasket) < 128;
+          if (atRim && blockRead.blockPositioning > 0.6 && blockRead.blockCloseness > 0.48 && Math.random() < 0.028 + blockRead.blockPositioning * 0.05) {
+            beginJump(state, entity);
+          }
+        }
         if (userHasBall && state.ball.kind === 'possession' && target.id === state.ball.ownerId && dist(target.pos, entity.pos) < 52 && Math.random() < 0.022) {
           attemptKarateMove(state, entity, 'user');
         }
@@ -1813,15 +2233,23 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
     if (receiver) {
       const receiverTarget = input.passTarget ? input.passTarget : receiver.pos;
       const passPlan = passOutcomeProfile(state, passer, receiver, receiverTarget, 'ai');
-      if (passPlan.interceptor && Math.random() < passPlan.interceptChance) {
+      const lobProfile = experimentalGameplay ? lobWindowProfile(state, passer, receiver, userBasket, 'ai', receiverTarget) : null;
+      const throwLob = Boolean(
+        experimentalGameplay &&
+          lobProfile &&
+          lobProfile.lobWindow > 0.74 &&
+          (receiver.rollMs > 0 || dist(receiverTarget, userBasket) < 132 || dist(receiver.pos, userBasket) < 124),
+      );
+      const interceptChance = throwLob ? Math.min(0.52, passPlan.interceptChance + 0.015) : passPlan.interceptChance;
+      if (passPlan.interceptor && Math.random() < interceptChance) {
         const defenderStats = state.playerStatsByEntityId[passPlan.interceptor.entity.id];
         if (defenderStats) defenderStats.steals += 1;
         state.ball = { kind: 'possession', ownerId: passPlan.interceptor.entity.id };
-        addEvent(state, { tone: 'red', text: 'JUMPED LANE!', x: passPlan.interceptor.entity.pos.x, y: passPlan.interceptor.entity.pos.y });
+        addEvent(state, { tone: 'red', text: throwLob ? 'LOB PICKED!' : 'JUMPED LANE!', x: passPlan.interceptor.entity.pos.x, y: passPlan.interceptor.entity.pos.y });
       } else {
-        const leadFactor = input.passTarget ? 0.28 : 0.64;
-        const lead = add(receiverTarget, scale(receiver.vel, (passPlan.duration / 1000) * leadFactor));
-        const offset = { x: (Math.random() - 0.5) * passPlan.spread, y: (Math.random() - 0.5) * passPlan.spread };
+        const leadFactor = throwLob ? 0 : input.passTarget ? 0.28 : 0.64;
+        const lead = throwLob ? userBasket : add(receiverTarget, scale(receiver.vel, (passPlan.duration / 1000) * leadFactor));
+        const offset = throwLob ? { x: 0, y: 0 } : { x: (Math.random() - 0.5) * passPlan.spread, y: (Math.random() - 0.5) * passPlan.spread };
         state.ball = {
           kind: 'pass',
           passerId: passer.id,
@@ -1829,11 +2257,14 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
           start: { ...passer.pos },
           end: add(lead, offset),
           t: 0,
-          duration: passPlan.duration,
-          passAccuracy: passPlan.passAccuracy,
+          duration: throwLob ? passPlan.duration + 90 : passPlan.duration,
+          passAccuracy: throwLob ? clamp(passPlan.passAccuracy - 0.02 + (lobProfile?.lobWindow ?? 0) * 0.015, 0.78, 0.99) : passPlan.passAccuracy,
           offset,
+          arcHeight: throwLob ? lobProfile?.arcHeight ?? 68 : 0,
+          isLob: throwLob,
+          lobTarget: throwLob ? { ...userBasket } : undefined,
         };
-        addEvent(state, { tone: 'blue', text: 'PASS', x: receiver.pos.x, y: receiver.pos.y });
+        addEvent(state, { tone: throwLob ? 'gold' : 'blue', text: throwLob ? 'LOB!' : 'PASS', x: receiver.pos.x, y: receiver.pos.y });
       }
     }
   }
@@ -1853,7 +2284,10 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
     const shooterSkill = shooterProfile.shooting * shooterFatigue;
     const defenderSkill = (defenderProfile?.defense ?? 5) * defenderFatigue;
     const dunkWindow = dunkWindowProfile(state, shooter, target, 'ai');
-    const isDunk = dunkWindow.canDunk && (dunkWindow.distance < 112 || dunkWindow.windowScore > 0.82);
+    const rimContest = defender ? rimContestProfile(state, shooter, defender, target) : null;
+    const posterFinish = defender ? posterFinishProfile(state, shooter, defender, target) : null;
+    const isDunk = dunkWindow.canDunk && (dunkWindow.distance < 118 || dunkWindow.windowScore > 0.78);
+    const isPoster = isDunk && Boolean(posterFinish && posterFinish.posterWindow > 0.7 && posterFinish.contest.bodyUp > 0.3 && posterFinish.contest.frontAngle > 0.5);
     const points = isDunk ? 2 : isThreePointShot(state, shooter.pos, target) ? 3 : 2;
 
     const baseHitChance = clamp(
@@ -1861,15 +2295,26 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
       0.04,
       0.9,
     );
-    const hitChance = isDunk ? clamp(baseHitChance + 0.28, 0.58, 0.98) : baseHitChance;
+    const hitChance = isDunk
+      ? clamp(baseHitChance + 0.18 + (posterFinish?.posterWindow ?? 0) * 0.18 - (rimContest?.contestWindow ?? 0) * 0.06, 0.54, 0.99)
+      : clamp(baseHitChance - (rimContest?.contestWindow ?? 0) * 0.03, 0.04, 0.9);
+    const nearRimFactor = clamp(1 - d / 150, 0, 1);
+    const blockExecution =
+      (rimContest?.blockPositioning ?? 0) *
+      (rimContest?.jumpTiming ?? 0) *
+      (0.35 + (rimContest?.frontAngle ?? 0) * 0.35 + (rimContest?.lineUp ?? 0) * 0.3);
     const blockChance = clamp(
-      0.05 +
-        ((defenderSkill - shooterSkill) / 10) * 0.28 * defenseMulAI +
-        ((defenderProfile?.size ?? 5) / 10) * 0.08 +
-        (defender?.jumpMs ? 0.08 : 0) +
-        (isDunk ? 0.08 : 0),
-      0.02,
-      0.62,
+      0.001 +
+        nearRimFactor * 0.008 +
+        blockExecution *
+          (0.12 +
+            ((defenderSkill - shooterSkill) / 10) * 0.1 * defenseMulAI +
+            ((defenderProfile?.size ?? 5) / 10) * 0.08 +
+            ((defenderProfile?.defense ?? 5) / 10) * 0.06 +
+            (isDunk ? 0.04 : 0)) -
+        (isDunk ? (posterFinish?.posterWindow ?? 0) * 0.2 + Math.max(0, posterFinish?.heightEdge ?? 0) * 0.08 : 0),
+      0.001,
+      0.46,
     );
     if (isDunk) beginDunk(state, shooter, target);
     else if (!shooter.jumpMs) beginJump(state, shooter);
@@ -1887,15 +2332,19 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
       hitChance,
       points,
       isDunk,
+      isPoster,
     };
-    addEvent(state, { tone: 'gold', text: isDunk ? 'DUNK' : points === 3 ? 'DEEP SHOT' : 'SHOT', x: shooter.pos.x, y: shooter.pos.y });
+    addEvent(state, { tone: 'gold', text: isPoster ? 'POSTER DUNK' : isDunk ? 'DUNK' : points === 3 ? 'DEEP SHOT' : 'SHOT', x: shooter.pos.x, y: shooter.pos.y });
   }
 
   if (state.ball.kind === 'pass') {
     const receiver = getEntitySafe(state, state.ball.receiverId);
     if (receiver) {
       const remainingSeconds = Math.max(0.08, (state.ball.duration - state.ball.t) / 1000);
-      const desiredEnd = add(add(receiver.pos, scale(receiver.vel, remainingSeconds * 0.65)), state.ball.offset);
+      const desiredEnd =
+        state.ball.isLob && state.ball.lobTarget
+          ? { ...state.ball.lobTarget }
+          : add(add(receiver.pos, scale(receiver.vel, remainingSeconds * 0.65)), state.ball.offset);
       const correction = clamp((dtMs / 1000) * 8, 0.06, 0.32);
       state.ball.end = {
         x: lerp(state.ball.end.x, desiredEnd.x, correction),
@@ -1908,27 +2357,84 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
       const receiverId = state.ball.receiverId;
       const endPos = { ...state.ball.end };
       const passerId = state.ball.passerId;
+      const isLob = Boolean(state.ball.isLob);
+      const lobTarget = state.ball.lobTarget ? { ...state.ball.lobTarget } : undefined;
       const complete = Math.random() < state.ball.passAccuracy;
 
       if (!complete) {
         const passer = getEntitySafe(state, passerId);
-        addEvent(state, { tone: 'red', text: 'BAD PASS', x: endPos.x, y: endPos.y });
+        addEvent(state, { tone: 'red', text: isLob ? 'BAD LOB' : 'BAD PASS', x: endPos.x, y: endPos.y });
         state.ball = createLooseBall(
           {
             x: endPos.x + (Math.random() - 0.5) * 24,
             y: endPos.y + (Math.random() - 0.5) * 24,
           },
           {
-            x: (Math.random() - 0.5) * 130,
-            y: (Math.random() - 0.5) * 130,
+            x: (Math.random() - 0.5) * (isLob ? 170 : 130),
+            y: (Math.random() - 0.5) * (isLob ? 170 : 130),
           },
-          { pickupDelayMs: 220, bounceMs: 240, lastTouchTeam: passer?.team ?? null, source: 'pass' },
+          { pickupDelayMs: isLob ? 260 : 220, bounceMs: isLob ? 320 : 240, lastTouchTeam: passer?.team ?? null, source: 'pass' },
         );
       } else {
         const passerStats = state.playerStatsByEntityId[passerId];
         if (passerStats) passerStats.assists += 1;
-        state.ball = { kind: 'possession', ownerId: receiverId };
-        addEvent(state, { tone: 'green', text: 'Great Pass!', x: endPos.x, y: endPos.y });
+        const receiverEntity = getEntitySafe(state, receiverId);
+        if (isLob && receiverEntity && lobTarget) {
+          const defenderTeam: EntityTeam = receiverEntity.team === 'user' ? 'ai' : 'user';
+          const passerEntity = getEntitySafe(state, passerId) ?? receiverEntity;
+          const lobProfile = lobWindowProfile(state, passerEntity, receiverEntity, lobTarget, defenderTeam, lobTarget);
+          const defender = closestOpponent(state, receiverEntity.id, defenderTeam)?.entity ?? null;
+          const rimContest = defender ? rimContestProfile(state, receiverEntity, defender, lobTarget) : null;
+          const posterFinish = defender ? posterFinishProfile(state, receiverEntity, defender, lobTarget) : null;
+          const receiverProfile = entitySkillBlend(state, receiverEntity);
+          const defenderProfile = defender ? entitySkillBlend(state, defender) : null;
+          const finisherSkill = insideFinishRating(receiverProfile) * fatigueMultiplier(getPlayerStamina(state, receiverEntity.id));
+          const defenderSkill = (defenderProfile?.defense ?? 5) * fatigueMultiplier(getPlayerStamina(state, defender?.id ?? ''));
+          const canFinish = lobProfile.rimDistance < 144 && (lobProfile.dunkWindow.canDunk || lobProfile.lobWindow > 0.9);
+          if (canFinish) {
+            const isPoster = Boolean(
+              posterFinish &&
+                posterFinish.posterWindow > 0.76 &&
+                posterFinish.contest.bodyUp > 0.32 &&
+                posterFinish.contest.frontAngle > 0.5,
+            );
+            const blockExecution =
+              (rimContest?.blockPositioning ?? 0) *
+              (rimContest?.jumpTiming ?? 0) *
+              (0.35 + (rimContest?.frontAngle ?? 0) * 0.35 + (rimContest?.lineUp ?? 0) * 0.3);
+            const blockChance = clamp(
+              0.002 +
+                blockExecution *
+                  (0.08 + (defenderSkill / 10) * 0.08 + ((defenderProfile?.size ?? 5) / 10) * 0.08) -
+                (isPoster ? 0.08 : 0),
+              0.001,
+              0.34,
+            );
+            beginDunk(state, receiverEntity, lobTarget);
+            state.ball = {
+              kind: 'shot',
+              shooterId: receiverEntity.id,
+              start: { ...receiverEntity.pos },
+              target: lobTarget,
+              t: 0,
+              duration: 330,
+              arcHeight: 26,
+              defenseContestId: defender?.id,
+              willBlock: defender ? Math.random() < blockChance : false,
+              hitChance: clamp(0.64 + lobProfile.lobWindow * 0.16 + (finisherSkill / 10) * 0.18 - (rimContest?.contestWindow ?? 0) * 0.08, 0.5, 0.995),
+              points: 2,
+              isDunk: true,
+              isPoster,
+            };
+            addEvent(state, { tone: 'gold', text: isPoster ? 'ALLEY-OOP POSTER' : 'ALLEY-OOP', x: lobTarget.x, y: lobTarget.y - 10 });
+          } else {
+            state.ball = { kind: 'possession', ownerId: receiverId };
+            addEvent(state, { tone: 'green', text: 'LOB CAUGHT', x: endPos.x, y: endPos.y });
+          }
+        } else {
+          state.ball = { kind: 'possession', ownerId: receiverId };
+          addEvent(state, { tone: 'green', text: 'Great Pass!', x: endPos.x, y: endPos.y });
+        }
       }
     }
   }
@@ -1980,7 +2486,17 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
           state,
           {
             tone: 'green',
-            text: state.ball.isDunk ? (isUserShot ? `DUNK! +${shotPoints}` : `Rival DUNK! +${shotPoints}`) : isUserShot ? `Great Shot! +${shotPoints}` : `Rival Great Shot! +${shotPoints}`,
+            text: state.ball.isPoster
+              ? isUserShot
+                ? `POSTER! +${shotPoints}`
+                : `Rival POSTER! +${shotPoints}`
+              : state.ball.isDunk
+                ? isUserShot
+                  ? `DUNK! +${shotPoints}`
+                  : `Rival DUNK! +${shotPoints}`
+                : isUserShot
+                  ? `Great Shot! +${shotPoints}`
+                  : `Rival Great Shot! +${shotPoints}`,
             x: state.ball.target.x,
             y: state.ball.target.y,
           },

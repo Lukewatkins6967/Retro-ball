@@ -72,11 +72,9 @@ export function createPlayoffsState(teams: TeamState[], standings: DraftStanding
 }
 
 export function tryAdvancePlayoffs(playoffs: PlayoffsState): PlayoffsState {
-  // If finals already done, determine champion.
   const finals = playoffs.games.filter((g) => g.round === 'final');
   const semis = playoffs.games.filter((g) => g.round === 'semi');
 
-  // If no finals created yet, see if semis are complete.
   if (finals.length === 0 && semis.length >= 2 && semis.every((g) => g.result?.played && g.result.winnerTeamId)) {
     const w1 = semis[0].result!.winnerTeamId!;
     const w2 = semis[1].result!.winnerTeamId!;
@@ -89,8 +87,9 @@ export function tryAdvancePlayoffs(playoffs: PlayoffsState): PlayoffsState {
     return { ...playoffs, games: [...playoffs.games, final] };
   }
 
-  if (finals.length === 1 && finals[0].result?.played && finals[0].result.winnerTeamId) {
-    return { ...playoffs, championTeamId: finals[0].result.winnerTeamId ?? undefined };
+  const completedFinal = finals.find((g) => g.result?.played && g.result.winnerTeamId);
+  if (completedFinal?.result?.winnerTeamId) {
+    return { ...playoffs, championTeamId: completedFinal.result.winnerTeamId };
   }
 
   return playoffs;

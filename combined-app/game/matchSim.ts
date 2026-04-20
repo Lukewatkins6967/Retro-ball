@@ -453,12 +453,26 @@ export function simulateMatch(
   if (opts?.userTeamId === teamB.id) normalizedA += difficulty.aiSimScoreBoost;
   normalizedA = clamp(normalizedA, 38, 142);
   normalizedB = clamp(normalizedB, 38, 142);
+  while (normalizedA === normalizedB) {
+    const overtimeIntensity = 0.22 + Math.random() * 0.16;
+    maybeSubstitute(stateA, true);
+    maybeSubstitute(stateB, true);
+    normalizedA += simulatePossession(stateA, stateB, playerStatsByEntityId, playerStatsByEntityId, overtimeIntensity, {
+      isLateGame: true,
+      scoreMargin: 0,
+    });
+    if (normalizedA !== normalizedB) break;
+    normalizedB += simulatePossession(stateB, stateA, playerStatsByEntityId, playerStatsByEntityId, overtimeIntensity, {
+      isLateGame: true,
+      scoreMargin: 0,
+    });
+  }
   distributeScoreAdjustment(stateA, playerStatsByEntityId, normalizedA - scoreA);
   distributeScoreAdjustment(stateB, playerStatsByEntityId, normalizedB - scoreB);
 
   const result: MatchResult = {
     status: 'ended',
-    winner: normalizedA === normalizedB ? 'draw' : normalizedA > normalizedB ? 'user' : 'ai',
+    winner: normalizedA > normalizedB ? 'user' : 'ai',
     finalScore: { user: normalizedA, ai: normalizedB },
     playerStatsByEntityId,
   };
