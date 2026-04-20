@@ -556,6 +556,13 @@ export default function App() {
         major: false,
         delta: 0.1,
       },
+      {
+        id: 'seed-50',
+        createdAt: Date.now() + 27,
+        description: 'Style library expansion: every management theme now gets a stronger readability pass, clearer controls, better focus states, more distinct surfaces, and two new looks called Sunset League and Blueprint.',
+        major: false,
+        delta: 0.1,
+      },
     ];
 
     try {

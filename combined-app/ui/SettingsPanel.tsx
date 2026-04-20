@@ -27,6 +27,8 @@ const THEME_OPTIONS: Array<{ value: AppTheme; label: string; emoji: string; desc
   { value: 'neonCyber', label: 'Neon Rush', emoji: '⚡', description: 'Electric cyan-magenta contrast with hacked-terminal intensity and sharp futuristic edges.' },
   { value: 'classicSports', label: 'Courtside Vintage', emoji: '🏆', description: 'Broadcast-era paper, pennant tones, and old-school championship theater.' },
   { value: 'minimalist', label: 'Gallery Air', emoji: '☁️', description: 'Editorial whitespace, soft monochrome layers, and calm museum-clean framing.' },
+  { value: 'sunsetLeague', label: 'Sunset League', emoji: '🌅', description: 'Hot sunset gradients, coastal arena glow, and bold warm-weather showtime vibes.' },
+  { value: 'blueprint', label: 'Blueprint', emoji: '📐', description: 'Crisp drafting-board lines, cool technical contrast, and a polished scouting-lab mood.' },
 ];
 
 function OptionRow<T extends string>(props: {

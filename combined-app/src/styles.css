@@ -11,6 +11,11 @@
   --muted: rgba(15, 23, 42, 0.66);
   --border: rgba(15, 23, 42, 0.12);
   --lineSoft: rgba(148, 163, 184, 0.22);
+  --fieldBg: rgba(255, 255, 255, 0.94);
+  --fieldText: #0f172a;
+  --fieldBorder: rgba(15, 23, 42, 0.14);
+  --focusRing: rgba(37, 99, 235, 0.34);
+  --focusGlow: 0 0 0 4px rgba(37, 99, 235, 0.16);
 
   --primary: #2563eb;
   --primary2: #1d4ed8;
@@ -42,6 +47,11 @@
   --muted: rgba(226, 232, 240, 0.72);
   --border: rgba(34, 211, 238, 0.24);
   --lineSoft: rgba(34, 211, 238, 0.24);
+  --fieldBg: rgba(9, 14, 38, 0.9);
+  --fieldText: #f8fafc;
+  --fieldBorder: rgba(69, 240, 255, 0.3);
+  --focusRing: rgba(69, 240, 255, 0.36);
+  --focusGlow: 0 0 0 4px rgba(69, 240, 255, 0.18);
   --primary: #45f0ff;
   --primary2: #00a6d6;
   --accent: #ff9f1c;
@@ -65,6 +75,11 @@
   --muted: rgba(203, 213, 225, 0.7);
   --border: rgba(148, 163, 184, 0.2);
   --lineSoft: rgba(148, 163, 184, 0.18);
+  --fieldBg: rgba(4, 10, 22, 0.84);
+  --fieldText: #f8fafc;
+  --fieldBorder: rgba(212, 162, 76, 0.22);
+  --focusRing: rgba(212, 162, 76, 0.34);
+  --focusGlow: 0 0 0 4px rgba(212, 162, 76, 0.16);
   --primary: #d4a24c;
   --primary2: #8f6b2f;
   --accent: #34d399;
@@ -85,6 +100,11 @@
   --muted: rgba(165, 243, 252, 0.74);
   --border: rgba(34, 211, 238, 0.26);
   --lineSoft: rgba(217, 70, 239, 0.24);
+  --fieldBg: rgba(4, 10, 24, 0.88);
+  --fieldText: #ecfeff;
+  --fieldBorder: rgba(34, 211, 238, 0.3);
+  --focusRing: rgba(217, 70, 239, 0.34);
+  --focusGlow: 0 0 0 4px rgba(217, 70, 239, 0.18);
   --primary: #22d3ee;
   --primary2: #0891b2;
   --accent: #d946ef;
@@ -108,6 +128,11 @@
   --muted: rgba(31, 41, 55, 0.64);
   --border: rgba(30, 41, 59, 0.14);
   --lineSoft: rgba(148, 163, 184, 0.22);
+  --fieldBg: rgba(255, 249, 239, 0.96);
+  --fieldText: #1f2937;
+  --fieldBorder: rgba(15, 76, 189, 0.18);
+  --focusRing: rgba(15, 76, 189, 0.26);
+  --focusGlow: 0 0 0 4px rgba(15, 76, 189, 0.12);
   --primary: #0f4cbd;
   --primary2: #102d73;
   --accent: #d14334;
@@ -128,12 +153,73 @@
   --muted: rgba(17, 24, 39, 0.56);
   --border: rgba(17, 24, 39, 0.08);
   --lineSoft: rgba(148, 163, 184, 0.16);
+  --fieldBg: rgba(255, 255, 255, 0.98);
+  --fieldText: #111827;
+  --fieldBorder: rgba(17, 24, 39, 0.12);
+  --focusRing: rgba(17, 24, 39, 0.22);
+  --focusGlow: 0 0 0 4px rgba(17, 24, 39, 0.1);
   --primary: #111827;
   --primary2: #374151;
   --accent: #9ca3af;
   --good: #16a34a;
   --bad: #dc2626;
   --info: #2563eb;
+}
+
+:root[data-theme="sunsetLeague"] {
+  --font-ui: "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-display: "Trebuchet MS", "Segoe UI", sans-serif;
+  --bg0: #2f1028;
+  --bg1: #581c3f;
+  --bg2: #f97316;
+  --panel: rgba(42, 10, 38, 0.82);
+  --panelSolid: #3f1436;
+  --text: #fff7ed;
+  --muted: rgba(255, 237, 213, 0.74);
+  --border: rgba(253, 186, 116, 0.26);
+  --lineSoft: rgba(251, 146, 60, 0.24);
+  --fieldBg: rgba(55, 15, 45, 0.88);
+  --fieldText: #fff7ed;
+  --fieldBorder: rgba(253, 186, 116, 0.28);
+  --focusRing: rgba(251, 146, 60, 0.36);
+  --focusGlow: 0 0 0 4px rgba(249, 115, 22, 0.18);
+  --primary: #fb7185;
+  --primary2: #ea580c;
+  --accent: #fde047;
+  --good: #86efac;
+  --bad: #fecaca;
+  --info: #fdba74;
+  --shadow-sm: 0 16px 38px rgba(88, 28, 63, 0.2);
+  --shadow-md: 0 22px 58px rgba(88, 28, 63, 0.28);
+  --shadow-lg: 0 36px 92px rgba(67, 20, 55, 0.38);
+}
+
+:root[data-theme="blueprint"] {
+  --font-ui: "Segoe UI", Tahoma, sans-serif;
+  --font-display: Consolas, "Segoe UI", monospace;
+  --bg0: #031525;
+  --bg1: #07273f;
+  --bg2: #0b4f79;
+  --panel: rgba(5, 28, 48, 0.84);
+  --panelSolid: #08263d;
+  --text: #e0f2fe;
+  --muted: rgba(186, 230, 253, 0.74);
+  --border: rgba(125, 211, 252, 0.24);
+  --lineSoft: rgba(56, 189, 248, 0.24);
+  --fieldBg: rgba(3, 23, 39, 0.9);
+  --fieldText: #e0f2fe;
+  --fieldBorder: rgba(125, 211, 252, 0.28);
+  --focusRing: rgba(125, 211, 252, 0.36);
+  --focusGlow: 0 0 0 4px rgba(56, 189, 248, 0.16);
+  --primary: #7dd3fc;
+  --primary2: #0284c7;
+  --accent: #f8fafc;
+  --good: #6ee7b7;
+  --bad: #fda4af;
+  --info: #38bdf8;
+  --shadow-sm: 0 16px 40px rgba(3, 7, 18, 0.24);
+  --shadow-md: 0 22px 60px rgba(3, 7, 18, 0.32);
+  --shadow-lg: 0 34px 92px rgba(2, 6, 23, 0.42);
 }
 
 :root[data-theme="classicSports"] body,
@@ -372,6 +458,87 @@ body[data-theme-ready="true"]::after {
   border-color: rgba(17, 24, 39, 0.06);
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(18px);
+}
+
+:root[data-theme="sunsetLeague"] body::before {
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.06), transparent 24%),
+    radial-gradient(circle at top left, rgba(253, 224, 71, 0.16), transparent 28%);
+  opacity: 0.88;
+}
+
+:root[data-theme="sunsetLeague"] body {
+  background:
+    radial-gradient(900px 620px at 10% 0%, rgba(251, 146, 60, 0.3), transparent 44%),
+    radial-gradient(1000px 760px at 90% 8%, rgba(244, 114, 182, 0.28), transparent 42%),
+    linear-gradient(180deg, #2f1028 0%, #581c3f 42%, #f97316 100%);
+}
+
+:root[data-theme="sunsetLeague"] .panel,
+:root[data-theme="sunsetLeague"] .card,
+:root[data-theme="sunsetLeague"] .panelSolid {
+  background: linear-gradient(180deg, rgba(58, 16, 47, 0.92), rgba(86, 24, 63, 0.88));
+  border-color: rgba(253, 186, 116, 0.22);
+  box-shadow: 0 20px 52px rgba(67, 20, 55, 0.34);
+}
+
+:root[data-theme="sunsetLeague"] .btnSoft,
+:root[data-theme="sunsetLeague"] .pill,
+:root[data-theme="sunsetLeague"] .settingsChip {
+  background: rgba(255, 237, 213, 0.1);
+  color: #fff7ed;
+}
+
+:root[data-theme="sunsetLeague"] .navShell {
+  background: linear-gradient(180deg, rgba(54, 13, 43, 0.92), rgba(88, 28, 63, 0.78));
+  border-color: rgba(253, 186, 116, 0.22);
+}
+
+:root[data-theme="sunsetLeague"] .btnPrimary,
+:root[data-theme="sunsetLeague"] .navBrandBadge {
+  background: linear-gradient(180deg, #fb7185, #ea580c);
+  color: #fff7ed;
+}
+
+:root[data-theme="blueprint"] body::before {
+  background:
+    linear-gradient(90deg, rgba(125, 211, 252, 0.09) 0, rgba(125, 211, 252, 0.09) 1px, transparent 1px, transparent 28px),
+    linear-gradient(180deg, rgba(125, 211, 252, 0.06) 0, rgba(125, 211, 252, 0.06) 1px, transparent 1px, transparent 28px),
+    radial-gradient(circle at top left, rgba(224, 242, 254, 0.12), transparent 26%);
+  opacity: 0.88;
+}
+
+:root[data-theme="blueprint"] body {
+  background:
+    radial-gradient(1000px 660px at 12% 0%, rgba(56, 189, 248, 0.22), transparent 46%),
+    radial-gradient(900px 700px at 88% 10%, rgba(14, 165, 233, 0.14), transparent 42%),
+    linear-gradient(180deg, #031525 0%, #07273f 52%, #0b4f79 100%);
+}
+
+:root[data-theme="blueprint"] .panel,
+:root[data-theme="blueprint"] .card,
+:root[data-theme="blueprint"] .panelSolid {
+  background: linear-gradient(180deg, rgba(5, 28, 48, 0.94), rgba(8, 38, 61, 0.9));
+  border-color: rgba(125, 211, 252, 0.2);
+  box-shadow: 0 20px 56px rgba(2, 6, 23, 0.36);
+}
+
+:root[data-theme="blueprint"] .btnSoft,
+:root[data-theme="blueprint"] .pill,
+:root[data-theme="blueprint"] .settingsChip {
+  background: rgba(14, 165, 233, 0.1);
+  color: #e0f2fe;
+}
+
+:root[data-theme="blueprint"] .navShell {
+  background: linear-gradient(180deg, rgba(3, 23, 39, 0.92), rgba(7, 39, 63, 0.8));
+  border-color: rgba(125, 211, 252, 0.2);
+}
+
+:root[data-theme="blueprint"] .btnPrimary,
+:root[data-theme="blueprint"] .navBrandBadge {
+  background: linear-gradient(180deg, #7dd3fc, #0284c7);
+  color: #08263d;
 }
 
 :root[data-theme="retroArcade"] .appGlow,
@@ -744,6 +911,20 @@ body[data-theme-ready="true"]::after {
     linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 18%);
 }
 
+:root[data-theme="sunsetLeague"] body[data-theme-ready="true"]::after {
+  opacity: 0.5;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(253, 224, 71, 0.18), transparent 24%),
+    linear-gradient(120deg, rgba(255, 255, 255, 0.04), transparent 22%, rgba(251, 146, 60, 0.12) 78%, transparent 100%);
+}
+
+:root[data-theme="blueprint"] body[data-theme-ready="true"]::after {
+  opacity: 0.5;
+  background:
+    linear-gradient(90deg, rgba(125, 211, 252, 0.08) 0, rgba(125, 211, 252, 0.08) 1px, transparent 1px, transparent 22px),
+    linear-gradient(180deg, rgba(125, 211, 252, 0.06) 0, rgba(125, 211, 252, 0.06) 1px, transparent 1px, transparent 22px);
+}
+
 :root[data-theme="retroArcade"] .navShell,
 :root[data-theme="retroArcade"] .heroSurface,
 :root[data-theme="retroArcade"] .settingsThemeCard {
@@ -899,10 +1080,92 @@ body[data-theme-ready="true"]::after {
   font-weight: 800;
 }
 
+:root[data-theme="sunsetLeague"] .navShell,
+:root[data-theme="sunsetLeague"] .heroSurface,
+:root[data-theme="sunsetLeague"] .settingsThemeCard {
+  position: relative;
+  overflow: hidden;
+}
+
+:root[data-theme="sunsetLeague"] .navShell::after,
+:root[data-theme="sunsetLeague"] .heroSurface::before,
+:root[data-theme="sunsetLeague"] .settingsThemeCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.07), transparent 24%, rgba(253, 186, 116, 0.14) 72%, transparent 100%);
+}
+
+:root[data-theme="sunsetLeague"] .navBtn,
+:root[data-theme="sunsetLeague"] .settingsCategoryButton,
+:root[data-theme="sunsetLeague"] .settingsThemeCard {
+  border-radius: 20px;
+}
+
+:root[data-theme="sunsetLeague"] .navBrandTitle,
+:root[data-theme="sunsetLeague"] .scheduleWeekTitle,
+:root[data-theme="sunsetLeague"] .tradeColumnTitle,
+:root[data-theme="sunsetLeague"] .settingsSidebarTitle {
+  color: #fff1c7;
+  text-shadow: 0 10px 30px rgba(67, 20, 55, 0.4);
+}
+
+:root[data-theme="blueprint"] .navShell,
+:root[data-theme="blueprint"] .heroSurface,
+:root[data-theme="blueprint"] .settingsSidebar,
+:root[data-theme="blueprint"] .settingsControlCard,
+:root[data-theme="blueprint"] .settingsThemeCard {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(125, 211, 252, 0.2);
+  box-shadow: 0 22px 54px rgba(2, 6, 23, 0.38);
+}
+
+:root[data-theme="blueprint"] .navShell::after,
+:root[data-theme="blueprint"] .heroSurface::before,
+:root[data-theme="blueprint"] .settingsThemeCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(125, 211, 252, 0.09) 0, rgba(125, 211, 252, 0.09) 1px, transparent 1px, transparent 26px),
+    linear-gradient(180deg, rgba(125, 211, 252, 0.06) 0, rgba(125, 211, 252, 0.06) 1px, transparent 1px, transparent 26px);
+}
+
+:root[data-theme="blueprint"] .navBtn,
+:root[data-theme="blueprint"] .settingsCategoryButton,
+:root[data-theme="blueprint"] .settingsThemeCard {
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+:root[data-theme="blueprint"] .navBrandTitle,
+:root[data-theme="blueprint"] .scheduleWeekTitle,
+:root[data-theme="blueprint"] .tradeColumnTitle,
+:root[data-theme="blueprint"] .settingsSidebarTitle {
+  color: #e0f2fe;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .navBtnSettings {
   min-width: 48px;
-  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
   font-weight: 900;
+}
+
+.navBtnSettings span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .settingsShell {
@@ -976,7 +1239,7 @@ body[data-theme-ready="true"]::after {
   justify-content: center;
   border-radius: 12px;
   background: rgba(15, 23, 42, 0.08);
-  font-size: 11px;
+  font-size: 18px;
   font-weight: 900;
   letter-spacing: 0.06em;
 }
@@ -990,6 +1253,7 @@ body[data-theme-ready="true"]::after {
   background: var(--panel);
   box-shadow: var(--shadow-sm);
   padding: 14px;
+  color: var(--text);
 }
 
 .settingsThemePreviewName {
@@ -1024,6 +1288,7 @@ body[data-theme-ready="true"]::after {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .settingsContent {
@@ -1078,7 +1343,7 @@ body[data-theme-ready="true"]::after {
   height: 30px;
   border-radius: 10px;
   background: rgba(15, 23, 42, 0.08);
-  font-size: 16px;
+  font-size: 17px;
 }
 
 .settingsThemeCheck {
@@ -1124,6 +1389,14 @@ body[data-theme-ready="true"]::after {
 .settingsThemeCard-minimalist .settingsThemeSwatches span:nth-child(2) { background: #9ca3af; }
 .settingsThemeCard-minimalist .settingsThemeSwatches span:nth-child(3) { background: #ffffff; }
 .settingsThemeCard-minimalist .settingsThemeCardEmoji { background: rgba(15, 23, 42, 0.06); }
+.settingsThemeCard-sunsetLeague .settingsThemeSwatches span:nth-child(1) { background: #fb7185; }
+.settingsThemeCard-sunsetLeague .settingsThemeSwatches span:nth-child(2) { background: #f97316; }
+.settingsThemeCard-sunsetLeague .settingsThemeSwatches span:nth-child(3) { background: #581c3f; }
+.settingsThemeCard-sunsetLeague .settingsThemeCardEmoji { background: rgba(251, 146, 60, 0.16); }
+.settingsThemeCard-blueprint .settingsThemeSwatches span:nth-child(1) { background: #7dd3fc; }
+.settingsThemeCard-blueprint .settingsThemeSwatches span:nth-child(2) { background: #0284c7; }
+.settingsThemeCard-blueprint .settingsThemeSwatches span:nth-child(3) { background: #08263d; }
+.settingsThemeCard-blueprint .settingsThemeCardEmoji { background: rgba(56, 189, 248, 0.14); }
 
 .settingsControlHeader {
   display: flex;
@@ -1279,6 +1552,11 @@ html {
   min-height: 100%;
 }
 
+::selection {
+  background: rgba(37, 99, 235, 0.2);
+  color: inherit;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -1287,6 +1565,10 @@ body {
     linear-gradient(180deg, var(--bg0), var(--bg1) 45%, var(--bg2));
   color: var(--text);
   font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
   transition: background var(--theme-transition), color var(--theme-transition);
 }
 
@@ -1310,7 +1592,45 @@ input,
 select,
 textarea {
   font-family: inherit;
+  font-size: 14px;
+  line-height: 1.35;
+  -webkit-tap-highlight-color: transparent;
   transition: background var(--theme-transition), color var(--theme-transition), border-color var(--theme-transition), box-shadow var(--theme-transition), transform 120ms ease;
+}
+
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  border: 1px solid var(--fieldBorder);
+  border-radius: 14px;
+  background: var(--fieldBg);
+  color: var(--fieldText);
+  padding: 11px 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"])::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+select {
+  padding-right: 34px;
+}
+
+button:focus-visible,
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.settingsRange:focus-visible,
+.settingsThemeCard:focus-visible,
+.settingsCategoryButton:focus-visible,
+.navBtn:focus-visible,
+.playerCardInteractive:focus-visible {
+  outline: none;
+  border-color: var(--focusRing);
+  box-shadow: var(--focusGlow);
 }
 
 .appShell {
@@ -1356,6 +1676,7 @@ textarea {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(14px);
+  color: var(--text);
   transition: background var(--theme-transition), border-color var(--theme-transition), box-shadow var(--theme-transition);
 }
 
@@ -1369,6 +1690,7 @@ textarea {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   padding: 14px;
+  color: var(--text);
   transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background var(--theme-transition), color var(--theme-transition);
 }
 
@@ -1414,6 +1736,7 @@ textarea {
   cursor: pointer;
   background: rgba(255, 255, 255, 0.92);
   color: var(--text);
+  font-weight: 800;
   transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease,
     border-color 120ms ease, opacity 120ms ease;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
@@ -1458,6 +1781,18 @@ textarea {
   color: var(--muted);
 }
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+label,
+th,
+strong {
+  color: inherit;
+}
+
 .grid2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1474,10 +1809,12 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
   padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: rgba(255, 255, 255, 0.85);
+  color: var(--text);
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
 }
 
@@ -1605,6 +1942,8 @@ textarea {
 :root[data-theme="neonCyber"] .navBrandBadge::after { content: "⚡"; }
 :root[data-theme="classicSports"] .navBrandBadge::after { content: "🏆"; }
 :root[data-theme="minimalist"] .navBrandBadge::after { content: "☁️"; }
+:root[data-theme="sunsetLeague"] .navBrandBadge::after { content: "🌅"; }
+:root[data-theme="blueprint"] .navBrandBadge::after { content: "📐"; }
 
 .navBrandTitle {
   color: #fff;
@@ -1643,12 +1982,16 @@ textarea {
 
 .navLinks {
   display: flex;
+  align-items: center;
   gap: 10px;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
 .navBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 10px 14px;
   font-weight: 900;
 }
@@ -2795,6 +3138,26 @@ textarea {
   .navShell {
     border-radius: 18px;
     padding: 12px;
+  }
+
+  .navActions,
+  .navLinks {
+    width: 100%;
+  }
+
+  .navStatusPill {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .navLinks {
+    justify-content: stretch;
+  }
+
+  .navBtn {
+    flex: 1 1 140px;
+    justify-content: center;
   }
 
   .scheduleHeroGrid {

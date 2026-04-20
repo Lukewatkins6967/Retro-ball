@@ -62,8 +62,9 @@ export default function TopNav(props: {
               className="btn navBtn navBtnSettings"
               onClick={props.onOpenSettings}
               title="Open settings"
+              aria-label="Open settings"
             >
-              <span aria-hidden="true">🎛️</span>
+              <span aria-hidden="true">⚙️</span>
             </button>
             <button
               className="btn navBtn navBtnDanger"

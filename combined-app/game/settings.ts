@@ -1,4 +1,12 @@
-export type AppTheme = 'modern' | 'retroArcade' | 'darkMode' | 'neonCyber' | 'classicSports' | 'minimalist';
+export type AppTheme =
+  | 'modern'
+  | 'retroArcade'
+  | 'darkMode'
+  | 'neonCyber'
+  | 'classicSports'
+  | 'minimalist'
+  | 'sunsetLeague'
+  | 'blueprint';
 export type DifficultyPreset = 'easy' | 'normal' | 'hard' | 'extreme';
 export type GameSpeedPreset = 'slow' | 'normal' | 'fast';
 export type StaminaImpactPreset = 'low' | 'medium' | 'high';
@@ -51,7 +59,16 @@ function asEnum<T extends string>(value: unknown, fallback: T, allowed: readonly
 export function normalizeGameSettings(raw: unknown): GameSettings {
   const candidate = (raw && typeof raw === 'object' ? raw : {}) as Partial<GameSettings>;
   return {
-    theme: asEnum(candidate.theme, defaultGameSettings.theme, ['modern', 'retroArcade', 'darkMode', 'neonCyber', 'classicSports', 'minimalist']),
+    theme: asEnum(candidate.theme, defaultGameSettings.theme, [
+      'modern',
+      'retroArcade',
+      'darkMode',
+      'neonCyber',
+      'classicSports',
+      'minimalist',
+      'sunsetLeague',
+      'blueprint',
+    ]),
     difficulty: asEnum(candidate.difficulty, defaultGameSettings.difficulty, ['easy', 'normal', 'hard', 'extreme']),
     gameSpeed: asEnum(candidate.gameSpeed, defaultGameSettings.gameSpeed, ['slow', 'normal', 'fast']),
     autoSubstitutions: typeof candidate.autoSubstitutions === 'boolean' ? candidate.autoSubstitutions : defaultGameSettings.autoSubstitutions,
