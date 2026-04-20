@@ -410,9 +410,9 @@ const CONTROL_CORNER_HINTS = [
     detail: 'Drive deep and hit Space to trigger the dunk window, or use it as your normal shot and defensive contest button.',
   },
   {
-    keys: ['CLICK', 'P', 'L'],
+    keys: ['CLICK', 'P', 'P x2'],
     title: 'Lead pass',
-    detail: 'Pass with Click or P, and press L only when your teammate is really sprinting at the rim for the lob.',
+    detail: 'Pass with Click or P, then tap pass again quickly when your teammate is really sprinting to the rim for the lob.',
   },
   {
     keys: ['R'],
@@ -472,6 +472,12 @@ function triggerCallScreen(input: PlayerInput) {
 
 function triggerLob(input: PlayerInput) {
   input.lobPressed = true;
+}
+
+function triggerPass(input: PlayerInput, opts?: { lob?: boolean; target?: { x: number; y: number } }) {
+  input.passPressed = !opts?.lob;
+  input.lobPressed = Boolean(opts?.lob);
+  input.passTarget = opts?.target;
 }
 
 function buildHudSnapshot(state: MatchState): HudSnapshot {
@@ -635,6 +641,7 @@ export default function GameScreen(props: GameScreenProps) {
   const seenEventIdsRef = useRef<Set<string>>(new Set());
   const lastScoreRef = useRef({ user: 0, ai: 0 });
   const endSoundPlayedRef = useRef(false);
+  const lastPassTapRef = useRef<{ at: number; target?: { x: number; y: number } }>({ at: -Infinity, target: undefined });
 
   const [ended, setEnded] = useState<MatchResult | null>(null);
   const [hud, setHud] = useState<HudSnapshot | null>(null);
@@ -781,6 +788,15 @@ export default function GameScreen(props: GameScreenProps) {
       syncMovementInput(inputRef.current, movement);
     };
 
+    const triggerTimedPass = (target?: { x: number; y: number }) => {
+      const now = performance.now();
+      const previous = lastPassTapRef.current;
+      const isDoubleTap = now - previous.at <= 280;
+      const nextTarget = target ?? previous.target;
+      triggerPass(inputRef.current, { lob: isDoubleTap, target: nextTarget });
+      lastPassTapRef.current = { at: now, target: nextTarget };
+    };
+
     const onKeyDown = (e: KeyboardEvent) => {
       unlockAudio();
       if (
@@ -801,7 +817,6 @@ export default function GameScreen(props: GameScreenProps) {
           'KeyF',
           'KeyP',
           'KeyR',
-          'KeyL',
         ].includes(e.code)
       ) {
         e.preventDefault();
@@ -812,11 +827,10 @@ export default function GameScreen(props: GameScreenProps) {
         return;
       }
       setMovementKey(e.code, true);
-      if (['Space', 'KeyP', 'ShiftLeft', 'ShiftRight', 'KeyQ', 'KeyE', 'KeyF', 'KeyR', 'KeyL'].includes(e.code) && e.repeat) return;
+      if (['Space', 'KeyP', 'ShiftLeft', 'ShiftRight', 'KeyQ', 'KeyE', 'KeyF', 'KeyR'].includes(e.code) && e.repeat) return;
       if (e.code === 'Space') triggerPrimaryAction(matchRef.current, inputRef.current);
-      if (e.code === 'KeyP') inputRef.current.passPressed = true;
+      if (e.code === 'KeyP') triggerTimedPass();
       if (e.code === 'KeyR') triggerCallScreen(inputRef.current);
-      if (e.code === 'KeyL') triggerLob(inputRef.current);
       if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') inputRef.current.dodgePressed = true;
       if (e.code === 'KeyQ') inputRef.current.jumpPressed = true;
       if (e.code === 'KeyE' || e.code === 'KeyF') inputRef.current.karatePressed = true;
@@ -832,8 +846,7 @@ export default function GameScreen(props: GameScreenProps) {
       const rect = canvas.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * courtSize.w;
       const y = ((e.clientY - rect.top) / rect.height) * courtSize.h;
-      inputRef.current.passTarget = { x, y };
-      inputRef.current.passPressed = true;
+      triggerTimedPass({ x, y });
     };
 
     window.addEventListener('keydown', onKeyDown);
@@ -1534,7 +1547,7 @@ export default function GameScreen(props: GameScreenProps) {
   const currentMatchLabel = props.matchLabel ?? `${userDisplayName} vs ${aiDisplayName}`;
   const livePrimaryActionText = userOwnsBall(matchRef.current)
     ? props.settings.experimentalGameplay
-      ? 'Experimental gameplay is live: press R to call the pick and roll, then press L only when your teammate is actually streaking to the rim. Space still handles jumpers and rim finishes.'
+      ? 'Experimental gameplay is live: press R to call the pick and roll, then tap pass twice when your teammate is actually streaking to the rim. Space still handles jumpers and rim finishes.'
       : 'Primary action is hot: Space gives you a jumper by default, but if you drive all the way to the rim it now turns into a real dunk window while Click or P still throws a lead pass.'
     : props.settings.experimentalGameplay
       ? 'Experimental gameplay is live: Space contests shots and rebounds, and once you win the ball back you can press R to call the screen yourself.'
@@ -1542,7 +1555,7 @@ export default function GameScreen(props: GameScreenProps) {
   const controlHints = props.settings.experimentalGameplay
     ? CONTROL_CORNER_HINTS.map((hint) =>
         hint.title === 'Lead pass'
-          ? { ...hint, detail: 'Press L for a lob only after the roller is really charging at the rim, otherwise stay with Click or P.' }
+          ? { ...hint, detail: 'Double tap Click or P for a lob only after the roller is really charging at the rim, otherwise stay with a normal pass.' }
           : hint,
       )
     : CONTROL_CORNER_HINTS;
@@ -1554,7 +1567,7 @@ export default function GameScreen(props: GameScreenProps) {
         },
         {
           title: 'Throw lobs to space',
-          detail: 'Press L only once the roller is really driving toward the hoop, otherwise it stays a normal pass instead of forcing a lob.',
+          detail: 'Double tap pass only once the roller is really driving toward the hoop, otherwise stay with the normal pass and let the action develop.',
         },
         {
           title: 'Still own the timing battle',
@@ -1583,9 +1596,9 @@ export default function GameScreen(props: GameScreenProps) {
     triggerCallScreen(inputRef.current);
   };
 
-  const handleThrowLob = () => {
+  const handleQuickPass = () => {
     unlockAudio();
-    triggerLob(inputRef.current);
+    triggerPass(inputRef.current);
   };
 
   return (
@@ -1745,8 +1758,8 @@ export default function GameScreen(props: GameScreenProps) {
                 <button className="btn btnSoft" style={{ padding: '12px 14px', fontWeight: 900 }} onClick={handleCallScreen}>
                   Call Pick and Roll
                 </button>
-                <button className="btn btnSoft" style={{ padding: '12px 14px', fontWeight: 900 }} onClick={handleThrowLob}>
-                  Throw Lob
+                <button className="btn btnSoft" style={{ padding: '12px 14px', fontWeight: 900 }} onClick={handleQuickPass}>
+                  Pass / Double Tap For Lob
                 </button>
               </div>
             ) : null}

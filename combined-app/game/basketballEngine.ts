@@ -756,7 +756,7 @@ function dunkWindowProfile(state: MatchState, entity: Entity, basket: Vec2, defe
 }
 
 function beginScreen(entity: Entity, targetId: string, anchor: Vec2) {
-  entity.screenMs = Math.max(entity.screenMs, 760);
+  entity.screenMs = Math.max(entity.screenMs, 1100);
   entity.rollMs = 0;
   entity.screenTargetId = targetId;
   entity.screenAnchor = { ...anchor };
@@ -769,19 +769,36 @@ function beginRoll(entity: Entity, target: Vec2) {
   entity.rollMs = Math.max(entity.rollMs, 1760);
 }
 
+function lobCatchTargetFor(receiver: Entity, basket: Vec2) {
+  const rimDir = normalize(sub(basket, receiver.pos));
+  const moveDirRaw =
+    receiver.rollMs > 0
+      ? normalize(sub(receiver.rollTarget, receiver.pos))
+      : len2(receiver.vel) > 18
+        ? normalize(receiver.vel)
+        : rimDir;
+  const moveDir = len2(moveDirRaw) > 0.01 ? moveDirRaw : rimDir;
+  const speedLead = clamp(len2(receiver.vel) * (receiver.rollMs > 0 ? 0.2 : 0.12), 8, receiver.rollMs > 0 ? 34 : 20);
+  const rimLead = clamp(dist(receiver.pos, basket) * (receiver.rollMs > 0 ? 0.08 : 0.045), 4, receiver.rollMs > 0 ? 18 : 10);
+  return add(add(receiver.pos, scale(moveDir, speedLead)), scale(rimDir, rimLead));
+}
+
 function screenAnchorFor(state: MatchState, ballHandler: Entity, screener: Entity, defender: Entity | null, basket: Vec2) {
   const attackDirRaw = normalize(sub(basket, ballHandler.pos));
   const attackDir = len2(attackDirRaw) > 0.01 ? attackDirRaw : { x: basket.x >= ballHandler.pos.x ? 1 : -1, y: 0 };
   const shoulderDir = normalize(perpendicular(attackDir));
   const sideBias = defender ? Math.sign(defender.pos.y - ballHandler.pos.y) || (screener.slotIndex === 0 ? -1 : 1) : screener.slotIndex === 0 ? -1 : 1;
   const base = defender
-    ? { x: lerp(ballHandler.pos.x, defender.pos.x, 0.58), y: lerp(ballHandler.pos.y, defender.pos.y, 0.58) }
-    : add(ballHandler.pos, scale(attackDir, 18));
+    ? {
+        x: lerp(ballHandler.pos.x, defender.pos.x, 0.52),
+        y: lerp(ballHandler.pos.y, defender.pos.y, 0.52),
+      }
+    : add(ballHandler.pos, scale(attackDir, 20));
   return courtClampPosition(
     state,
     add(
       add(base, scale(shoulderDir, sideBias * 16)),
-      scale(attackDir, -6),
+      scale(attackDir, defender ? -12 : -8),
     ),
   );
 }
@@ -835,11 +852,45 @@ function lobWindowProfile(
 }
 
 function isRunningToBasket(entity: Entity, basket: Vec2) {
-  const toBasket = normalize(sub(basket, entity.pos));
+  const target = entity.rollMs > 0 ? entity.rollTarget : basket;
+  const toBasket = normalize(sub(target, entity.pos));
   const moveDir = len2(entity.vel) > 24 ? normalize(entity.vel) : len2(entity.facing) > 0.01 ? normalize(entity.facing) : { x: 0, y: 0 };
   const forwardAngle = dot(moveDir, toBasket);
   const speed = len2(entity.vel);
-  return entity.rollMs > 0 && speed > 88 && forwardAngle > 0.58;
+  return entity.rollMs > 0 && speed > 82 && forwardAngle > 0.5;
+}
+
+function triggerScreenContact(state: MatchState, screener: Entity, defender: Entity, separation: number) {
+  if (!isExperimentalGameplayEnabled() || state.ball.kind !== 'possession' || screener.team === defender.team) return false;
+  if (state.ball.ownerId === screener.id || state.ball.ownerId === defender.id) return false;
+  if (screener.screenMs <= 0 || (screener.screenTargetId != null && screener.screenTargetId !== defender.id)) return false;
+
+  const ballHandler = getEntity(state, state.ball.ownerId);
+  const handlerLane = projectPointToSegment(screener.pos, defender.pos, ballHandler.pos);
+  const laneDistance = handlerLane.distance;
+  const contactRange = screener.radius + defender.radius + 12;
+  if (separation > contactRange || laneDistance > 24) return false;
+
+  const toHandler = normalize(sub(ballHandler.pos, defender.pos));
+  const toScreener = normalize(sub(screener.pos, defender.pos));
+  const defenderDir = len2(defender.vel) > 12 ? normalize(defender.vel) : toHandler;
+  const hitAngle = dot(defenderDir, toScreener);
+  const pursuitAngle = dot(toHandler, toScreener);
+  if (hitAngle < -0.08 || pursuitAngle < 0.18) return false;
+
+  const baskets = basketTargets(state);
+  const attackBasket = screener.team === 'user' ? baskets.user : baskets.ai;
+  const screenerProfile = entitySkillBlend(state, screener);
+  const defenderProfile = entitySkillBlend(state, defender);
+  const bodyStonewall = clamp(0.16 + (screenerProfile.size / 10) * 0.22 + (screenerProfile.defense / 10) * 0.1, 0.18, 0.52);
+  const slipRate = clamp(0.62 - (defenderProfile.speed / 10) * 0.18 - (defenderProfile.defense / 10) * 0.14, 0.22, 0.54);
+  defender.vel = scale(defender.vel, Math.min(bodyStonewall, slipRate));
+  defender.stunMs = Math.max(defender.stunMs, 120 + screenerProfile.size * 8 + screenerProfile.defense * 6);
+  defender.impactMs = Math.max(defender.impactMs, 180);
+  screener.impactMs = Math.max(screener.impactMs, 130);
+  beginRoll(screener, screenRollTargetFor(state, screener, ballHandler, attackBasket));
+  addEvent(state, { tone: 'blue', text: 'SCREEN HIT', x: screener.pos.x, y: screener.pos.y - 18 });
+  return true;
 }
 
 function applyExperimentalOffBallAction(
@@ -854,20 +905,30 @@ function applyExperimentalOffBallAction(
   if (entity.id === ballHandler.id) return false;
 
   if (entity.screenMs > 0) {
-    entity.screenAnchor = screenAnchorFor(state, ballHandler, entity, defender, attackBasket);
+    const desiredAnchor = screenAnchorFor(state, ballHandler, entity, defender, attackBasket);
+    entity.screenAnchor = {
+      x: lerp(entity.screenAnchor.x, desiredAnchor.x, 0.28),
+      y: lerp(entity.screenAnchor.y, desiredAnchor.y, 0.28),
+    };
     const anchor = entity.screenAnchor;
     const anchorDist = dist(entity.pos, anchor);
-    if (anchorDist > 18) {
+    if (anchorDist > 14) {
       const dir = normalize(sub(anchor, entity.pos));
       if (len2(dir) > 0.01) entity.facing = dir;
-      entity.vel = scale(dir, speed * (anchorDist > 54 ? 1.06 : 0.72));
+      entity.vel = scale(dir, speed * (anchorDist > 46 ? 1.02 : 0.6));
     } else {
       const faceTarget = defender?.pos ?? ballHandler.pos;
       const dir = normalize(sub(faceTarget, entity.pos));
       if (len2(dir) > 0.01) entity.facing = dir;
-      entity.vel = scale(entity.vel, 0.2);
+      if (defender) {
+        const chokePoint = projectPointToSegment(entity.pos, defender.pos, ballHandler.pos).point;
+        const stepDir = normalize(sub(chokePoint, entity.pos));
+        entity.vel = len2(stepDir) > 0.01 ? scale(stepDir, speed * 0.18) : scale(entity.vel, 0.12);
+      } else {
+        entity.vel = scale(entity.vel, 0.12);
+      }
     }
-    if (entity.screenMs <= 160 || dist(ballHandler.pos, attackBasket) < 128) {
+    if (entity.screenMs <= 180 || dist(ballHandler.pos, attackBasket) < 128) {
       beginRoll(entity, screenRollTargetFor(state, entity, ballHandler, attackBasket));
     }
     return true;
@@ -1308,7 +1369,14 @@ function resolveEntityCollisions(state: MatchState) {
       const between = sub(b.pos, a.pos);
       const d = len2(between) || 0.0001;
       const minDist = a.radius + b.radius + 1;
-      if (d >= minDist) continue;
+      if (d >= minDist) {
+        if (experimentalGameplay) {
+          const screener = a.screenMs > 0 ? a : b.screenMs > 0 ? b : null;
+          const defender = screener === a ? b : screener === b ? a : null;
+          if (screener && defender) triggerScreenContact(state, screener, defender, d);
+        }
+        continue;
+      }
       const dir = scale(between, 1 / d);
       const overlap = minDist - d;
       a.pos = courtClampPosition(state, add(a.pos, scale(dir, -overlap * 0.5)));
@@ -1329,26 +1397,7 @@ function resolveEntityCollisions(state: MatchState) {
       if (experimentalGameplay && state.ball.kind === 'possession' && a.team !== b.team) {
         const screener = state.ball.ownerId === a.id || state.ball.ownerId === b.id ? null : a.screenMs > 0 ? a : b.screenMs > 0 ? b : null;
         const defender = screener === a ? b : screener === b ? a : null;
-        if (screener && defender && (screener.screenTargetId == null || screener.screenTargetId === defender.id)) {
-          const toScreen = normalize(sub(screener.pos, defender.pos));
-          const defenderDir = len2(defender.vel) > 0.01 ? normalize(defender.vel) : toScreen;
-          const hitAngle = dot(defenderDir, toScreen);
-          if (hitAngle > 0.12) {
-            const baskets = basketTargets(state);
-            const ballHandler = getEntity(state, state.ball.ownerId);
-            const attackBasket = screener.team === 'user' ? baskets.user : baskets.ai;
-            const screenerProfile = entitySkillBlend(state, screener);
-            const defenderProfile = entitySkillBlend(state, defender);
-            const bodyStonewall = clamp(0.18 + (screenerProfile.size / 10) * 0.18 + (screenerProfile.defense / 10) * 0.08, 0.18, 0.48);
-            const slipRate = clamp(0.56 - (defenderProfile.speed / 10) * 0.18 - (defenderProfile.defense / 10) * 0.14, 0.18, 0.48);
-            defender.vel = scale(defender.vel, Math.min(bodyStonewall, slipRate));
-            defender.stunMs = Math.max(defender.stunMs, 110 + screenerProfile.size * 8 + screenerProfile.defense * 5);
-            defender.impactMs = Math.max(defender.impactMs, 180);
-            screener.impactMs = Math.max(screener.impactMs, 130);
-            beginRoll(screener, screenRollTargetFor(state, screener, ballHandler, attackBasket));
-            addEvent(state, { tone: 'blue', text: 'SCREEN HIT', x: screener.pos.x, y: screener.pos.y - 18 });
-          }
-        }
+        if (screener && defender) triggerScreenContact(state, screener, defender, d);
       }
     }
   }
@@ -2029,7 +2078,9 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
         const dunkWindow = dunkWindowProfile(state, entity, aiBasket, 'user');
         const rimContest = nearUser ? rimContestProfile(state, entity, nearUser.entity, aiBasket) : null;
         const posterFinish = nearUser ? posterFinishProfile(state, entity, nearUser.entity, aiBasket) : null;
-        const lobProfile = experimentalGameplay && teammate ? lobWindowProfile(state, entity, teammate, aiBasket, 'user', teammate.pos) : null;
+        const lobReceiverTarget = teammate ? lobCatchTargetFor(teammate, aiBasket) : null;
+        const lobProfile =
+          experimentalGameplay && teammate && lobReceiverTarget ? lobWindowProfile(state, entity, teammate, aiBasket, 'user', lobReceiverTarget) : null;
         const driveTarget = {
           x: aiBasket.x + 28,
           y: clamp(
@@ -2131,6 +2182,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
 
         if (teammate && lobProfile && lobIntent && state.resetTimerMs === 0) {
           const passPlan = passOutcomeProfile(state, entity, teammate, aiBasket, 'user');
+          const lobCatchTarget = lobCatchTargetFor(teammate, aiBasket);
           if (passPlan.interceptor && Math.random() < Math.min(0.52, passPlan.interceptChance + 0.015)) {
             const defenderStats = state.playerStatsByEntityId[passPlan.interceptor.entity.id];
             if (defenderStats) defenderStats.steals += 1;
@@ -2144,7 +2196,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
             passerId: entity.id,
             receiverId: teammate.id,
             start: { ...entity.pos },
-            end: { ...aiBasket },
+            end: lobCatchTarget,
             t: 0,
             duration: passPlan.duration + 90,
             passAccuracy: clamp(passPlan.passAccuracy - 0.02 + lobProfile.lobWindow * 0.015, 0.78, 0.99),
@@ -2287,15 +2339,16 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
     const receiver = state.entities.find((entity) => entity.team === 'user' && entity.id !== passer.id);
     if (receiver) {
       const receiverTarget = input.passTarget ? input.passTarget : receiver.pos;
+        const lobCatchTarget = lobCatchTargetFor(receiver, userBasket);
         const passPlan = passOutcomeProfile(state, passer, receiver, receiverTarget, 'ai');
-        const lobProfile = experimentalGameplay ? lobWindowProfile(state, passer, receiver, userBasket, 'ai', receiverTarget) : null;
+        const lobProfile = experimentalGameplay ? lobWindowProfile(state, passer, receiver, userBasket, 'ai', lobCatchTarget) : null;
         const receiverRunningToBasket = isRunningToBasket(receiver, userBasket);
         const throwLob = Boolean(
           experimentalGameplay &&
             input.lobPressed &&
             lobProfile &&
-            lobProfile.lobWindow > 0.52 &&
-            receiverRunningToBasket,
+            lobProfile.lobWindow > (receiver.rollMs > 0 ? 0.44 : 0.52) &&
+            (receiverRunningToBasket || lobProfile.rimDistance < 118),
       );
       const interceptChance = throwLob ? Math.min(0.52, passPlan.interceptChance + 0.015) : passPlan.interceptChance;
       if (passPlan.interceptor && Math.random() < interceptChance) {
@@ -2305,7 +2358,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
         addEvent(state, { tone: 'red', text: throwLob ? 'LOB PICKED!' : 'JUMPED LANE!', x: passPlan.interceptor.entity.pos.x, y: passPlan.interceptor.entity.pos.y });
       } else {
         const leadFactor = throwLob ? 0 : input.passTarget ? 0.28 : 0.64;
-        const lead = throwLob ? userBasket : add(receiverTarget, scale(receiver.vel, (passPlan.duration / 1000) * leadFactor));
+        const lead = throwLob ? lobCatchTarget : add(receiverTarget, scale(receiver.vel, (passPlan.duration / 1000) * leadFactor));
         const offset = throwLob ? { x: 0, y: 0 } : { x: (Math.random() - 0.5) * passPlan.spread, y: (Math.random() - 0.5) * passPlan.spread };
         state.ball = {
           kind: 'pass',
@@ -2400,7 +2453,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
       const remainingSeconds = Math.max(0.08, (state.ball.duration - state.ball.t) / 1000);
       const desiredEnd =
         state.ball.isLob && state.ball.lobTarget
-          ? { ...state.ball.lobTarget }
+          ? lobCatchTargetFor(receiver, state.ball.lobTarget)
           : add(add(receiver.pos, scale(receiver.vel, remainingSeconds * 0.65)), state.ball.offset);
       const correction = clamp((dtMs / 1000) * 8, 0.06, 0.32);
       state.ball.end = {
