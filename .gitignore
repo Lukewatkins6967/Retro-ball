@@ -15,3 +15,6 @@ combined-app/temp-Assembly-CSharp.dll
 # Optional bulky local outputs
 combined-app/preview.log
 combined-app/preview.err
+
+.vercel
+.env*.local

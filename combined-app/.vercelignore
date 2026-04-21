@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+.gitignore
+.vercel
+preview.log
+preview.err
+smoke-hoop.png
+temp-Assembly-CSharp.dll
+unity-extract
+unity-managed-inspect
+retro-bowl-game
+draft-prospects
