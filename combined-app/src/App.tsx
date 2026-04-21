@@ -55,6 +55,10 @@ type ScheduledGameContext = {
   awayTeamId: string;
 };
 
+const UPDATE_LOG_STORAGE_KEY = 'combinedAppUpdateLog_v2';
+const UPDATE_LOG_LEGACY_STORAGE_KEY = 'combinedAppUpdateLog_v1';
+const UPDATE_LOG_SEED_VERSION = 51;
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>('start');
   const [franchise, setFranchise] = useState<FranchiseState | null>(null);
@@ -69,6 +73,7 @@ export default function App() {
 
   const [updateLevel, setUpdateLevel] = useState(0);
   const [entries, setEntries] = useState<UpdateLogEntry[]>([]);
+  const [updateLogHydrated, setUpdateLogHydrated] = useState(false);
   const [newsPosts, setNewsPosts] = useState<LeagueNewsPost[]>([]);
   const [hasSave, setHasSave] = useState(false);
   const [freeAgencyRecapFranchise, setFreeAgencyRecapFranchise] = useState<FranchiseState | null>(null);
@@ -573,42 +578,49 @@ export default function App() {
     ];
 
     try {
-      const raw = localStorage.getItem('combinedAppUpdateLog_v1');
+      const raw = localStorage.getItem(UPDATE_LOG_STORAGE_KEY) ?? localStorage.getItem(UPDATE_LOG_LEGACY_STORAGE_KEY);
       if (!raw) {
         const seedLevel = seedEntries.reduce((s, e) => s + e.delta, 0);
         setUpdateLevel(Math.round(seedLevel * 10) / 10);
         setEntries(seedEntries);
+        setUpdateLogHydrated(true);
         return;
       }
 
-      const parsed = JSON.parse(raw) as { updateLevel: number; entries: UpdateLogEntry[] };
+      const parsed = JSON.parse(raw) as { updateLevel?: number; entries?: UpdateLogEntry[]; seedVersion?: number };
       const storedEntries = Array.isArray(parsed.entries) ? parsed.entries : [];
       const storedLevel = typeof parsed.updateLevel === 'number' ? parsed.updateLevel : 0;
 
       // Ensure we always include newly-added seed entries without overwriting user updates.
       const missingSeedEntries = seedEntries.filter((se) => !storedEntries.some((e) => e?.id === se.id));
       const missingDeltaSum = missingSeedEntries.reduce((s, e) => s + e.delta, 0);
-
-      const nextEntries = missingSeedEntries.length ? [...storedEntries, ...missingSeedEntries] : storedEntries;
-      const nextLevel = missingDeltaSum ? Math.round((storedLevel + missingDeltaSum) * 10) / 10 : storedLevel;
+      const mergedEntries = missingSeedEntries.length ? [...storedEntries, ...missingSeedEntries] : storedEntries;
+      const mergedLevel = missingDeltaSum ? Math.round((storedLevel + missingDeltaSum) * 10) / 10 : storedLevel;
+      const fallbackLevel = Math.round(mergedEntries.reduce((sum, entry) => sum + (entry?.delta ?? 0), 0) * 10) / 10;
+      const nextLevel = parsed.seedVersion === UPDATE_LOG_SEED_VERSION ? mergedLevel : Math.max(mergedLevel, fallbackLevel);
 
       setUpdateLevel(nextLevel);
-      setEntries(nextEntries);
+      setEntries(mergedEntries);
+      setUpdateLogHydrated(true);
     } catch {
-      // Ignore storage issues.
+      const seedLevel = seedEntries.reduce((s, e) => s + e.delta, 0);
+      setUpdateLevel(Math.round(seedLevel * 10) / 10);
+      setEntries(seedEntries);
+      setUpdateLogHydrated(true);
     }
   }, []);
 
   useEffect(() => {
+    if (!updateLogHydrated) return;
     try {
       localStorage.setItem(
-        'combinedAppUpdateLog_v1',
-        JSON.stringify({ updateLevel, entries }),
+        UPDATE_LOG_STORAGE_KEY,
+        JSON.stringify({ updateLevel, entries, seedVersion: UPDATE_LOG_SEED_VERSION }),
       );
     } catch {
       // Ignore storage issues.
     }
-  }, [updateLevel, entries]);
+  }, [entries, updateLevel, updateLogHydrated]);
 
   useEffect(() => {
     // Optional persistence: helps keep your preference across refresh.
