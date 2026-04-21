@@ -57,7 +57,7 @@ type ScheduledGameContext = {
 
 const UPDATE_LOG_STORAGE_KEY = 'combinedAppUpdateLog_v2';
 const UPDATE_LOG_LEGACY_STORAGE_KEY = 'combinedAppUpdateLog_v1';
-const UPDATE_LOG_SEED_VERSION = 52;
+const UPDATE_LOG_SEED_VERSION = 53;
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('start');
@@ -581,6 +581,13 @@ export default function App() {
         description: 'Experimental screen gameplay tightened: screeners now hold contact longer before rolling, on-ball defenders get knocked off the action more clearly on real screen hits, and nearby help defenders feel that collision too.',
         major: false,
         delta: 0.1,
+      },
+      {
+        id: 'seed-53',
+        createdAt: Date.now() + 30,
+        description: 'Gameplay and simulation realism overhaul: possessions now lean much harder on player ratings and defensive context, open dunks finish far more reliably, movement and passing feel smoother, player growth follows clearer age/performance curves, and generated draft classes have stronger archetype, height, and rating separation.',
+        major: true,
+        delta: 0.5,
       },
     ];
 

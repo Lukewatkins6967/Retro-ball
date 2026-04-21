@@ -2443,6 +2443,78 @@ function deriveOverallFromCategories(categories: Prospect['categories']): number
   return deriveOverall100({ categories });
 }
 
+function ageProgressionCurve(age: number) {
+  if (age <= 22) return 1.55 - (22 - age) * 0.1;
+  if (age <= 27) return 0.55;
+  if (age <= 32) return -0.16 - (age - 28) * 0.08;
+  return -0.6 - Math.max(0, age - 33) * 0.12;
+}
+
+function efficiencyProxy(inc: PlayerInGameStats, player: TeamPlayer) {
+  const creationValue = inc.points * 0.62 + inc.assists * 0.86 + inc.rebounds * 0.42 + inc.steals * 1.15 + inc.blocks * 1.1;
+  const expectation = 7.5 + player.prospect.overall * 0.055;
+  return clamp(creationValue / expectation, 0.72, 1.34);
+}
+
+function performanceFactorFromStats(
+  player: TeamPlayer,
+  stats: TeamPlayer['seasonStats'],
+  inc: PlayerInGameStats,
+  teamWon: boolean,
+) {
+  const pg = perGame(stats);
+  const production = clamp(pg.points * 0.032 + pg.assists * 0.05 + pg.rebounds * 0.028 + pg.steals * 0.09 + pg.blocks * 0.085, 0.72, 1.26);
+  const efficiency = efficiencyProxy(inc, player);
+  const winFactor = teamWon ? 1.08 : 0.96;
+  return clamp(production * 0.4 + efficiency * 0.42 + winFactor * 0.18, 0.72, 1.3);
+}
+
+function applyProgressionFromGame(
+  player: TeamPlayer,
+  nextStats: TeamPlayer['seasonStats'],
+  inc: PlayerInGameStats,
+  teamWon: boolean,
+) {
+  const potentialFactor = clamp(player.prospect.potential / 10, 0.1, 1);
+  const ageCurve = ageProgressionCurve(player.prospect.age);
+  const performanceFactor = performanceFactorFromStats(player, nextStats, inc, teamWon);
+  const weightedChange = potentialFactor * ageCurve * performanceFactor * 0.045;
+  const positive = weightedChange >= 0;
+
+  const weights = positive
+    ? {
+        shooting: 0.26 + inc.points * 0.014,
+        speed: 0.16 + inc.steals * 0.05 + inc.rebounds * 0.01,
+        playmaking: 0.2 + inc.assists * 0.03 + inc.points * 0.004,
+        defense: 0.18 + inc.steals * 0.06 + inc.blocks * 0.055 + inc.rebounds * 0.018,
+      }
+    : {
+        shooting: 0.22,
+        speed: 0.3,
+        playmaking: 0.2,
+        defense: 0.28,
+      };
+  const weightTotal = weights.shooting + weights.speed + weights.playmaking + weights.defense;
+  const normalizedWeights = {
+    shooting: weights.shooting / weightTotal,
+    speed: weights.speed / weightTotal,
+    playmaking: weights.playmaking / weightTotal,
+    defense: weights.defense / weightTotal,
+  };
+
+  const nextCats = {
+    shooting: clamp(player.prospect.categories.shooting + weightedChange * normalizedWeights.shooting, 1, 10),
+    speed: clamp(player.prospect.categories.speed + weightedChange * normalizedWeights.speed, 1, 10),
+    playmaking: clamp(player.prospect.categories.playmaking + weightedChange * normalizedWeights.playmaking, 1, 10),
+    defense: clamp(player.prospect.categories.defense + weightedChange * normalizedWeights.defense, 1, 10),
+  };
+
+  return {
+    nextCats,
+    nextOverall: deriveOverallFromCategories(nextCats),
+  };
+}
+
 function statsForPhase(player: TeamPlayer, phase: 'regular' | 'playoffs' | 'complete' = 'regular') {
   return phase === 'playoffs' ? player.playoffStats : player.seasonStats;
 }
@@ -3169,6 +3241,7 @@ export function applyMatchResults(
     const nextRoster = team.roster.map((tp) => {
       const inc = inGameStatsByEntityId[tp.id];
       if (!inc) return tp;
+      const teamWon = team.id === franchise.user.id ? didUserWin === true : team.id === franchise.ai.id ? didUserWin === false : false;
 
       const beforeCats = tp.prospect.categories;
       const beforeRounds = {
@@ -3187,22 +3260,7 @@ export function applyMatchResults(
         steals: currentStats.steals + inc.steals,
         blocks: currentStats.blocks + inc.blocks,
       };
-
-      // Progression: high potential improves faster.
-      const growth = tp.prospect.potential / 10; // 0.1..1
-      const shootingBoost = growth * (inc.points * 0.02 + inc.assists * 0.01);
-      const playmakingBoost = growth * (inc.assists * 0.03 + inc.points * 0.005 + inc.rebounds * 0.004);
-      const defenseBoost = growth * (inc.steals * 0.05 + inc.blocks * 0.04 + inc.rebounds * 0.015);
-      const speedBoost = growth * (inc.steals * 0.02 + inc.blocks * 0.015 + inc.rebounds * 0.01);
-
-      const nextCats = {
-        shooting: clamp(tp.prospect.categories.shooting + shootingBoost, 1, 10),
-        speed: clamp(tp.prospect.categories.speed + speedBoost, 1, 10),
-        playmaking: clamp(tp.prospect.categories.playmaking + playmakingBoost, 1, 10),
-        defense: clamp(tp.prospect.categories.defense + defenseBoost, 1, 10),
-      };
-
-      const nextOverall = deriveOverallFromCategories(nextCats);
+      const { nextCats, nextOverall } = applyProgressionFromGame(tp, nextBucketStats, inc, teamWon);
 
       const afterRounds = {
         shooting: Math.round(nextCats.shooting),
@@ -3341,6 +3399,7 @@ export function applyLeagueMatchResults(
     const nextRoster = team.roster.map((tp) => {
       const inc = inGameStatsByEntityId[tp.id];
       if (!inc) return tp;
+      const teamWon = winnerTeamId === team.id;
 
       const beforeCats = tp.prospect.categories;
       const beforeRounds = {
@@ -3359,21 +3418,7 @@ export function applyLeagueMatchResults(
         steals: currentStats.steals + inc.steals,
         blocks: currentStats.blocks + inc.blocks,
       };
-
-      const growth = tp.prospect.potential / 10; // 0.1..1
-      const shootingBoost = growth * (inc.points * 0.02 + inc.assists * 0.01);
-      const playmakingBoost = growth * (inc.assists * 0.03 + inc.points * 0.005 + inc.rebounds * 0.004);
-      const defenseBoost = growth * (inc.steals * 0.05 + inc.blocks * 0.04 + inc.rebounds * 0.015);
-      const speedBoost = growth * (inc.steals * 0.02 + inc.blocks * 0.015 + inc.rebounds * 0.01);
-
-      const nextCats = {
-        shooting: clamp(tp.prospect.categories.shooting + shootingBoost, 1, 10),
-        speed: clamp(tp.prospect.categories.speed + speedBoost, 1, 10),
-        playmaking: clamp(tp.prospect.categories.playmaking + playmakingBoost, 1, 10),
-        defense: clamp(tp.prospect.categories.defense + defenseBoost, 1, 10),
-      };
-
-      const nextOverall = deriveOverallFromCategories(nextCats);
+      const { nextCats, nextOverall } = applyProgressionFromGame(tp, nextBucketStats, inc, teamWon);
 
       const afterRounds = {
         shooting: Math.round(nextCats.shooting),

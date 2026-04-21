@@ -167,6 +167,10 @@ function scale(a: Vec2, s: number): Vec2 {
   return { x: a.x * s, y: a.y * s };
 }
 
+function lerpVec(a: Vec2, b: Vec2, t: number): Vec2 {
+  return { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) };
+}
+
 function normalize(v: Vec2): Vec2 {
   const l = len2(v);
   if (l <= 0.0001) return { x: 0, y: 0 };
@@ -493,22 +497,27 @@ function laneTrafficScore(
 
 function shotQualityScore(state: MatchState, shooter: Entity, basket: Vec2, defenderTeam: EntityTeam) {
   const defender = closestOpponent(state, shooter.id, defenderTeam);
-  const distanceScore = clamp(1 - dist(shooter.pos, basket) / 340, 0, 1);
+  const shotDistance = dist(shooter.pos, basket);
+  const isThree = isThreePointShot(state, shooter.pos, basket);
+  const distanceScore = clamp(1 - shotDistance / (isThree ? 430 : 300), 0, 1);
   const pressure = clamp(1 - (defender?.d ?? 132) / 96, 0, 1);
   const profile = entitySkillBlend(state, shooter);
+  const defenderProfile = defender?.entity ? entitySkillBlend(state, defender.entity) : null;
   const shooterPlayer = findPlayer(state[shooter.team], shooter.id);
   const shooterMods = shooterPlayer ? getPlayerGameplayModifiers(shooterPlayer, state[shooter.team], liveGameContext(state)) : null;
   const shooterTeamMods = getTeamGameplayModifiers(state[shooter.team]);
-  const shootingTouch = (profile.shooting / 10) * fatigueMultiplier(getPlayerStamina(state, shooter.id));
+  const shootingTouch = ((isThree ? profile.shooting : insideFinishRating(profile)) / 10) * fatigueMultiplier(getPlayerStamina(state, shooter.id));
+  const defenseTouch = defenderProfile ? ((isThree ? perimeterDefenseRating(defenderProfile) : interiorDefenseRating(defenderProfile)) / 10) * pressure : 0;
   const laneTraffic = laneTrafficScore(state, shooter.pos, basket, defenderTeam, shooter.id);
   return clamp(
     0.12 +
-      shootingTouch * 0.42 +
-      distanceScore * 0.26 +
+      shootingTouch * (isThree ? 0.38 : 0.42) +
+      distanceScore * (isThree ? 0.2 : 0.26) +
       (1 - pressure) * 0.18 +
       (profile.athleticism / 10) * 0.08 +
       (shooterMods?.shotBoost ?? 0) * 0.22 +
       shooterTeamMods.shootingBoost * 0.2 -
+      defenseTouch * (isThree ? 0.18 : 0.24) -
       laneTraffic * 0.15,
     0,
     1,
@@ -576,19 +585,19 @@ function passOutcomeProfile(
   const receiveTouch = (receiverProfile.hands * 0.6 + receiverProfile.speed * 0.16 + receiverProfile.overall * 0.24) / 10;
   const interceptChance = interceptor
     ? clamp(
-        0.03 +
-          laneTraffic * 0.1 +
-          interceptor.score * 0.26 -
-          releaseTouch * 0.17 -
-          receiveTouch * 0.06 +
-          distFactor * 0.06,
-        0.02,
-        0.42,
+        0.025 +
+          laneTraffic * 0.085 +
+          interceptor.score * 0.22 -
+          releaseTouch * 0.18 -
+          receiveTouch * 0.08 +
+          distFactor * 0.04,
+        0.015,
+        0.34,
       )
     : 0;
-  const passAccuracy = clamp(0.82 + releaseTouch * 0.13 + receiveTouch * 0.06 - laneTraffic * 0.05 - distFactor * 0.06, 0.76, 0.99);
-  const duration = clamp((passDist / 780) * 1000, 210, 390);
-  const spread = (1 - passAccuracy) * 24;
+  const passAccuracy = clamp(0.87 + releaseTouch * 0.1 + receiveTouch * 0.06 - laneTraffic * 0.04 - distFactor * 0.035, 0.84, 0.995);
+  const duration = clamp((passDist / 820) * 1000, 190, 360);
+  const spread = (1 - passAccuracy) * 14;
   return { interceptor, interceptChance, passAccuracy, duration, spread };
 }
 
@@ -641,6 +650,23 @@ function blockRejectionVelocity(state: MatchState, blocker: Entity, shooter: Ent
     x: downCourt * launch + (shooter ? shooter.vel.x * 0.35 : 0),
     y: sidelineDrift,
   };
+}
+
+function perimeterDefenseRating(profile: ReturnType<typeof entitySkillBlend>) {
+  return clamp(profile.defense * 0.68 + profile.speed * 0.2 + profile.athleticism * 0.12, 1, 10);
+}
+
+function interiorDefenseRating(profile: ReturnType<typeof entitySkillBlend>) {
+  return clamp(profile.defense * 0.58 + profile.size * 0.26 + profile.athleticism * 0.16, 1, 10);
+}
+
+function steerEntityVelocity(entity: Entity, desired: Vec2, dtMs: number, accel = 11, brake = 8.5) {
+  const desiredSpeed = len2(desired);
+  if (desiredSpeed <= 0.01) {
+    entity.vel = lerpVec(entity.vel, { x: 0, y: 0 }, clamp((dtMs / 1000) * brake, 0.08, 0.32));
+    return;
+  }
+  entity.vel = lerpVec(entity.vel, desired, clamp((dtMs / 1000) * accel, 0.1, 0.34));
 }
 
 function insideFinishRating(profile: ReturnType<typeof entitySkillBlend>) {
@@ -1405,8 +1431,8 @@ function resolveEntityCollisions(state: MatchState) {
       const overlap = minDist - d;
       a.pos = courtClampPosition(state, add(a.pos, scale(dir, -overlap * 0.5)));
       b.pos = courtClampPosition(state, add(b.pos, scale(dir, overlap * 0.5)));
-      a.vel = add(a.vel, scale(dir, -overlap * 6));
-      b.vel = add(b.vel, scale(dir, overlap * 6));
+      a.vel = add(scale(a.vel, 0.92), scale(dir, -overlap * 3.8));
+      b.vel = add(scale(b.vel, 0.92), scale(dir, overlap * 3.8));
 
       if (state.ball.kind === 'possession') {
         const owner = state.ball.ownerId === a.id ? a : state.ball.ownerId === b.id ? b : null;
@@ -1979,9 +2005,9 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
           if (len2(dir) > 0.01) entity.facing = dir;
           const baseSpeed = 235;
           const speed = baseSpeed * (0.46 + (profile.speed / 10) * 0.42 + (profile.athleticism / 10) * 0.12) * staminaBoost * burst;
-          entity.vel = scale(dir, speed);
+          steerEntityVelocity(entity, scale(dir, speed), dtMs, 12.5, 9.2);
         } else {
-          entity.vel = scale(entity.vel, 0.7);
+          steerEntityVelocity(entity, { x: 0, y: 0 }, dtMs, 10, 9.5);
         }
         continue;
       }
@@ -1993,7 +2019,13 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
         };
         const dir = normalize(sub(reboundTarget, entity.pos));
         if (len2(dir) > 0.01) entity.facing = dir;
-        entity.vel = scale(entity.dodgeMs > 0 ? entity.dashDir : dir, 168 * (0.46 + (profile.speed / 10) * 0.3 + (profile.rebounding / 10) * 0.24) * staminaBoost * burst);
+        steerEntityVelocity(
+          entity,
+          scale(entity.dodgeMs > 0 ? entity.dashDir : dir, 168 * (0.46 + (profile.speed / 10) * 0.3 + (profile.rebounding / 10) * 0.24) * staminaBoost * burst),
+          dtMs,
+          11.5,
+          8.8,
+        );
         if (dist(entity.pos, liveBallPos) < 46 && Math.random() < 0.06) {
           beginJump(state, entity);
         }
@@ -2004,7 +2036,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
         const releaseTarget = state.ball.lobTarget ?? userBasket;
         const dir = normalize(sub(releaseTarget, entity.pos));
         if (len2(dir) > 0.01) entity.facing = dir;
-        entity.vel = scale(dir, 176 * (0.44 + (profile.speed / 10) * 0.3 + (profile.athleticism / 10) * 0.18 + (profile.playmaking / 10) * 0.12) * staminaBoost * burst);
+        steerEntityVelocity(entity, scale(dir, 176 * (0.44 + (profile.speed / 10) * 0.3 + (profile.athleticism / 10) * 0.18 + (profile.playmaking / 10) * 0.12) * staminaBoost * burst), dtMs, 12, 8.8);
         continue;
       }
 
@@ -2021,7 +2053,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
         : { x: clamp(liveBallPos.x + 36, state.court.width * 0.5, state.court.width - 100), y: liveBallPos.y + (entity.slotIndex === 0 ? -52 : 52) };
       const dir = normalize(sub(supportTarget, entity.pos));
       if (len2(dir) > 0.01) entity.facing = dir;
-      entity.vel = scale(entity.dodgeMs > 0 ? entity.dashDir : dir, 132 * (0.48 + (profile.speed / 10) * 0.32 + (profile.playmaking / 10) * 0.2) * staminaBoost * burst);
+      steerEntityVelocity(entity, scale(entity.dodgeMs > 0 ? entity.dashDir : dir, 132 * (0.48 + (profile.speed / 10) * 0.32 + (profile.playmaking / 10) * 0.2) * staminaBoost * burst), dtMs, 10.5, 8.6);
     }
 
     const aiAvg = teamAverages(state.ai, state);
@@ -2062,7 +2094,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
         const releaseTarget = state.ball.lobTarget ?? aiBasket;
         const dir = normalize(sub(releaseTarget, entity.pos));
         if (len2(dir) > 0.01) entity.facing = dir;
-        entity.vel = scale(dir, 180 * (0.44 + (profile.speed / 10) * 0.3 + (profile.athleticism / 10) * 0.18 + (profile.playmaking / 10) * 0.12) * staminaBoost * burst);
+        steerEntityVelocity(entity, scale(dir, 180 * (0.44 + (profile.speed / 10) * 0.3 + (profile.athleticism / 10) * 0.18 + (profile.playmaking / 10) * 0.12) * staminaBoost * burst), dtMs, 12, 8.8);
         continue;
       }
 
@@ -2071,7 +2103,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
           const chaseDir = normalize(sub(liveBallPos, entity.pos));
           if (len2(chaseDir) > 0.01) entity.facing = chaseDir;
           const speed = 188 * (0.46 + (profile.speed / 10) * 0.3 + (profile.rebounding / 10) * 0.24) * staminaBoost * burst;
-          entity.vel = scale(entity.dodgeMs > 0 ? entity.dashDir : chaseDir, speed);
+          steerEntityVelocity(entity, scale(entity.dodgeMs > 0 ? entity.dashDir : chaseDir, speed), dtMs, 11.6, 8.8);
           if (dist(entity.pos, liveBallPos) < 52 && Math.random() < 0.012) {
             beginDodge(state, entity, len2(chaseDir) > 0.01 ? chaseDir : { x: -1, y: 0 });
           }
@@ -2085,7 +2117,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
             : { x: state.court.width * 0.62, y: state.court.height * 0.5 + (entity.slotIndex === 0 ? -68 : 68) };
           const dir = normalize(sub(shadeTarget, entity.pos));
           if (len2(dir) > 0.01) entity.facing = dir;
-          entity.vel = scale(entity.dodgeMs > 0 ? entity.dashDir : dir, 154 * (0.42 + (profile.speed / 10) * 0.26 + (profile.defense / 10) * 0.22 + (profile.athleticism / 10) * 0.1) * staminaBoost * burst);
+          steerEntityVelocity(entity, scale(entity.dodgeMs > 0 ? entity.dashDir : dir, 154 * (0.42 + (profile.speed / 10) * 0.26 + (profile.defense / 10) * 0.22 + (profile.athleticism / 10) * 0.1) * staminaBoost * burst), dtMs, 10.8, 8.5);
         }
         continue;
       }
@@ -2150,20 +2182,36 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
           const defender = closestOpponent(state, entity.id, 'user');
           const attackerProfile = entitySkillBlend(state, entity);
           const defenderProfile = defender?.entity ? entitySkillBlend(state, defender.entity) : null;
-          const defenderSkill = (defenderProfile?.defense ?? 5) * fatigueMultiplier(getPlayerStamina(state, defender?.entity.id ?? ''));
+          const perimeterDefense = (defenderProfile ? perimeterDefenseRating(defenderProfile) : 5) * fatigueMultiplier(getPlayerStamina(state, defender?.entity.id ?? ''));
+          const interiorDefense = (defenderProfile ? interiorDefenseRating(defenderProfile) : 5) * fatigueMultiplier(getPlayerStamina(state, defender?.entity.id ?? ''));
           const shooterSkill = attackerProfile.shooting * staminaBoost;
+          const finisherSkill = insideFinishRating(attackerProfile) * staminaBoost;
           const distFactor = clamp(d / 520, 0, 1);
           const isDunk = dunkIntent || (entity.jumpMs > 0 && d < 118);
           const isPoster = isDunk && Boolean(posterFinish && posterFinish.posterWindow > 0.7 && posterFinish.contest.bodyUp > 0.3 && posterFinish.contest.frontAngle > 0.5);
           const points = isDunk ? 2 : isThreePointShot(state, entity.pos, aiBasket) ? 3 : 2;
+          const shotTypeBase = isDunk ? 0.88 : points === 3 ? 0.34 : d < 126 ? 0.56 : 0.44;
+          const contestPenalty = isDunk ? (rimContest?.contestWindow ?? 0) * 0.22 + interiorDefense * 0.018 : points === 3 ? (rimContest?.contestWindow ?? 0) * 0.04 + perimeterDefense * 0.024 : (rimContest?.contestWindow ?? 0) * 0.1 + interiorDefense * 0.016;
           const baseHitChance = clamp(
-            0.08 + (shooterSkill / 10) * 0.68 * attackMulAI + (attackerProfile.overall / 10) * 0.08 - (defenderSkill / 10) * 0.3 * defenseMulUser - distFactor * 0.22 + difficulty.aiShotBoost + arcadeBias * 0.018,
-            0.04,
-            0.9,
+            shotTypeBase +
+              (isDunk ? finisherSkill * 0.01 : shooterSkill * 0.038) * attackMulAI +
+              (attackerProfile.overall / 10) * 0.05 -
+              contestPenalty * defenseMulUser -
+              (isDunk ? 0 : distFactor * (points === 3 ? 0.1 : 0.14)) +
+              difficulty.aiShotBoost +
+              arcadeBias * 0.015,
+            0.08,
+            0.96,
           );
           const hitChance = isDunk
-            ? clamp(baseHitChance + 0.18 + (posterFinish?.posterWindow ?? 0) * 0.18 - (rimContest?.contestWindow ?? 0) * 0.06, 0.54, 0.99)
-            : clamp(baseHitChance - (rimContest?.contestWindow ?? 0) * 0.03, 0.04, 0.9);
+            ? clamp(
+                (rimContest?.contestWindow ?? 0) < 0.28 && (rimContest?.frontAngle ?? 0) < 0.58
+                  ? 0.985 - clamp((6.2 - finisherSkill) * 0.012, 0, 0.1) - clamp((72 - getPlayerStamina(state, entity.id)) / 220, 0, 0.08)
+                  : baseHitChance + (posterFinish?.posterWindow ?? 0) * 0.08 - (rimContest?.contestWindow ?? 0) * 0.08,
+                0.58,
+                0.999,
+              )
+            : clamp(baseHitChance, 0.08, 0.92);
           const nearRimFactor = clamp(1 - d / 150, 0, 1);
           const blockExecution =
             (rimContest?.blockPositioning ?? 0) *
@@ -2174,13 +2222,13 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
               nearRimFactor * 0.008 +
               blockExecution *
                 (0.12 +
-                  ((defenderSkill - shooterSkill) / 10) * 0.1 * defenseMulUser +
+                  (((isDunk ? interiorDefense : perimeterDefense) - (isDunk ? finisherSkill : shooterSkill)) / 10) * 0.1 * defenseMulUser +
                   ((defenderProfile?.size ?? 5) / 10) * 0.08 +
-                  ((defenderProfile?.defense ?? 5) / 10) * 0.06 +
+                  ((isDunk ? interiorDefense : perimeterDefense) / 10) * 0.06 +
                   (isDunk ? 0.04 : 0)) +
               (isDunk ? (posterFinish?.posterWindow ?? 0) * 0.2 + Math.max(0, posterFinish?.heightEdge ?? 0) * 0.08 : 0),
             0.001,
-            0.46,
+            isDunk ? 0.34 : 0.22,
           );
           if (isDunk) beginDunk(state, entity, aiBasket);
           else if (!entity.jumpMs) beginJump(state, entity);
@@ -2416,7 +2464,9 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
     const d = dist(shooter.pos, target);
     const distFactor = clamp(d / 520, 0, 1);
     const shooterSkill = shooterProfile.shooting * shooterFatigue;
-    const defenderSkill = (defenderProfile?.defense ?? 5) * defenderFatigue;
+    const finisherSkill = insideFinishRating(shooterProfile) * shooterFatigue;
+    const perimeterDefense = (defenderProfile ? perimeterDefenseRating(defenderProfile) : 5) * defenderFatigue;
+    const interiorDefense = (defenderProfile ? interiorDefenseRating(defenderProfile) : 5) * defenderFatigue;
     const dunkWindow = dunkWindowProfile(state, shooter, target, 'ai');
     const rimContest = defender ? rimContestProfile(state, shooter, defender, target) : null;
     const posterFinish = defender ? posterFinishProfile(state, shooter, defender, target) : null;
@@ -2424,14 +2474,28 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
     const isPoster = isDunk && Boolean(posterFinish && posterFinish.posterWindow > 0.7 && posterFinish.contest.bodyUp > 0.3 && posterFinish.contest.frontAngle > 0.5);
     const points = isDunk ? 2 : isThreePointShot(state, shooter.pos, target) ? 3 : 2;
 
+    const shotTypeBase = isDunk ? 0.88 : points === 3 ? 0.34 : d < 126 ? 0.56 : 0.44;
+    const contestPenalty = isDunk ? (rimContest?.contestWindow ?? 0) * 0.22 + interiorDefense * 0.018 : points === 3 ? (rimContest?.contestWindow ?? 0) * 0.04 + perimeterDefense * 0.024 : (rimContest?.contestWindow ?? 0) * 0.1 + interiorDefense * 0.016;
     const baseHitChance = clamp(
-      0.08 + (shooterSkill / 10) * 0.68 * attackMulUser + (shooterProfile.overall / 10) * 0.08 - (defenderSkill / 10) * 0.3 * defenseMulAI - distFactor * 0.22 + difficulty.userShotBoost + arcadeBias * 0.018,
-      0.04,
-      0.9,
+      shotTypeBase +
+        (isDunk ? finisherSkill * 0.01 : shooterSkill * 0.038) * attackMulUser +
+        (shooterProfile.overall / 10) * 0.05 -
+        contestPenalty * defenseMulAI -
+        (isDunk ? 0 : distFactor * (points === 3 ? 0.1 : 0.14)) +
+        difficulty.userShotBoost +
+        arcadeBias * 0.015,
+      0.08,
+      0.96,
     );
     const hitChance = isDunk
-      ? clamp(baseHitChance + 0.18 + (posterFinish?.posterWindow ?? 0) * 0.18 - (rimContest?.contestWindow ?? 0) * 0.06, 0.54, 0.99)
-      : clamp(baseHitChance - (rimContest?.contestWindow ?? 0) * 0.03, 0.04, 0.9);
+      ? clamp(
+          (rimContest?.contestWindow ?? 0) < 0.28 && (rimContest?.frontAngle ?? 0) < 0.58
+            ? 0.985 - clamp((6.2 - finisherSkill) * 0.012, 0, 0.1) - clamp((72 - getPlayerStamina(state, shooter.id)) / 220, 0, 0.08)
+            : baseHitChance + (posterFinish?.posterWindow ?? 0) * 0.08 - (rimContest?.contestWindow ?? 0) * 0.08,
+          0.58,
+          0.999,
+        )
+      : clamp(baseHitChance, 0.08, 0.92);
     const nearRimFactor = clamp(1 - d / 150, 0, 1);
     const blockExecution =
       (rimContest?.blockPositioning ?? 0) *
@@ -2442,13 +2506,13 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
         nearRimFactor * 0.008 +
         blockExecution *
           (0.12 +
-            ((defenderSkill - shooterSkill) / 10) * 0.1 * defenseMulAI +
+            (((isDunk ? interiorDefense : perimeterDefense) - (isDunk ? finisherSkill : shooterSkill)) / 10) * 0.1 * defenseMulAI +
             ((defenderProfile?.size ?? 5) / 10) * 0.08 +
-            ((defenderProfile?.defense ?? 5) / 10) * 0.06 +
+            ((isDunk ? interiorDefense : perimeterDefense) / 10) * 0.06 +
             (isDunk ? 0.04 : 0)) -
         (isDunk ? (posterFinish?.posterWindow ?? 0) * 0.2 + Math.max(0, posterFinish?.heightEdge ?? 0) * 0.08 : 0),
       0.001,
-      0.46,
+      isDunk ? 0.34 : 0.22,
     );
     if (isDunk) beginDunk(state, shooter, target);
     else if (!shooter.jumpMs) beginJump(state, shooter);
@@ -2523,7 +2587,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
           const receiverProfile = entitySkillBlend(state, receiverEntity);
           const defenderProfile = defender ? entitySkillBlend(state, defender) : null;
           const finisherSkill = insideFinishRating(receiverProfile) * fatigueMultiplier(getPlayerStamina(state, receiverEntity.id));
-          const defenderSkill = (defenderProfile?.defense ?? 5) * fatigueMultiplier(getPlayerStamina(state, defender?.id ?? ''));
+          const defenderSkill = (defenderProfile ? interiorDefenseRating(defenderProfile) : 5) * fatigueMultiplier(getPlayerStamina(state, defender?.id ?? ''));
           const canFinish = lobProfile.rimDistance < 144 && (lobProfile.dunkWindow.canDunk || lobProfile.lobWindow > 0.9);
           if (canFinish) {
             const isPoster = Boolean(
@@ -2542,7 +2606,7 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
                   (0.08 + (defenderSkill / 10) * 0.08 + ((defenderProfile?.size ?? 5) / 10) * 0.08) -
                 (isPoster ? 0.08 : 0),
               0.001,
-              0.34,
+              0.24,
             );
             beginDunk(state, receiverEntity, lobTarget);
             state.ball = {
@@ -2555,7 +2619,13 @@ export function updateMatch(state: MatchState, input: PlayerInput, dtMs: number)
               arcHeight: 26,
               defenseContestId: defender?.id,
               willBlock: defender ? Math.random() < blockChance : false,
-              hitChance: clamp(0.64 + lobProfile.lobWindow * 0.16 + (finisherSkill / 10) * 0.18 - (rimContest?.contestWindow ?? 0) * 0.08, 0.5, 0.995),
+              hitChance: clamp(
+                (rimContest?.contestWindow ?? 0) < 0.28
+                  ? 0.988 - clamp((6.2 - finisherSkill) * 0.012, 0, 0.08)
+                  : 0.74 + lobProfile.lobWindow * 0.12 + (finisherSkill / 10) * 0.14 - (rimContest?.contestWindow ?? 0) * 0.1,
+                0.58,
+                0.999,
+              ),
               points: 2,
               isDunk: true,
               isPoster,

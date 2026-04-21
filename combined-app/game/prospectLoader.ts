@@ -154,6 +154,9 @@ const GENERATED_FIRST_NAMES = [
   'Caden', 'Bryce', 'Jabari', 'Keon', 'RJ', 'Emoni', 'Tariq', 'Desmond', 'Avery', 'Omari',
   'Luca', 'Sincere', 'Terrance', 'Nasir', 'Quinton', 'Aidan', 'Javon', 'Cory', 'Roman', 'Kylan',
   'Sterling', 'Donovan', 'Ezekiel', 'Parker', 'Tobias', 'Dante', 'Jeremiah', 'Keenan', 'Amari', 'Collin',
+  'Jase', 'Daxton', 'Mekhi', 'Tristan', 'Kason', 'Jaeden', 'Ronin', 'Bryson', 'Trevon', 'Cassius',
+  'Julian', 'Paxton', 'Marlon', 'Tatum', 'Kyrie', 'Kendrick', 'Javonte', 'Dre', 'Kayden', 'Zaire',
+  'Antwan', 'Rylan', 'KJ', 'Devonte', 'Misael', 'Landen', 'Damar', 'Jett', 'Talon', 'Zayden',
 ];
 
 const GENERATED_LAST_NAMES = [
@@ -162,6 +165,9 @@ const GENERATED_LAST_NAMES = [
   'Whitaker', 'Temple', 'Rowe', 'Morrison', 'Bennett', 'Coleman', 'Dennis', 'Pryor', 'Tate', 'Hampton',
   'Mathis', 'Caldwell', 'Love', 'Branch', 'Merritt', 'Beck', 'Parker', 'Sampson', 'Thornton', 'Dunlap',
   'Rutherford', 'Hines', 'Goodwin', 'Nash', 'Benton', 'Bradford', 'Conley', 'Prince', 'Keller', 'Bynum',
+  'Aldridge', 'Harper', 'Cummings', 'Macklin', 'Wallace', 'Hardin', 'Booker', 'Lowery', 'Pace', 'Faulkner',
+  'Noble', 'Sanders', 'Vance', 'Crews', 'McCall', 'Holmes', 'Dawkins', 'Bright', 'Tolliver', 'Hendricks',
+  'McKnight', 'Ford', 'Stanley', 'Randle', 'Blair', 'Redd', 'Moss', 'Lott', 'Ellis', 'Morrow',
 ];
 
 const GENERATED_SCHOOLS = [
@@ -415,9 +421,32 @@ function buildGeneratedSchool(index: number, seasonIndex: number) {
 
 function buildGeneratedSkill(seed: string, range: [number, number], quality: number, volatility = 1) {
   const base = seededInt(seed, range[0], range[1]);
-  const qualityBoost = Math.round(quality * 2);
-  const swing = seededInt(`${seed}:swing`, -volatility, volatility);
+  const qualityBoost = Math.round(quality * 3);
+  const swing = seededInt(`${seed}:swing`, -volatility - 1, volatility + 1);
   return clamp(base + qualityBoost + swing, 1, 10) as Rating10;
+}
+
+function tierBiasFromQuality(quality: number) {
+  if (quality >= 0.86) return 2;
+  if (quality >= 0.6) return 1;
+  if (quality <= 0.18) return -1;
+  return 0;
+}
+
+function positionProfile(position: ProspectPosition) {
+  if (position === 'Point Guard') {
+    return { minHeight: 71, maxHeight: 76, skillBoosts: { speed: 1, playmaking: 1, shooting: 0, defense: 0 } };
+  }
+  if (position === 'Shooting Guard') {
+    return { minHeight: 74, maxHeight: 79, skillBoosts: { speed: 1, playmaking: 0, shooting: 1, defense: 0 } };
+  }
+  if (position === 'Small Forward') {
+    return { minHeight: 77, maxHeight: 81, skillBoosts: { speed: 0, playmaking: 0, shooting: 0, defense: 1 } };
+  }
+  if (position === 'Power Forward') {
+    return { minHeight: 79, maxHeight: 83, skillBoosts: { speed: 0, playmaking: 0, shooting: 0, defense: 1 } };
+  }
+  return { minHeight: 81, maxHeight: 87, skillBoosts: { speed: 0, playmaking: 0, shooting: 0, defense: 1 } };
 }
 
 function strongestSkillLabel(categories: ProspectCategories) {
@@ -440,17 +469,29 @@ function buildGeneratedProspect(base: any, seasonIndex: number, classSize: numbe
   const name = buildGeneratedName(rank || 0, seasonIndex);
   const college = buildGeneratedSchool(rank || 0, seasonIndex);
   const position = seededPick(`${seedBase}:position`, archetype.positions);
+  const positionTuning = positionProfile(position);
   const competitionLevel = seededPick(`${seedBase}:competition`, archetype.competitionLevels);
   const age = seededInt(`${seedBase}:age`, archetype.age[0], archetype.age[1]);
-  const height = seededInt(`${seedBase}:height`, archetype.height[0], archetype.height[1]);
+  const height = clamp(
+    seededInt(`${seedBase}:height`, archetype.height[0], archetype.height[1]),
+    positionTuning.minHeight,
+    positionTuning.maxHeight,
+  );
   const wingspan = height + seededInt(`${seedBase}:wingspan`, archetype.wingspanBonus[0], archetype.wingspanBonus[1]);
   const weight = seededInt(`${seedBase}:weight`, archetype.weight[0], archetype.weight[1]);
+  const tierBias = tierBiasFromQuality(quality);
 
+  const rawCategories: ProspectCategories = {
+    shooting: buildGeneratedSkill(`${seedBase}:shooting`, archetype.skillRanges.shooting, quality, 2),
+    speed: buildGeneratedSkill(`${seedBase}:speed`, archetype.skillRanges.speed, quality, 2),
+    playmaking: buildGeneratedSkill(`${seedBase}:playmaking`, archetype.skillRanges.playmaking, quality, 2),
+    defense: buildGeneratedSkill(`${seedBase}:defense`, archetype.skillRanges.defense, quality, 2),
+  };
   const categories: ProspectCategories = {
-    shooting: buildGeneratedSkill(`${seedBase}:shooting`, archetype.skillRanges.shooting, quality),
-    speed: buildGeneratedSkill(`${seedBase}:speed`, archetype.skillRanges.speed, quality),
-    playmaking: buildGeneratedSkill(`${seedBase}:playmaking`, archetype.skillRanges.playmaking, quality),
-    defense: buildGeneratedSkill(`${seedBase}:defense`, archetype.skillRanges.defense, quality),
+    shooting: clamp(rawCategories.shooting + positionTuning.skillBoosts.shooting + tierBias, 1, 10) as Rating10,
+    speed: clamp(rawCategories.speed + positionTuning.skillBoosts.speed + (quality >= 0.82 ? 1 : 0), 1, 10) as Rating10,
+    playmaking: clamp(rawCategories.playmaking + positionTuning.skillBoosts.playmaking + (quality >= 0.92 ? 1 : 0), 1, 10) as Rating10,
+    defense: clamp(rawCategories.defense + positionTuning.skillBoosts.defense + (height >= 81 ? 1 : 0), 1, 10) as Rating10,
   };
 
   const athleticism = clamp(
