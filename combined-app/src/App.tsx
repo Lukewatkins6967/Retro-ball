@@ -563,6 +563,13 @@ export default function App() {
         major: false,
         delta: 0.1,
       },
+      {
+        id: 'seed-51',
+        createdAt: Date.now() + 28,
+        description: 'Auto-update test ping: added a fresh Update Log entry so hosted builds have a visible new badge/count change to verify deployment updates are landing.',
+        major: false,
+        delta: 0.1,
+      },
     ];
 
     try {
