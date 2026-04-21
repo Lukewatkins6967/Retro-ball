@@ -756,7 +756,7 @@ function dunkWindowProfile(state: MatchState, entity: Entity, basket: Vec2, defe
 }
 
 function beginScreen(entity: Entity, targetId: string, anchor: Vec2) {
-  entity.screenMs = Math.max(entity.screenMs, 1100);
+  entity.screenMs = Math.max(entity.screenMs, 1400);
   entity.rollMs = 0;
   entity.screenTargetId = targetId;
   entity.screenAnchor = { ...anchor };
@@ -866,28 +866,55 @@ function triggerScreenContact(state: MatchState, screener: Entity, defender: Ent
   if (screener.screenMs <= 0 || (screener.screenTargetId != null && screener.screenTargetId !== defender.id)) return false;
 
   const ballHandler = getEntity(state, state.ball.ownerId);
+  if (ballHandler.team !== screener.team) return false;
   const handlerLane = projectPointToSegment(screener.pos, defender.pos, ballHandler.pos);
-  const laneDistance = handlerLane.distance;
-  const contactRange = screener.radius + defender.radius + 12;
-  if (separation > contactRange || laneDistance > 24) return false;
+  const laneDistance = dist(screener.pos, handlerLane.point);
+  const ballHandlerDistance = dist(defender.pos, ballHandler.pos);
+  const contactRange = screener.radius + defender.radius + 6;
+  if (separation > contactRange || laneDistance > 18 || ballHandlerDistance > 78) return false;
 
   const toHandler = normalize(sub(ballHandler.pos, defender.pos));
   const toScreener = normalize(sub(screener.pos, defender.pos));
   const defenderDir = len2(defender.vel) > 12 ? normalize(defender.vel) : toHandler;
   const hitAngle = dot(defenderDir, toScreener);
   const pursuitAngle = dot(toHandler, toScreener);
-  if (hitAngle < -0.08 || pursuitAngle < 0.18) return false;
+  if (hitAngle < 0.14 || pursuitAngle < 0.32) return false;
 
   const baskets = basketTargets(state);
   const attackBasket = screener.team === 'user' ? baskets.user : baskets.ai;
   const screenerProfile = entitySkillBlend(state, screener);
   const defenderProfile = entitySkillBlend(state, defender);
-  const bodyStonewall = clamp(0.16 + (screenerProfile.size / 10) * 0.22 + (screenerProfile.defense / 10) * 0.1, 0.18, 0.52);
-  const slipRate = clamp(0.62 - (defenderProfile.speed / 10) * 0.18 - (defenderProfile.defense / 10) * 0.14, 0.22, 0.54);
-  defender.vel = scale(defender.vel, Math.min(bodyStonewall, slipRate));
-  defender.stunMs = Math.max(defender.stunMs, 120 + screenerProfile.size * 8 + screenerProfile.defense * 6);
-  defender.impactMs = Math.max(defender.impactMs, 180);
-  screener.impactMs = Math.max(screener.impactMs, 130);
+  const bodyStonewall = clamp(0.2 + (screenerProfile.size / 10) * 0.28 + (screenerProfile.defense / 10) * 0.16, 0.24, 0.62);
+  const slipRate = clamp(0.74 - (defenderProfile.speed / 10) * 0.18 - (defenderProfile.defense / 10) * 0.14, 0.22, 0.58);
+  const collisionDir = normalize(sub(defender.pos, screener.pos));
+  const slideDir = normalize(sub(ballHandler.pos, defender.pos));
+  const screenForce = scale(collisionDir, 88 + screenerProfile.size * 8 - defenderProfile.size * 2);
+  const recoveryLoss = Math.min(bodyStonewall, slipRate);
+  defender.vel = add(scale(defender.vel, recoveryLoss), add(screenForce, scale(slideDir, -34)));
+  defender.stunMs = Math.max(defender.stunMs, 220 + screenerProfile.size * 10 + screenerProfile.defense * 8);
+  defender.impactMs = Math.max(defender.impactMs, 280);
+  defender.actionCooldownMs = Math.max(defender.actionCooldownMs, 340);
+  screener.impactMs = Math.max(screener.impactMs, 170);
+
+  const helperTargets = state.entities
+    .filter((entity) => entity.team === defender.team && entity.id !== defender.id && isEntityAvailable(entity))
+    .map((entity) => ({
+      entity,
+      distanceToDefender: dist(entity.pos, defender.pos),
+      laneDistance: dist(entity.pos, handlerLane.point),
+    }))
+    .filter((entry) => entry.distanceToDefender < 126 && entry.laneDistance < 104)
+    .sort((a, b) => a.distanceToDefender - b.distanceToDefender)
+    .slice(0, 2);
+
+  for (const helper of helperTargets) {
+    const helperDir = normalize(sub(helper.entity.pos, ballHandler.pos));
+    helper.entity.vel = add(scale(helper.entity.vel, 0.76), scale(helperDir, 42));
+    helper.entity.impactMs = Math.max(helper.entity.impactMs, 130);
+    helper.entity.stunMs = Math.max(helper.entity.stunMs, 90);
+    helper.entity.actionCooldownMs = Math.max(helper.entity.actionCooldownMs, 140);
+  }
+
   beginRoll(screener, screenRollTargetFor(state, screener, ballHandler, attackBasket));
   addEvent(state, { tone: 'blue', text: 'SCREEN HIT', x: screener.pos.x, y: screener.pos.y - 18 });
   return true;
@@ -923,13 +950,10 @@ function applyExperimentalOffBallAction(
       if (defender) {
         const chokePoint = projectPointToSegment(entity.pos, defender.pos, ballHandler.pos).point;
         const stepDir = normalize(sub(chokePoint, entity.pos));
-        entity.vel = len2(stepDir) > 0.01 ? scale(stepDir, speed * 0.18) : scale(entity.vel, 0.12);
+        entity.vel = len2(stepDir) > 0.01 ? scale(stepDir, speed * 0.22) : scale(entity.vel, 0.12);
       } else {
         entity.vel = scale(entity.vel, 0.12);
       }
-    }
-    if (entity.screenMs <= 180 || dist(ballHandler.pos, attackBasket) < 128) {
-      beginRoll(entity, screenRollTargetFor(state, entity, ballHandler, attackBasket));
     }
     return true;
   }
