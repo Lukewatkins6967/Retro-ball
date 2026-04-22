@@ -176,17 +176,17 @@ const GENERATED_LAST_NAMES = [
   'Turner', 'Ellison', 'Walker', 'Brooks', 'Robinson', 'Holloway', 'Dawson', 'Banks', 'McRae', 'Collins',
 ];
 
-const FEATURED_PROSPECT_NAMES = [
-  'Jalen Roccins', 'Treyvon Hills', 'Kaden Brooks', 'Amari Phillips', 'Xavier Boone', 'Leon Carter Jr.',
-  'Jaxon Reed', 'Nasir Collins', 'Zion Booker', 'Tyrese Morgan', 'Amari Jenkins', 'Isaiah Carter Jr.',
-  'Trevon Malikson', 'Jaylen Carter', 'Elijah Banks', 'Jaxon Wallace', 'Isaiah Brooks', 'Amari Dawson',
-  'Jayce Robinson', 'Jalen Brooks Jr.', 'Marcus Dalen', 'Darius Coley', 'Malik Jefferson', 'Jordan Vance',
-  'Elijah Trent', 'Tyrese Caldwell', 'Dante McAllister', 'RJ Holloway', 'Isaiah Mercer', 'Quincy Hart',
-  'Tyrell Dawson', 'Devon Carter', 'Jordan Banks', 'Malik Grayson', 'Kade Thompson', 'Camden Ellis',
-  'Jalen Whitfield', 'Darius Vaughn', 'Trey Porter', 'Jordan Whitfield', 'Jamal Rivers', 'Andre Whitmore',
-  'Terrence Blake', 'Brandon Ellison', 'Marcus Ellington', 'Cameron Rhodes', 'RJ Sanders', 'DeAndre Sutton',
-  'Cameron Walker', 'Andre Collins', 'Marcus Vaughn', 'Isaiah Morgan', 'Malik Patterson', 'Desmond Avery',
-  'Jordan McRae', 'Deon Washington', 'Tyshawn Reed', 'Darius Bentley', 'Kaden Mitchell', 'Malik Turner',
+const PROSPECT_NAME_POOL = [
+  'Kentrell Banks', 'Micah Lawson', 'Jalen Richards', 'Zion Wallace', 'Amari Goodwin', 'Jalen Porter',
+  'Tyrese Bennett', 'Zion Hayes', 'Devon Hayes', 'Elijah Simmons', 'Kaden Carter', 'Jaxon Carter',
+  'Jaylen Harris', 'Zion Carter', 'Amari Brooks', 'Tyquan Miller', 'Jarell Thompson', 'Keon Richardson',
+  'Bryce Hamilton', 'Cameron Brooks', 'DeMarcus Lee', 'Aaron Whitaker', 'Stephon Daniels', 'Malik Owens',
+  'Jordan Hayes', 'Dorian Scott', 'Lamont Carter', 'Terrell Johnson', 'Quincy Davis', 'Devon Marshall',
+  'Isaiah Thomas Jr.', 'Jalen Matthews', 'Andre Washington', 'Marcus Floyd', 'Zion Alexander', 'Tyrell Jackson',
+  'Darius Simmons', 'Kade Robinson', 'Amari Wallace', 'Jaxon Pierce', 'Elijah Hayes', 'Malik Carter',
+  'Jordan Simmons', 'Trey Vaughn', 'Cameron Davis', 'Marcus Bennett', 'Isaiah Reed', 'Jaylen Washington',
+  'DeAndre Carter', 'Tyrese Brooks', 'Brandon Hayes', 'Zion Thompson', 'Darius Jackson', 'Andre Simmons',
+  'Cameron Wallace', 'Isaiah Brooks Sr.', 'Amari Collins', 'Jaylen Whitaker', 'Malik Richardson', 'Jordan Ellis',
 ];
 
 const GENERATED_SCHOOLS = [
@@ -429,14 +429,9 @@ function seededPick<T>(seed: string, items: T[]): T {
 }
 
 function buildGeneratedName(index: number, seasonIndex: number) {
-  const customSeed = `${seasonIndex}:${index}:featuredName`;
-  if (seededUnit(customSeed) < 0.16) {
-    return FEATURED_PROSPECT_NAMES[seededInt(`${customSeed}:pick`, 0, FEATURED_PROSPECT_NAMES.length - 1)];
-  }
-
-  const first = GENERATED_FIRST_NAMES[(index * 7 + seasonIndex * 11) % GENERATED_FIRST_NAMES.length];
-  const last = GENERATED_LAST_NAMES[(index * 13 + seasonIndex * 17) % GENERATED_LAST_NAMES.length];
-  return `${first} ${last}`;
+  const pool = PROSPECT_NAME_POOL;
+  const offset = (seasonIndex * 31) % pool.length;
+  return pool[(index + offset) % pool.length];
 }
 
 function buildGeneratedSchool(index: number, seasonIndex: number) {
