@@ -589,6 +589,13 @@ export default function App() {
         major: true,
         delta: 0.5,
       },
+      {
+        id: 'seed-54',
+        createdAt: Date.now() + 31,
+        description: 'Draft automation added: Sim Draft button now lets you complete the entire draft instantly with AI selections, so you can skip manual picks and jump straight to season management.',
+        major: false,
+        delta: 0.1,
+      },
     ];
 
     try {
