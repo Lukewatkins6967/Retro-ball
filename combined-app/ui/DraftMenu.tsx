@@ -305,7 +305,7 @@ export default function DraftMenu(props: {
                 </div>
               </div>
 
-              {!isUserTurn || props.aiForNextPick ? (
+              {props.onSimDraftRemaining ? (
                 <div style={{ marginTop: 14 }} className="card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                     <b>Draft Control</b>

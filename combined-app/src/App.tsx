@@ -596,6 +596,13 @@ export default function App() {
         major: false,
         delta: 0.1,
       },
+      {
+        id: 'seed-55',
+        createdAt: Date.now() + 32,
+        description: 'Custom prospect seed names added: new draft/free agency player name pools now include user-inspired names across multiple seasons and draft classes.',
+        major: false,
+        delta: 0.1,
+      },
     ];
 
     try {
