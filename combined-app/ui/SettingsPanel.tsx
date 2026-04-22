@@ -259,6 +259,15 @@ export default function SettingsPanel(props: {
                 ]}
                 onChange={(value) => update('salaryCapStrictness', value)}
               />
+              <SliderRow
+                title="Rookie Contract Salary"
+                value={props.settings.rookieContractSalary}
+                min={0}
+                max={120}
+                suffix="k"
+                description="Set the per-season salary for drafted rookies. Use 0k for easy cap management."
+                onChange={(value) => update('rookieContractSalary', value)}
+              />
               <OptionRow<InjuryFrequencyPreset>
                 title="Injury Frequency"
                 value={props.settings.injuryFrequency}

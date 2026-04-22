@@ -136,13 +136,14 @@ export default function App() {
 
     for (const summary of summaries) {
       for (const signing of summary.signings) {
+        const badgeTone: LeagueNewsPost['badgeTone'] = signing.teamId === franchise?.user.id ? 'good' : 'accent';
         posts.push({
           id: `fa-signing-${summary.day}-${signing.playerId}-${offset}`,
           createdAtMs: Date.now() + offset,
           type: 'breaking',
           icon: 'FA',
           badge: 'FA',
-          badgeTone: signing.teamId === franchise?.user.id ? 'good' : 'accent',
+          badgeTone,
           text: `${signing.teamName} signs ${signing.playerName} for ${signing.years} years at $${Math.round(signing.salary / 1000)}k per season.`,
         });
         offset += 1;
@@ -150,13 +151,15 @@ export default function App() {
 
       const headlineFeeds = summary.feed.slice(0, 3);
       for (const feedItem of headlineFeeds) {
+        const postType: LeagueNewsPost['type'] = feedItem.toLowerCase().includes('signs') ? 'breaking' : 'reaction';
+        const badgeTone: LeagueNewsPost['badgeTone'] = feedItem.toLowerCase().includes('bidding war') ? 'accent' : 'info';
         posts.push({
           id: `fa-feed-${summary.day}-${offset}`,
           createdAtMs: Date.now() + offset,
-          type: feedItem.toLowerCase().includes('signs') ? 'breaking' : 'reaction',
+          type: postType,
           icon: 'FA',
           badge: `DAY ${summary.day}`,
-          badgeTone: feedItem.toLowerCase().includes('bidding war') ? 'accent' : 'info',
+          badgeTone,
           text: feedItem,
         });
         offset += 1;
@@ -168,18 +171,20 @@ export default function App() {
 
   const finishFreeAgencyWithRecap = (completed: FranchiseState, summaries: FreeAgencyDaySummary[], closeMessage: string) => {
     setFranchise(completed);
+    const closePost: LeagueNewsPost = {
+      id: `fa-close-${Date.now()}`,
+      createdAtMs: Date.now(),
+      type: 'breaking',
+      icon: 'FA',
+      badge: 'FA',
+      badgeTone: 'accent',
+      text: 'Free agency closes and the league shifts to the lottery and draft.',
+    };
+
     setNewsPosts((prev) => [
       ...buildDynamicStorylinePosts(completed, { limit: 3 }),
       ...buildFreeAgencyNewsPosts(summaries),
-      {
-        id: `fa-close-${Date.now()}`,
-        createdAtMs: Date.now(),
-        type: 'breaking',
-        icon: 'FA',
-        badge: 'FA',
-        badgeTone: 'accent',
-        text: 'Free agency closes and the league shifts to the lottery and draft.',
-      },
+      closePost,
       ...prev,
     ].slice(0, 250));
     setFrontOfficeMessage(closeMessage);
@@ -431,175 +436,196 @@ export default function App() {
       {
         id: 'seed-31',
         createdAt: Date.now() + 8,
-        description: 'Modal panels now lock above the site chrome with background scrolling disabled, a sticky in-modal header, and top-anchored viewport sizing so popup titles never hide behind the nav.',
+        description: 'Draft and free agency now use a unique generated name pool so every created player is different, and rookie contracts can be set as low as 0k for easier cap management.',
         major: false,
         delta: 0.1,
       },
       {
         id: 'seed-32',
         createdAt: Date.now() + 9,
-        description: 'Modal overlays now render through a portal with full-screen fixed backdrops and higher stacking than the navbar, so the Hybrid Basketball header can no longer sit on top of contract popups.',
+        description: 'Modal panels now lock above the site chrome with background scrolling disabled, a sticky in-modal header, and top-anchored viewport sizing so popup titles never hide behind the nav.',
         major: false,
         delta: 0.1,
       },
       {
         id: 'seed-33',
+        createdAt: Date.now() + 9,
+        description: 'Modal overlays now render through a portal with full-screen fixed backdrops and higher stacking than the navbar, so the Hybrid Basketball header can no longer sit on top of contract popups.',
+        major: false,
+        delta: 0.1,
+      },
+      {
+        id: 'seed-34',
         createdAt: Date.now() + 10,
         description: 'The trade screen was redesigned into a cleaner front-office hub with better partner cards, richer asset rows, a sticky deal summary rail, and a stronger confirm/counteroffer flow.',
         major: true,
         delta: 0.5,
       },
       {
-        id: 'seed-34',
+        id: 'seed-35',
         createdAt: Date.now() + 11,
         description: 'End-of-season free agency now opens with a real market, roster re-signing is pushed into that offseason phase, traded lottery picks show their current owner, and the league was expanded with deeper draft classes and more teams.',
         major: true,
         delta: 0.5,
       },
       {
-        id: 'seed-35',
+        id: 'seed-36',
         createdAt: Date.now() + 12,
         description: 'Player overall ratings now use a real 100-point scale with wider separation between prospects and veterans, while contracts, trades, sim balance, and team ratings were recalibrated around the new spread.',
         major: true,
         delta: 0.5,
       },
       {
-        id: 'seed-36',
+        id: 'seed-37',
         createdAt: Date.now() + 13,
         description: 'Season schedule sim now supports both one-game-at-a-time results and a fast Sim Whole Week option, so you can clear a full slate without clicking every matchup individually.',
         major: false,
         delta: 0.1,
       },
       {
-        id: 'seed-37',
+        id: 'seed-38',
         createdAt: Date.now() + 14,
         description: 'Trade AI now weighs roster fit and outgoing core pain more intelligently, counters are softer, and compromise deals can still be accepted even when you tweak them instead of copying the AI package exactly.',
         major: false,
         delta: 0.1,
       },
       {
-        id: 'seed-38',
+        id: 'seed-39',
         createdAt: Date.now() + 15,
         description: 'Generated draft classes now create much more varied prospects with bigger name pools, seeded archetypes, different positions and body types, and more distinct skill/stat profiles instead of lightly remixed copies of the original class.',
         major: false,
         delta: 0.1,
       },
       {
-        id: 'seed-39',
+        id: 'seed-40',
         createdAt: Date.now() + 16,
         description: 'The live game now leans into a more physical arcade style with stronger court presentation, manual dodge/jump/strip actions, defensive control when you do not have the ball, contact-heavy movement, and safer click-to-pass handling on the game canvas.',
         major: true,
         delta: 0.5,
       },
       {
-        id: 'seed-40',
+        id: 'seed-41',
+        createdAt: Date.now() + 18,
+        description: 'Draft and free agency now use a unique generated name pool so every created player is different, and rookie contracts can be set as low as 0k for easier cap management.',
+        major: false,
+        delta: 0.1,
+      },
+      {
+        id: 'seed-42',
         createdAt: Date.now() + 17,
         description: 'Unity extraction pass: exported the Karate Basketball build into reusable project assets, then wired the live game to use the extracted pixel-art court, hoops, ball, and character sprite sets directly in the web match renderer.',
         major: true,
         delta: 0.5,
       },
       {
-        id: 'seed-41',
-        createdAt: Date.now() + 18,
+        id: 'seed-43',
+        createdAt: Date.now() + 19,
         description: 'Live games now open in a fullscreen arcade shell with the site nav hidden, plus a corner options menu that lets you simulate the rest of a match or back out and leave that scheduled game unplayed.',
         major: false,
         delta: 0.1,
       },
       {
-        id: 'seed-42',
-        createdAt: Date.now() + 19,
+        id: 'seed-44',
+        createdAt: Date.now() + 20,
         description: 'Arcade gameplay now leans much harder into the extracted Karate Basketball build: sharper full-screen rendering, richer crowd/court presentation, original-game audio cues, longer match flow, loose-ball physics, smarter pass flight, stronger hit/KO contact, and more explosive dunk/shot behavior.',
         major: true,
         delta: 0.5,
       },
       {
-        id: 'seed-43',
-        createdAt: Date.now() + 20,
+        id: 'seed-45',
+        createdAt: Date.now() + 21,
         description: 'Free agency now runs as a live day-by-day market with competing offers, bidding wars, daily recaps, deeper roster targets, smarter cap-aware AI team building, and depth-weighted sim value before the lottery and draft.',
         major: true,
         delta: 0.5,
       },
       {
-        id: 'seed-44',
-        createdAt: Date.now() + 21,
+        id: 'seed-46',
+        createdAt: Date.now() + 22,
         description: 'Theme polish pass: Modern stays untouched, while Retro Arcade, Dark Mode, Neon Cyber, Classic Sports, and Minimalist now each have much more dramatic backgrounds, panel treatments, button styles, and overall visual identity.',
         major: false,
         delta: 0.1,
       },
       {
-        id: 'seed-45',
-        createdAt: Date.now() + 22,
+        id: 'seed-47',
+        createdAt: Date.now() + 23,
         description: 'Theme isolation pass: selected themes now restyle the full management website while the live arcade gameplay presentation stays visually fixed and unchanged.',
         major: false,
         delta: 0.1,
       },
       {
-        id: 'seed-46',
-        createdAt: Date.now() + 23,
+        id: 'seed-48',
+        createdAt: Date.now() + 24,
         description: 'Theme expansion pass: non-Modern themes now push much deeper across the management website with stronger nav, page, card, chip, modal, schedule, trade, settings, and offseason styling for a more dramatic full-site visual change.',
         major: false,
         delta: 0.1,
       },
       {
-        id: 'seed-47',
-        createdAt: Date.now() + 24,
+        id: 'seed-49',
+        createdAt: Date.now() + 25,
         description: 'Deployment prep pass: the app is now self-contained for hosting, draft data no longer depends on the sibling project at build time, and Vercel deployment files and setup docs are included for easy auto-updating releases.',
         major: false,
         delta: 0.1,
       },
       {
-        id: 'seed-48',
-        createdAt: Date.now() + 25,
+        id: 'seed-50',
+        createdAt: Date.now() + 26,
         description: 'Hosting hardening pass: the repo can now build from the project root for Vercel too, with workspace scripts and safer TypeScript includes so deployment is less sensitive to dashboard root-directory setup.',
         major: false,
         delta: 0.1,
       },
       {
-        id: 'seed-49',
-        createdAt: Date.now() + 26,
+        id: 'seed-51',
+        createdAt: Date.now() + 27,
         description: 'Playoff stability pass: postseason matchups now advance the bracket more reliably, and tied live or simulated games automatically continue into overtime until there is a winner.',
         major: false,
         delta: 0.1,
       },
       {
-        id: 'seed-50',
-        createdAt: Date.now() + 27,
+        id: 'seed-52',
+        createdAt: Date.now() + 28,
         description: 'Style library expansion: every management theme now gets a stronger readability pass, clearer controls, better focus states, more distinct surfaces, and two new looks called Sunset League and Blueprint.',
         major: false,
         delta: 0.1,
       },
       {
-        id: 'seed-51',
-        createdAt: Date.now() + 28,
+        id: 'seed-53',
+        createdAt: Date.now() + 29,
         description: 'Auto-update test ping: added a fresh Update Log entry so hosted builds have a visible new badge/count change to verify deployment updates are landing.',
         major: false,
         delta: 0.1,
       },
       {
-        id: 'seed-52',
-        createdAt: Date.now() + 29,
+        id: 'seed-54',
+        createdAt: Date.now() + 30,
         description: 'Experimental screen gameplay tightened: screeners now hold contact longer before rolling, on-ball defenders get knocked off the action more clearly on real screen hits, and nearby help defenders feel that collision too.',
         major: false,
         delta: 0.1,
       },
       {
-        id: 'seed-53',
-        createdAt: Date.now() + 30,
+        id: 'seed-55',
+        createdAt: Date.now() + 31,
         description: 'Gameplay and simulation realism overhaul: possessions now lean much harder on player ratings and defensive context, open dunks finish far more reliably, movement and passing feel smoother, player growth follows clearer age/performance curves, and generated draft classes have stronger archetype, height, and rating separation.',
         major: true,
         delta: 0.5,
       },
       {
-        id: 'seed-54',
-        createdAt: Date.now() + 31,
+        id: 'seed-56',
+        createdAt: Date.now() + 32,
         description: 'Draft automation added: Sim Draft button now lets you complete the entire draft instantly with AI selections, so you can skip manual picks and jump straight to season management.',
         major: false,
         delta: 0.1,
       },
       {
-        id: 'seed-55',
-        createdAt: Date.now() + 32,
+        id: 'seed-57',
+        createdAt: Date.now() + 33,
         description: 'Custom prospect seed names added: new draft/free agency player name pools now include user-inspired names across multiple seasons and draft classes.',
+        major: false,
+        delta: 0.1,
+      },
+      {
+        id: 'seed-58',
+        createdAt: Date.now() + 34,
+        description: 'Free agency fix: resolved the sign-offer flow so declined offers update state cleanly, and corrected news post typing for the closing free agency recap.',
         major: false,
         delta: 0.1,
       },
@@ -1104,6 +1130,7 @@ export default function App() {
             const counterText = result.counterOffer
               ? ` Counter ask: $${Math.round(result.counterOffer.salary / 1000)}k for ${result.counterOffer.years} years.`
               : '';
+
             if (result.accepted) {
               setFrontOfficeMessage(`${player.prospect.name} signed for ${offer.years} years at $${Math.round(offer.salary / 1000)}k per season.`);
               setNewsPosts((prev) => [
@@ -1121,6 +1148,7 @@ export default function App() {
               pushStorylines(result.updated, 2);
               return;
             }
+
             if (result.submitted) {
               setFrontOfficeMessage(`${player.prospect.name}: ${result.reason ?? 'Offer submitted.'}${counterText}`);
               setNewsPosts((prev) => [
@@ -1138,6 +1166,7 @@ export default function App() {
               pushStorylines(result.updated, 1);
               return;
             }
+
             setFrontOfficeMessage(`${player.prospect.name} passed on the offer. ${result.reason ?? 'Signing failed.'}${counterText}`);
             setNewsPosts((prev) => [
               {
@@ -1153,40 +1182,6 @@ export default function App() {
             ]);
             pushStorylines(result.updated, 1);
             return;
-            if (!result.accepted) {
-              setFranchise(result.updated);
-              const counterText = result.counterOffer
-                ? ` Counter ask: $${Math.round(result.counterOffer.salary / 1000)}k for ${result.counterOffer.years} years.`
-                : '';
-              setFrontOfficeMessage(`${player.prospect.name} refused the offer. ${result.reason ?? 'Signing failed.'}${counterText}`);
-              setNewsPosts((prev) => [
-                {
-                  id: `fa-refusal-${Date.now()}`,
-                  createdAtMs: Date.now(),
-                  type: 'breaking',
-                  icon: '🚪',
-                  badge: 'FA',
-                  badgeTone: 'bad',
-                  text: `${player.prospect.name} rejects an offer from ${franchise.user.name}.${counterText ? ` ${counterText.trim()}` : ''}`,
-                },
-                ...prev,
-              ]);
-              return;
-            }
-            setFranchise(result.updated);
-            setFrontOfficeMessage(`${player.prospect.name} signed for ${offer.years} years at $${Math.round(offer.salary / 1000)}k per season.`);
-            setNewsPosts((prev) => [
-              {
-                id: `fa-signing-${Date.now()}`,
-                createdAtMs: Date.now(),
-                type: 'breaking',
-                icon: '🧾',
-                badge: 'FA',
-                badgeTone: 'accent',
-                text: `${franchise.user.name} signs ${player.prospect.name} for ${offer.years} years at $${Math.round(offer.salary / 1000)}k annually.`,
-              },
-              ...prev,
-            ]);
           }}
           onAdvanceDay={() => {
             const advanced = advanceFreeAgencyDay(franchise);

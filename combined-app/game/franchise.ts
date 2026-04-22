@@ -10,7 +10,7 @@ import {
   getPlayerStatusLabel,
   refreshFranchiseDynamics,
 } from './personality';
-import { getAiAggressionMultiplier, getCapAllowance, getDifficultyTuning } from './settings';
+import { getAiAggressionMultiplier, getCapAllowance, getDifficultyTuning, getCurrentSettings, getRookieContractSalary } from './settings';
 import { depthAwareTeamRating, getDepthScore, getRotationMetrics, recoverBetweenGames } from './stamina';
 import type {
   DraftState,
@@ -98,7 +98,9 @@ function pickOverallCompare(a: Prospect, b: Prospect) {
 }
 
 function createTeamPlayer(teamId: string, prospect: Prospect, acquiredRound: number): TeamPlayer {
-  const salary = computeSalary(prospect.overall);
+  const settings = getCurrentSettings();
+  const rookieSalary = acquiredRound > 0 && acquiredRound <= 4 ? getRookieContractSalary(settings) : computeSalary(prospect.overall);
+  const salary = rookieSalary;
   const personality = createPlayerPersonality({ prospect });
   const blankStats = {
     matchesPlayed: 0,

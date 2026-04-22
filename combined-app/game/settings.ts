@@ -25,6 +25,7 @@ export type GameSettings = {
   salaryCapStrictness: SalaryCapPreset;
   injuryFrequency: InjuryFrequencyPreset;
   aiAggressiveness: AiAggressivenessPreset;
+  rookieContractSalary: number;
   sfxVolume: number;
   musicVolume: number;
 };
@@ -42,6 +43,7 @@ export const defaultGameSettings: GameSettings = {
   salaryCapStrictness: 'hard',
   injuryFrequency: 'low',
   aiAggressiveness: 'medium',
+  rookieContractSalary: 0,
   sfxVolume: 72,
   musicVolume: 48,
 };
@@ -78,6 +80,11 @@ export function normalizeGameSettings(raw: unknown): GameSettings {
     salaryCapStrictness: asEnum(candidate.salaryCapStrictness, defaultGameSettings.salaryCapStrictness, ['soft', 'hard']),
     injuryFrequency: asEnum(candidate.injuryFrequency, defaultGameSettings.injuryFrequency, ['off', 'low', 'high']),
     aiAggressiveness: asEnum(candidate.aiAggressiveness, defaultGameSettings.aiAggressiveness, ['low', 'medium', 'high']),
+    rookieContractSalary: clamp(
+      Number.isFinite(candidate.rookieContractSalary) ? Number(candidate.rookieContractSalary) : defaultGameSettings.rookieContractSalary,
+      0,
+      120,
+    ),
     sfxVolume: clamp(Number.isFinite(candidate.sfxVolume) ? Number(candidate.sfxVolume) : defaultGameSettings.sfxVolume, 0, 100),
     musicVolume: clamp(Number.isFinite(candidate.musicVolume) ? Number(candidate.musicVolume) : defaultGameSettings.musicVolume, 0, 100),
   };
@@ -197,6 +204,10 @@ export function getStaminaImpactMultiplier(settings = getCurrentSettings()) {
 
 export function getCapAllowance(settings = getCurrentSettings()) {
   return settings.salaryCapStrictness === 'soft' ? 16_000 : 0;
+}
+
+export function getRookieContractSalary(settings = getCurrentSettings()) {
+  return Math.round(settings.rookieContractSalary * 1_000);
 }
 
 export function getAiAggressionMultiplier(settings = getCurrentSettings()) {

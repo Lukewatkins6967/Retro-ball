@@ -430,8 +430,14 @@ function seededPick<T>(seed: string, items: T[]): T {
 
 function buildGeneratedName(index: number, seasonIndex: number) {
   const pool = PROSPECT_NAME_POOL;
-  const offset = (seasonIndex * 31) % pool.length;
-  return pool[(index + offset) % pool.length];
+  const poolSize = pool.length;
+  const normalizedIndex = Math.max(0, index - 1);
+  const poolName = pool[(normalizedIndex + seasonIndex * 31) % poolSize];
+  if (poolName) return poolName;
+
+  const first = GENERATED_FIRST_NAMES[(normalizedIndex * 7 + seasonIndex * 11) % GENERATED_FIRST_NAMES.length];
+  const last = GENERATED_LAST_NAMES[(normalizedIndex * 13 + seasonIndex * 17) % GENERATED_LAST_NAMES.length];
+  return `${first} ${last}`;
 }
 
 function buildGeneratedSchool(index: number, seasonIndex: number) {
