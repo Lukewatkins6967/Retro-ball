@@ -12,6 +12,7 @@ export default function DraftMenu(props: {
   onGoRoster: () => void;
   aiForNextPick: boolean;
   onAiForNextPickChange: (value: boolean) => void;
+  onSimDraftRemaining?: () => void;
 }) {
   const estimateDraftValue = (p: Prospect) => {
     // UI-only: approximates “future value”. Trading uses a separate function in franchise logic.
@@ -303,6 +304,22 @@ export default function DraftMenu(props: {
                   )}
                 </div>
               </div>
+
+              {!isUserTurn || props.aiForNextPick ? (
+                <div style={{ marginTop: 14 }} className="card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <b>Draft Control</b>
+                    <button
+                      onClick={() => props.onSimDraftRemaining?.()}
+                      className="btn btnPrimary"
+                      style={{ padding: '8px 12px', fontWeight: 900, fontSize: 13 }}
+                      title="Let AI complete the entire draft automatically"
+                    >
+                      Sim Draft
+                    </button>
+                  </div>
+                </div>
+              ) : null}
 
               {isUserTurn && !props.aiForNextPick ? (
                 <div style={{ marginTop: 14 }} className="card">

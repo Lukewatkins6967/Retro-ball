@@ -980,6 +980,16 @@ export default function App() {
             setFranchise((prev) => (prev ? userDraftPick(prev, prospectId) : prev));
           }}
           onGoRoster={() => setScreen('roster')}
+          onSimDraftRemaining={() => {
+            setFranchise((prev) => {
+              if (!prev) return prev;
+              let current = prev;
+              while (!current.draftCompleted) {
+                current = advanceDraftPicks(current, { userPickMode: 'ai' });
+              }
+              return current;
+            });
+          }}
         />
       )}
 
