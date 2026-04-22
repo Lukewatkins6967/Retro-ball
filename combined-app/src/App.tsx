@@ -629,6 +629,13 @@ export default function App() {
         major: false,
         delta: 0.1,
       },
+      {
+        id: 'seed-59',
+        createdAt: Date.now() + 35,
+        description: 'League expansion: increased the franchise to a full 30-team roster so every season now runs with a complete league field.',
+        major: true,
+        delta: 0.5,
+      },
     ];
 
     try {
