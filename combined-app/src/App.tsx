@@ -75,7 +75,7 @@ type ScheduledGameContext = {
 
 const UPDATE_LOG_STORAGE_KEY = 'combinedAppUpdateLog_v2';
 const UPDATE_LOG_LEGACY_STORAGE_KEY = 'combinedAppUpdateLog_v1';
-const UPDATE_LOG_SEED_VERSION = 61;
+const UPDATE_LOG_SEED_VERSION = 62;
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('start');
@@ -668,6 +668,13 @@ export default function App() {
         major: true,
         delta: 0.5,
       },
+      {
+        id: 'seed-62',
+        createdAt: Date.now() + 38,
+        description: 'Awards flow fix and player accolades pass: postseason awards presentation now marks as completed so Start Play-In advances correctly without looping back, while player cards and profile panels now surface recent award badges plus season-by-season accomplishments and championship years.',
+        major: false,
+        delta: 0.1,
+      },
     ];
 
     try {
@@ -863,6 +870,18 @@ export default function App() {
     };
   };
 
+  const markAwardsPresentationComplete = () => {
+    setFranchise((prev) => (prev ? { ...prev, hasCompletedAwardsPresentation: true } : prev));
+  };
+
+  const getResumeScreen = (state: FranchiseState): Screen => {
+    if (state.freeAgencyPending) return 'freeAgency';
+    if (!state.draftCompleted) return 'draft';
+    if (state.season?.phase === 'playoffs' && !state.hasCompletedAwardsPresentation) return 'awards';
+    if (state.season?.phase === 'playoffs') return 'playoffs';
+    return 'roster';
+  };
+
   const rollIntoNextSeason = (completedFranchise: FranchiseState) => {
     try {
       localStorage.setItem('combinedAppLastSeasonStandings_v1', JSON.stringify(completedFranchise.seasonStandings));
@@ -978,7 +997,7 @@ export default function App() {
               setProgressionNotices([]);
               setTradeMessage(undefined);
               setSimResult(null);
-              setScreen(loaded.franchise.freeAgencyPending ? 'freeAgency' : loaded.franchise.draftCompleted ? 'roster' : 'draft');
+              setScreen(getResumeScreen(loaded.franchise));
             } catch {
               // ignore
             }
@@ -1135,6 +1154,7 @@ export default function App() {
           onBack={() => setScreen('roster')}
           onOpenPlayoffs={() => setScreen('playoffs')}
           onOpenHistory={() => setScreen('history')}
+          onCompletePresentation={markAwardsPresentationComplete}
         />
       )}
 

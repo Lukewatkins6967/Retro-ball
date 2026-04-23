@@ -55,6 +55,9 @@ function normalizePlayer(player: any) {
       },
     awardHistory: Array.isArray(player?.awardHistory) ? player.awardHistory : [],
     championships: typeof player?.championships === 'number' ? player.championships : 0,
+    championshipSeasons: Array.isArray(player?.championshipSeasons)
+      ? player.championshipSeasons.filter((value: unknown) => typeof value === 'number')
+      : [],
   };
 }
 
@@ -105,6 +108,13 @@ export function loadFranchise(): { franchise: FranchiseState; newsPosts: LeagueN
       championshipHistory: Array.isArray((parsed.franchise as FranchiseState).championshipHistory)
         ? (parsed.franchise as FranchiseState).championshipHistory
         : [],
+      hasCompletedAwardsPresentation:
+        typeof (parsed.franchise as FranchiseState).hasCompletedAwardsPresentation === 'boolean'
+          ? (parsed.franchise as FranchiseState).hasCompletedAwardsPresentation
+          : (((parsed.franchise as FranchiseState).season?.phase === 'playoffs' ||
+              (parsed.franchise as FranchiseState).season?.phase === 'complete') &&
+              ((((parsed.franchise as FranchiseState).season?.playoffs?.games ?? []).some((game) => !!game.result?.played)) ||
+                (parsed.franchise as FranchiseState).season?.phase === 'complete')),
     } as FranchiseState);
     return {
       franchise: normalizedFranchise,

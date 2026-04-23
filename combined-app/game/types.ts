@@ -133,6 +133,7 @@ export type TeamPlayer = {
   careerStats: PlayerSeasonStats;
   awardHistory: PlayerAwardHistoryEntry[];
   championships: number;
+  championshipSeasons: number[];
 };
 
 export type PlayerSeasonStats = {
@@ -405,6 +406,7 @@ export type FranchiseState = {
   seasonAwards: SeasonAwards | null;
   seasonAwardsHistory: SeasonAwards[];
   championshipHistory: ChampionshipHistoryEntry[];
+  hasCompletedAwardsPresentation: boolean;
 
   currentDate: CalendarDate; // live calendar tracking
   tradeHistory: TradeLogEntry[];

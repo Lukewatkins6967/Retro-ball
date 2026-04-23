@@ -24,6 +24,16 @@ function activeStatsForPhase(player: TeamPlayer, phase: FranchiseState['season']
   return phase === 'playoffs' ? player.playoffStats : player.seasonStats;
 }
 
+function recentAwardLabels(player: TeamPlayer, seasonIndex: number | null) {
+  if (!seasonIndex) return [];
+  const labels: string[] = [];
+  if (player.awardHistory.some((entry) => entry.seasonIndex === seasonIndex && entry.awardType === 'mvp')) labels.push('MVP');
+  if (player.awardHistory.some((entry) => entry.seasonIndex === seasonIndex && entry.awardType === 'dpoy')) labels.push('DPOY');
+  if (player.awardHistory.some((entry) => entry.seasonIndex === seasonIndex && entry.awardType === 'roy')) labels.push('ROY');
+  if (player.awardHistory.some((entry) => entry.seasonIndex === seasonIndex && entry.awardType === 'allLeagueFirstTeam')) labels.push('All-League');
+  return labels;
+}
+
 function computeLotteryOdds(standings: DraftStandingRow[]) {
   const weights = standings.map((row) => ({ teamId: row.teamId, row, weight: 1 / Math.max(1, row.wins + 1) }));
   const total = weights.reduce((sum, w) => sum + w.weight, 0);
@@ -199,6 +209,7 @@ export default function StatsScreen(props: { franchise: FranchiseState; onBack: 
   const latestAwards =
     franchise.seasonAwards ??
     (franchise.seasonAwardsHistory?.length ? franchise.seasonAwardsHistory[franchise.seasonAwardsHistory.length - 1] : null);
+  const recentAwardsSeasonIndex = latestAwards?.seasonIndex ?? null;
   const latestChampion =
     franchise.championshipHistory?.length ? franchise.championshipHistory[franchise.championshipHistory.length - 1] : null;
 
@@ -479,6 +490,26 @@ export default function StatsScreen(props: { franchise: FranchiseState; onBack: 
                         <div className="muted" style={{ marginTop: 4, fontSize: 12 }}>
                           {player.prospect.position} | Potential {player.prospect.potential}/10
                         </div>
+                        {recentAwardLabels(player, recentAwardsSeasonIndex).length ? (
+                          <div className="playerBadgeRow" style={{ marginTop: 8 }}>
+                            {recentAwardLabels(player, recentAwardsSeasonIndex).map((label) => (
+                              <span
+                                key={`${player.id}-${label}`}
+                                className={`playerAwardBadge ${
+                                  label === 'MVP'
+                                    ? 'tone-mvp'
+                                    : label === 'DPOY'
+                                      ? 'tone-dpoy'
+                                      : label === 'ROY'
+                                        ? 'tone-roy'
+                                        : 'tone-allLeague'
+                                }`}
+                              >
+                                {label}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontWeight: 1000 }}>OVR {player.prospect.overall}</div>

@@ -55,7 +55,73 @@ function negotiationLabel(value: number) {
   return 'Very unlikely';
 }
 
-function PlayerCard(props: { p: TeamPlayer; playoffsActive: boolean; onOpen: (playerId: string) => void }) {
+type PlayerBadge = {
+  key: string;
+  label: string;
+  tone: 'mvp' | 'dpoy' | 'roy' | 'allLeague';
+};
+
+type AccomplishmentItem = {
+  key: string;
+  label: string;
+  year: number;
+  priority: 'headline' | 'title' | 'standard';
+  tone: 'mvp' | 'championship' | 'minor';
+};
+
+function seasonIndexToYear(seasonIndex: number) {
+  return 2025 + seasonIndex;
+}
+
+function buildRecentAwardBadges(player: TeamPlayer, recentSeasonIndex: number | null): PlayerBadge[] {
+  if (!recentSeasonIndex) return [];
+
+  const awards = player.awardHistory.filter((entry) => entry.seasonIndex === recentSeasonIndex);
+  const badgeOrder: Array<{ awardType: string; label: string; tone: PlayerBadge['tone'] }> = [
+    { awardType: 'mvp', label: 'MVP', tone: 'mvp' },
+    { awardType: 'dpoy', label: 'DPOY', tone: 'dpoy' },
+    { awardType: 'roy', label: 'ROY', tone: 'roy' },
+    { awardType: 'allLeagueFirstTeam', label: 'All-League', tone: 'allLeague' },
+  ];
+
+  return badgeOrder
+    .filter((badge) => awards.some((entry) => entry.awardType === badge.awardType))
+    .map((badge) => ({
+      key: `${player.id}-${recentSeasonIndex}-${badge.awardType}`,
+      label: badge.label,
+      tone: badge.tone,
+    }));
+}
+
+function buildAccomplishments(player: TeamPlayer): AccomplishmentItem[] {
+  const championships = player.championshipSeasons.map((seasonIndex) => ({
+    key: `championship-${player.id}-${seasonIndex}`,
+    label: 'Champion',
+    year: seasonIndexToYear(seasonIndex),
+    priority: 'title' as const,
+    tone: 'championship' as const,
+  }));
+
+  const awards = player.awardHistory.map((entry) => ({
+    key: `${entry.awardType}-${player.id}-${entry.seasonIndex}`,
+    label: entry.label,
+    year: seasonIndexToYear(entry.seasonIndex),
+    priority: entry.awardType === 'mvp' ? ('headline' as const) : ('standard' as const),
+    tone: entry.awardType === 'mvp' ? ('mvp' as const) : ('minor' as const),
+  }));
+
+  const priorityScore = { headline: 0, title: 1, standard: 2 };
+  return [...awards, ...championships].sort((a, b) => {
+    return priorityScore[a.priority] - priorityScore[b.priority] || b.year - a.year || a.label.localeCompare(b.label);
+  });
+}
+
+function PlayerCard(props: {
+  p: TeamPlayer;
+  playoffsActive: boolean;
+  recentBadges: PlayerBadge[];
+  onOpen: (playerId: string) => void;
+}) {
   const { p } = props;
   const stats = activeStats(p, props.playoffsActive);
   const letter = p.prospect.name.trim().charAt(0).toUpperCase() || 'P';
@@ -134,6 +200,15 @@ function PlayerCard(props: { p: TeamPlayer; playoffsActive: boolean; onOpen: (pl
             <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>
               {p.prospect.position} • Age {p.prospect.age}
             </div>
+            {props.recentBadges.length ? (
+              <div className="playerBadgeRow" style={{ marginTop: 8 }}>
+                {props.recentBadges.map((badge) => (
+                  <span key={badge.key} className={`playerAwardBadge tone-${badge.tone}`}>
+                    {badge.label}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -246,6 +321,11 @@ export default function RosterMenu(props: {
   const roster = [...user.roster].sort((a, b) => b.prospect.overall - a.prospect.overall);
   const playoffsActive = props.franchise.season?.phase === 'playoffs';
   const selectedPlayer = selectedPlayerId ? roster.find((player) => player.id === selectedPlayerId) ?? null : null;
+  const recentAwardsSeasonIndex = useMemo(() => {
+    const seasonAwardsHistory = props.franchise.seasonAwardsHistory ?? [];
+    const latestSeasonAwards = props.franchise.seasonAwards ?? seasonAwardsHistory[seasonAwardsHistory.length - 1];
+    return latestSeasonAwards?.seasonIndex ?? null;
+  }, [props.franchise.seasonAwards, props.franchise.seasonAwardsHistory]);
 
   const liveOffer = selectedPlayer
     ? {
@@ -277,6 +357,17 @@ export default function RosterMenu(props: {
       .filter((entry) => entry.outgoingPlayerIds.includes(selectedPlayer.id) || entry.incomingPlayerIds.includes(selectedPlayer.id))
       .sort((a, b) => b.createdAtMs - a.createdAtMs);
   }, [props.franchise.tradeHistory, selectedPlayer]);
+  const recentBadgesByPlayerId = useMemo(
+    () =>
+      Object.fromEntries(
+        roster.map((player) => [player.id, buildRecentAwardBadges(player, recentAwardsSeasonIndex)]),
+      ) as Record<string, PlayerBadge[]>,
+    [recentAwardsSeasonIndex, roster],
+  );
+  const selectedAccomplishments = useMemo(
+    () => (selectedPlayer ? buildAccomplishments(selectedPlayer) : []),
+    [selectedPlayer],
+  );
 
   return (
     <div className="page">
@@ -370,6 +461,7 @@ export default function RosterMenu(props: {
               key={p.id}
               p={p}
               playoffsActive={playoffsActive}
+              recentBadges={recentBadgesByPlayerId[p.id] ?? []}
               onOpen={(playerId) => {
                 const player = roster.find((entry) => entry.id === playerId);
                 setSelectedPlayerId(playerId);
@@ -553,6 +645,34 @@ export default function RosterMenu(props: {
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            <div className="card" style={{ padding: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                <b>Accomplishments</b>
+                <div className="pill" style={{ fontSize: 12 }}>
+                  {selectedPlayer.championships} title{selectedPlayer.championships === 1 ? '' : 's'}
+                </div>
+              </div>
+              {selectedPlayer.championshipSeasons.length ? (
+                <div className="playerChampionshipGroup" style={{ marginTop: 10 }}>
+                  Championships: {selectedPlayer.championshipSeasons.map(seasonIndexToYear).join(', ')}
+                </div>
+              ) : null}
+              {selectedAccomplishments.length ? (
+                <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
+                  {selectedAccomplishments.map((item) => (
+                    <div key={item.key} className={`playerAccomplishmentRow priority-${item.priority} tone-${item.tone}`}>
+                      <span>{item.label}</span>
+                      <strong>{item.year}</strong>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="muted" style={{ marginTop: 8, fontSize: 12 }}>
+                  No league honors yet. Big seasons and championship runs will stack here over time.
+                </div>
+              )}
             </div>
 
             <div className="card" style={{ padding: 12 }}>

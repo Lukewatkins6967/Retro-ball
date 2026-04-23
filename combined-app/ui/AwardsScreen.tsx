@@ -94,6 +94,7 @@ export default function AwardsScreen(props: {
   onBack: () => void;
   onOpenPlayoffs: () => void;
   onOpenHistory: () => void;
+  onCompletePresentation: () => void;
 }) {
   const season = props.franchise.season;
   const latestAwards: SeasonAwards | null =
@@ -105,14 +106,25 @@ export default function AwardsScreen(props: {
   const finalists = latestAwards?.mvpFinalists?.length ? latestAwards.mvpFinalists : races.mvp.slice(0, 3);
   const revealOrder = useMemo(() => buildRevealOrder(finalists), [finalists]);
   const revealSeasonKey = `${latestAwards?.seasonIndex ?? props.franchise.seasonIndex}-${season?.phase ?? 'preseason'}`;
+  const shouldRunPresentation =
+    !props.franchise.hasCompletedAwardsPresentation && !!latestAwards && season?.phase === 'playoffs' && revealOrder.length === 3;
+  const [presentationRunStarted, setPresentationRunStarted] = useState(shouldRunPresentation);
   const [revealedCount, setRevealedCount] = useState(
-    latestAwards && season?.phase !== 'regular' && revealOrder.length ? 1 : 0,
+    shouldRunPresentation ? 1 : 0,
   );
 
   useEffect(() => {
-    if (!latestAwards || season?.phase === 'regular' || !revealOrder.length) {
+    setPresentationRunStarted(shouldRunPresentation);
+  }, [shouldRunPresentation]);
+
+  useEffect(() => {
+    if (!presentationRunStarted) {
       setRevealedCount(0);
       return;
+    }
+
+    if (!props.franchise.hasCompletedAwardsPresentation) {
+      props.onCompletePresentation();
     }
 
     setRevealedCount(0);
@@ -125,9 +137,16 @@ export default function AwardsScreen(props: {
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer));
     };
-  }, [latestAwards, revealOrder, revealSeasonKey, season?.phase]);
+  }, [
+    presentationRunStarted,
+    props.franchise.hasCompletedAwardsPresentation,
+    props.onCompletePresentation,
+    revealOrder,
+    revealSeasonKey,
+  ]);
 
-  const showReveal = !!latestAwards && season?.phase !== 'regular' && revealOrder.length === 3;
+  const showReveal = presentationRunStarted && revealOrder.length === 3;
+  const postseasonButtonLabel = season?.playoffs?.stage === 'playIn' ? 'Start Play-In' : 'Open Playoffs';
 
   return (
     <div className="page">
@@ -147,7 +166,7 @@ export default function AwardsScreen(props: {
           <div className="awardsHeroActions">
             {season?.phase === 'playoffs' ? (
               <button className="btn btnPrimary" onClick={props.onOpenPlayoffs} style={{ padding: '10px 14px', fontWeight: 900 }}>
-                Open Playoffs
+                {postseasonButtonLabel}
               </button>
             ) : null}
             <button className="btn btnSoft" onClick={props.onOpenHistory} style={{ padding: '10px 14px', fontWeight: 900 }}>

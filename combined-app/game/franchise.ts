@@ -218,6 +218,7 @@ function createTeamPlayer(teamId: string, prospect: Prospect, acquiredRound: num
     careerStats: { ...blankStats },
     awardHistory: [],
     championships: 0,
+    championshipSeasons: [],
   };
 }
 
@@ -711,6 +712,7 @@ export function createFranchiseState(params?: {
     seasonAwards: null,
     seasonAwardsHistory: [],
     championshipHistory: [],
+    hasCompletedAwardsPresentation: false,
     currentDate: { year: 2026, month: 9, day: 1 },
     tradeHistory: [],
   });
@@ -2114,6 +2116,7 @@ export function finalizeRegularSeason(franchise: FranchiseState): FranchiseState
   const teams = [awarded.user, awarded.ai, ...awarded.otherTeams];
   return {
     ...awarded,
+    hasCompletedAwardsPresentation: false,
     season: {
       ...awarded.season,
       phase: 'playoffs',
@@ -2170,6 +2173,9 @@ export function finalizePlayoffGameResult(
           roster: team.roster.map((player) => ({
             ...player,
             championships: player.championships + 1,
+            championshipSeasons: player.championshipSeasons.includes(franchise.seasonIndex)
+              ? player.championshipSeasons
+              : [...player.championshipSeasons, franchise.seasonIndex].sort((a, b) => a - b),
           })),
         }
       : team;
@@ -2250,6 +2256,7 @@ export function prepareNextSeasonCycle(franchise: FranchiseState): FranchiseStat
     draftCompleted: false,
     season: null,
     seasonAwards: null,
+    hasCompletedAwardsPresentation: false,
     currentDate: moveDate(franchise.currentDate, 21),
   });
 }
