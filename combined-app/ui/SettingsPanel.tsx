@@ -95,6 +95,7 @@ function SliderRow(props: {
   step?: number;
   suffix?: string;
   description?: string;
+  disabled?: boolean;
   onChange: (value: number) => void;
 }) {
   return (
@@ -116,6 +117,7 @@ function SliderRow(props: {
         max={props.max}
         step={props.step ?? 1}
         value={props.value}
+        disabled={props.disabled}
         onChange={(e) => props.onChange(Number(e.target.value))}
       />
     </div>
@@ -124,6 +126,7 @@ function SliderRow(props: {
 
 export default function SettingsPanel(props: {
   settings: GameSettings;
+  salaryCapLocked?: boolean;
   onChange: (next: GameSettings) => void;
   onClose: () => void;
 }) {
@@ -258,6 +261,28 @@ export default function SettingsPanel(props: {
                   { value: 'hard', label: 'Hard' },
                 ]}
                 onChange={(value) => update('salaryCapStrictness', value)}
+              />
+              <SliderRow
+                title="League Salary Cap"
+                value={props.settings.salaryCapValue}
+                min={220}
+                max={600}
+                suffix="k"
+                disabled={props.salaryCapLocked}
+                description={
+                  props.salaryCapLocked
+                    ? 'Locked once re-signing or free agency begins for the current season.'
+                    : 'Set the hard salary cap before offseason negotiation windows open.'
+                }
+                onChange={(value) => update('salaryCapValue', value)}
+              />
+              <SliderRow
+                title="Target Roster Size"
+                value={props.settings.targetRosterSize}
+                min={8}
+                max={12}
+                description="Controls how much bench depth teams try to carry through the draft, sim, and free agency."
+                onChange={(value) => update('targetRosterSize', value)}
               />
               <SliderRow
                 title="Rookie Contract Salary"

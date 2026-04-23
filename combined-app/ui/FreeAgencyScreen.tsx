@@ -95,6 +95,10 @@ function tagTone(player: TeamPlayer) {
   return null;
 }
 
+function latestAwardSeason(player: TeamPlayer) {
+  return player.awardHistory.reduce((latest, award) => Math.max(latest, award.seasonIndex), -1);
+}
+
 export default function FreeAgencyScreen(props: {
   franchise: FranchiseState;
   onBack: () => void;
@@ -149,6 +153,7 @@ export default function FreeAgencyScreen(props: {
     selectedPlayer && liveOffer
       ? evaluateContractOffer(props.franchise, props.franchise.user.id, selectedPlayer, liveOffer)
       : null;
+  const capBlocked = !!liveOffer && salaryTotal + liveOffer.salary > props.franchise.user.salaryCap;
 
   return (
     <div className="page">
@@ -186,7 +191,7 @@ export default function FreeAgencyScreen(props: {
                 </div>
                 <div style={{ fontWeight: 1000, fontSize: 30, marginTop: 4 }}>${Math.round(capSpace / 1000)}k</div>
                 <div style={{ color: 'rgba(226,232,240,0.7)', fontSize: 13, marginTop: 6 }}>
-                  ${Math.round(salaryTotal / 1000)}k committed of $350k
+                  ${Math.round(salaryTotal / 1000)}k committed of ${Math.round(props.franchise.user.salaryCap / 1000)}k
                 </div>
               </div>
             </div>
@@ -349,6 +354,7 @@ export default function FreeAgencyScreen(props: {
             filteredMarket.map((player) => {
               const expectedSalary = calculateMarketSalary(player);
               const tag = tagTone(player);
+              const recentAwards = latestAwardSeason(player);
               const totals = playerTotals(player);
               const userOffer = player.marketOffers?.find((offer) => offer.teamId === props.franchise.user.id);
               const bestOffer = player.marketOffers?.[0];
@@ -378,6 +384,16 @@ export default function FreeAgencyScreen(props: {
                         {tag ? (
                           <div className="pill" style={{ background: tag.bg, borderColor: tag.border, color: tag.color, fontWeight: 900 }}>
                             {tag.label}
+                          </div>
+                        ) : null}
+                        {player.unreSignedByUser ? (
+                          <div className="pill" style={{ background: 'rgba(220,38,38,0.10)', borderColor: 'rgba(220,38,38,0.18)', color: 'rgba(185,28,28,0.95)', fontWeight: 900 }}>
+                            Unre-signed
+                          </div>
+                        ) : null}
+                        {recentAwards >= 0 ? (
+                          <div className="pill" style={{ background: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.22)', color: 'rgba(180,83,9,0.95)', fontWeight: 900 }}>
+                            Award Winner
                           </div>
                         ) : null}
                         {bestOffer && bestOffer.teamId !== props.franchise.user.id && (bestOffer.acceptanceOdds ?? 0) >= 70 ? (
@@ -642,14 +658,23 @@ export default function FreeAgencyScreen(props: {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center' }}>
+              {capBlocked ? (
+                <div className="pill" style={{ background: 'rgba(220,38,38,0.10)', borderColor: 'rgba(220,38,38,0.18)', color: 'rgba(185,28,28,0.95)', whiteSpace: 'normal' }}>
+                  Over salary cap — cannot sign player
+                </div>
+              ) : (
+                <div className="muted" style={{ fontSize: 12 }}>
+                  Hard cap room after this deal: ${Math.max(0, Math.round((props.franchise.user.salaryCap - salaryTotal - liveOffer.salary) / 1000))}k
+                </div>
+              )}
               <button
                 className="btn btnPrimary"
                 onClick={() => props.onOffer(selectedPlayer.id, liveOffer)}
-                disabled={marketClosed}
-                style={{ padding: '10px 14px', fontWeight: 900, opacity: marketClosed ? 0.55 : 1 }}
+                disabled={marketClosed || capBlocked}
+                style={{ padding: '10px 14px', fontWeight: 900, opacity: marketClosed || capBlocked ? 0.55 : 1 }}
               >
-                {marketClosed ? 'Market Closed' : 'Submit Offer'}
+                {marketClosed ? 'Market Closed' : capBlocked ? 'Cap Locked' : 'Submit Offer'}
               </button>
             </div>
           </div>

@@ -1,6 +1,347 @@
 import React, { useMemo, useState } from 'react';
-import type { FranchiseState, SeasonGame } from '../game/types';
+import type { FranchiseState, PlayoffGame, PlayoffSeries, SeasonGame } from '../game/types';
 import Modal from './Modal';
+
+function roundLabel(round: PlayoffSeries['round']) {
+  if (round === 'quarter') return 'Quarterfinals';
+  if (round === 'semi') return 'Semifinals';
+  return 'League Finals';
+}
+
+function currentRound(playoffs: NonNullable<NonNullable<FranchiseState['season']>['playoffs']>) {
+  if (playoffs.stage === 'playIn' && playoffs.games.some((game) => game.round === 'playIn' && !game.result?.played)) return 'playIn';
+  if (playoffs.series.some((series) => series.round === 'quarter' && !series.winnerTeamId)) return 'quarter';
+  if (playoffs.series.some((series) => series.round === 'semi' && !series.winnerTeamId)) return 'semi';
+  if (playoffs.series.some((series) => series.round === 'final' && !series.winnerTeamId)) return 'final';
+  return playoffs.championTeamId ? 'complete' : 'quarter';
+}
+
+function SeriesNode(props: {
+  series?: PlayoffSeries;
+  teamName: (id: string) => string;
+  active: boolean;
+}) {
+  if (!props.series) {
+    return <div className="playoffSeriesNode isEmpty">Waiting for bracket to advance</div>;
+  }
+
+  const leaderText = props.series.winnerTeamId
+    ? `Advanced: ${props.teamName(props.series.winnerTeamId)}`
+    : `${props.series.winsA}-${props.series.winsB} in progress`;
+
+  return (
+    <div className={`playoffSeriesNode ${props.active ? 'isActive' : ''} ${props.series.winnerTeamId ? 'isAdvanced' : ''}`}>
+      <div className="playoffSeriesLabel">{props.series.label}</div>
+      <div className="playoffSeriesTeams">
+        <div>
+          <span className="playoffSeed">#{props.series.seedA}</span> {props.teamName(props.series.teamAId)}
+        </div>
+        <div>
+          <span className="playoffSeed">#{props.series.seedB}</span> {props.teamName(props.series.teamBId)}
+        </div>
+      </div>
+      <div className="playoffSeriesFooter">
+        <span>{leaderText}</span>
+        <span>Best-of-{props.series.winsNeeded * 2 - 1}</span>
+      </div>
+    </div>
+  );
+}
+
+function PlayoffSeriesActionCard(props: {
+  series: PlayoffSeries;
+  nextGame: PlayoffGame | null;
+  teamName: (id: string) => string;
+  userTeamId: string;
+  onPlay: (game: PlayoffGame) => void;
+  onSimulateGame: (game: PlayoffGame) => void;
+  onSimulateSeries: (series: PlayoffSeries) => void;
+}) {
+  const involvesUser = props.series.teamAId === props.userTeamId || props.series.teamBId === props.userTeamId;
+  return (
+    <div className="card playoffActionCard">
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div>
+          <div className="playoffSeriesLabel">{props.series.label}</div>
+          <div className="playoffActionTitle">
+            #{props.series.seedA} {props.teamName(props.series.teamAId)} vs #{props.series.seedB} {props.teamName(props.series.teamBId)}
+          </div>
+          <div className="muted" style={{ marginTop: 6, fontSize: 13 }}>
+            Series score: {props.series.winsA}-{props.series.winsB}
+            {props.nextGame ? ` • Next up: Game ${props.nextGame.gameNumber ?? props.series.gameIds.length + 1}` : ' • Series complete'}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button
+            className="btn btnSoft"
+            disabled={!props.nextGame}
+            onClick={() => props.nextGame && props.onSimulateGame(props.nextGame)}
+            style={{ padding: '10px 14px', fontWeight: 900 }}
+          >
+            Sim Game
+          </button>
+          <button
+            className="btn btnSoft"
+            disabled={!props.nextGame}
+            onClick={() => props.onSimulateSeries(props.series)}
+            style={{ padding: '10px 14px', fontWeight: 900 }}
+          >
+            Sim Series
+          </button>
+          {involvesUser ? (
+            <button
+              className="btn btnPrimary"
+              disabled={!props.nextGame}
+              onClick={() => props.nextGame && props.onPlay(props.nextGame)}
+              style={{ padding: '10px 14px', fontWeight: 900 }}
+            >
+              Play Game
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlayoffMode(props: {
+  franchise: FranchiseState;
+  onGoRoster: () => void;
+  onPlayoffPlay: (game: PlayoffGame) => void;
+  onPlayoffSimGame: (game: PlayoffGame) => void;
+  onPlayoffSimSeries: (series: PlayoffSeries) => void;
+}) {
+  const season = props.franchise.season;
+  const playoffs = season?.playoffs;
+  const [confirmSim, setConfirmSim] = useState<PlayoffGame | null>(null);
+  const [confirmSeries, setConfirmSeries] = useState<PlayoffSeries | null>(null);
+
+  const leagueTeams = useMemo(
+    () => [props.franchise.user, props.franchise.ai, ...props.franchise.otherTeams],
+    [props.franchise],
+  );
+  const teamById = useMemo(
+    () => Object.fromEntries(leagueTeams.map((team) => [team.id, team])),
+    [leagueTeams],
+  );
+
+  if (!season || !playoffs) {
+    return (
+      <div className="page">
+        <div className="panelSolid panel" style={{ padding: 16 }}>
+          <h2 style={{ margin: 0 }}>Playoff Mode</h2>
+          <div className="muted" style={{ marginTop: 10 }}>
+            No playoff bracket is available yet.
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <button className="btn btnSoft" onClick={props.onGoRoster}>
+              Back to Roster
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const teamName = (id: string) => teamById[id]?.name ?? id;
+  const roundNow = currentRound(playoffs);
+  const playInGames = playoffs.games.filter((game) => game.round === 'playIn');
+  const seriesById = Object.fromEntries(playoffs.series.map((series) => [series.id, series]));
+  const activeSeries = playoffs.series.filter((series) => !series.winnerTeamId);
+  const nextGameBySeriesId = Object.fromEntries(
+    activeSeries.map((series) => [
+      series.id,
+      playoffs.games.find((game) => game.seriesId === series.id && !game.result?.played) ?? null,
+    ]),
+  ) as Record<string, PlayoffGame | null>;
+
+  return (
+    <div className="page">
+      <div className="panelSolid panel" style={{ padding: 16 }}>
+        <div className="playoffHero">
+          <div>
+            <div className="pill awardsHeroPill">Season Page • Playoff Mode</div>
+            <h2 style={{ margin: '12px 0 0' }}>Playoff Picture</h2>
+            <div className="muted awardsHeroCopy">
+              The season page now flips into playoff mode, with the play-in, live bracket, and series controls all in one place.
+            </div>
+          </div>
+          <div className="playoffHeroMeta">
+            <div className="playoffMetaChip">
+              <span>Current Round</span>
+              <strong>{roundNow === 'playIn' ? 'Play-In' : roundNow === 'complete' ? 'Champion Crowned' : roundLabel(roundNow as PlayoffSeries['round'])}</strong>
+            </div>
+            <button className="btn btnGhost" onClick={props.onGoRoster} style={{ padding: '10px 14px', fontWeight: 900 }}>
+              Back to Roster
+            </button>
+          </div>
+        </div>
+
+        {playoffs.championTeamId ? (
+          <div className="playoffChampionBanner">
+            <div className="playoffSeriesLabel">Champion</div>
+            <div className="playoffChampionName">{teamName(playoffs.championTeamId)}</div>
+            <div className="muted">
+              {playoffs.runnerUpTeamId ? `Closed out the finals over ${teamName(playoffs.runnerUpTeamId)}.` : 'Season finished.'}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="card playoffSeedCard">
+          <div className="awardsSectionLabel">Seed Table</div>
+          <div className="playoffSeedTable">
+            {playoffs.seededTeamIds.map((teamId, index) => (
+              <div key={teamId} className={`playoffSeedPill ${index < 6 ? 'isDirect' : 'isPlayIn'}`}>
+                <span>#{index + 1}</span>
+                <strong>{teamName(teamId)}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="playoffPlayInSection">
+          <div className="awardsSectionLabel">Play-In</div>
+          <div className="playInGrid">
+            {playInGames.length ? (
+              playInGames.map((game) => {
+                const involvesUser = game.homeTeamId === props.franchise.user.id || game.awayTeamId === props.franchise.user.id;
+                return (
+                  <div key={game.id} className={`playInCard ${game.result?.played ? 'isResolved' : ''}`}>
+                    <div className="playoffSeriesLabel">{game.label}</div>
+                    <div className="playoffSeriesTeams">
+                      <div>
+                        <span className="playoffSeed">#{game.homeSeed}</span> {teamName(game.homeTeamId)}
+                      </div>
+                      <div>
+                        <span className="playoffSeed">#{game.awaySeed}</span> {teamName(game.awayTeamId)}
+                      </div>
+                    </div>
+                    <div className="playoffSeriesFooter">
+                      <span>
+                        {game.result?.played
+                          ? `${teamName(game.result.winnerTeamId ?? '')} advanced`
+                          : game.eliminationGame
+                            ? 'Loser goes home'
+                            : 'Winner locks the 7 seed'}
+                      </span>
+                    </div>
+                    {!game.result?.played ? (
+                      <div style={{ marginTop: 12, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                        <button className="btn btnSoft" onClick={() => setConfirmSim(game)} style={{ padding: '10px 14px', fontWeight: 900 }}>
+                          Sim Game
+                        </button>
+                        {involvesUser ? (
+                          <button className="btn btnPrimary" onClick={() => props.onPlayoffPlay(game)} style={{ padding: '10px 14px', fontWeight: 900 }}>
+                            Play Game
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })
+            ) : (
+              <div className="muted">Play-in is complete.</div>
+            )}
+          </div>
+        </div>
+
+        <div className="playoffBracketGrid">
+          <div className="playoffBracketColumn">
+            <div className="playoffBracketHeading">Quarters</div>
+            <SeriesNode series={seriesById['quarter-1']} teamName={teamName} active={roundNow === 'quarter'} />
+            <SeriesNode series={seriesById['quarter-2']} teamName={teamName} active={roundNow === 'quarter'} />
+          </div>
+          <div className="playoffBracketColumn isInner">
+            <div className="playoffBracketHeading">Semis</div>
+            <SeriesNode series={seriesById['semi-1']} teamName={teamName} active={roundNow === 'semi'} />
+          </div>
+          <div className="playoffBracketColumn isCenter">
+            <div className="playoffBracketHeading">Finals</div>
+            <SeriesNode series={seriesById['final-1']} teamName={teamName} active={roundNow === 'final'} />
+          </div>
+          <div className="playoffBracketColumn isInner">
+            <div className="playoffBracketHeading">Semis</div>
+            <SeriesNode series={seriesById['semi-2']} teamName={teamName} active={roundNow === 'semi'} />
+          </div>
+          <div className="playoffBracketColumn">
+            <div className="playoffBracketHeading">Quarters</div>
+            <SeriesNode series={seriesById['quarter-3']} teamName={teamName} active={roundNow === 'quarter'} />
+            <SeriesNode series={seriesById['quarter-4']} teamName={teamName} active={roundNow === 'quarter'} />
+          </div>
+        </div>
+
+        {activeSeries.length ? (
+          <div style={{ marginTop: 18 }}>
+            <div className="awardsSectionLabel">Active Series</div>
+            <div className="grid1">
+              {activeSeries.map((series) => (
+                <PlayoffSeriesActionCard
+                  key={series.id}
+                  series={series}
+                  nextGame={nextGameBySeriesId[series.id] ?? null}
+                  teamName={teamName}
+                  userTeamId={props.franchise.user.id}
+                  onPlay={props.onPlayoffPlay}
+                  onSimulateGame={(game) => setConfirmSim(game)}
+                  onSimulateSeries={(targetSeries) => setConfirmSeries(targetSeries)}
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      {confirmSim ? (
+        <Modal title="Simulate this playoff game?" onClose={() => setConfirmSim(null)}>
+          <div className="muted" style={{ lineHeight: 1.45 }}>
+            Simulate this postseason game now? The bracket will update immediately.
+          </div>
+          <div style={{ marginTop: 14, display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+            <button className="btn btnSoft" onClick={() => setConfirmSim(null)} style={{ padding: '10px 14px' }}>
+              Cancel
+            </button>
+            <button
+              className="btn btnPrimary"
+              style={{ padding: '10px 14px', fontWeight: 900 }}
+              onClick={() => {
+                const game = confirmSim;
+                setConfirmSim(null);
+                props.onPlayoffSimGame(game);
+              }}
+            >
+              Sim Game
+            </button>
+          </div>
+        </Modal>
+      ) : null}
+
+      {confirmSeries ? (
+        <Modal title="Simulate this full series?" onClose={() => setConfirmSeries(null)}>
+          <div className="muted" style={{ lineHeight: 1.45 }}>
+            Simulate the rest of this matchup all the way to a series winner?
+          </div>
+          <div style={{ marginTop: 14, display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+            <button className="btn btnSoft" onClick={() => setConfirmSeries(null)} style={{ padding: '10px 14px' }}>
+              Cancel
+            </button>
+            <button
+              className="btn btnPrimary"
+              style={{ padding: '10px 14px', fontWeight: 900 }}
+              onClick={() => {
+                const series = confirmSeries;
+                setConfirmSeries(null);
+                props.onPlayoffSimSeries(series);
+              }}
+            >
+              Sim Series
+            </button>
+          </div>
+        </Modal>
+      ) : null}
+    </div>
+  );
+}
 
 export default function SeasonScheduleScreen(props: {
   franchise: FranchiseState;
@@ -9,6 +350,9 @@ export default function SeasonScheduleScreen(props: {
   onSimulateWeek: () => void;
   onAdvanceWeek: () => void;
   onGoRoster: () => void;
+  onPlayoffPlay: (game: PlayoffGame) => void;
+  onPlayoffSimGame: (game: PlayoffGame) => void;
+  onPlayoffSimSeries: (series: PlayoffSeries) => void;
 }) {
   const season = props.franchise.season;
   const [confirmSim, setConfirmSim] = useState<SeasonGame | null>(null);
@@ -38,6 +382,18 @@ export default function SeasonScheduleScreen(props: {
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (season.phase === 'playoffs') {
+    return (
+      <PlayoffMode
+        franchise={props.franchise}
+        onGoRoster={props.onGoRoster}
+        onPlayoffPlay={props.onPlayoffPlay}
+        onPlayoffSimGame={props.onPlayoffSimGame}
+        onPlayoffSimSeries={props.onPlayoffSimSeries}
+      />
     );
   }
 
@@ -78,7 +434,7 @@ export default function SeasonScheduleScreen(props: {
             <div className="statRow" style={{ marginTop: 16 }}>
               <div className="statChip">
                 <span className="statChipLabel">Season Phase</span>
-                <span className="statChipValue">{season.phase === 'regular' ? 'Regular Season' : 'Playoffs'}</span>
+                <span className="statChipValue">Regular Season</span>
               </div>
               <div className="statChip">
                 <span className="statChipLabel">Your Team</span>
@@ -149,7 +505,7 @@ export default function SeasonScheduleScreen(props: {
               disabled={!allWeekPlayed}
               title={!allWeekPlayed ? 'Finish all games this week first' : isLastWeek ? 'Finish regular season' : 'Advance to next week'}
             >
-              {isLastWeek ? 'Start Play-In' : 'Advance Week'}
+              {isLastWeek ? 'Continue to Awards' : 'Advance Week'}
             </button>
           </div>
         </div>
@@ -208,11 +564,7 @@ export default function SeasonScheduleScreen(props: {
                   </div>
 
                   <div className="scheduleActions">
-                    <button
-                      className="btn btnSoft"
-                      disabled={!canSim}
-                      onClick={() => setConfirmSim(game)}
-                    >
+                    <button className="btn btnSoft" disabled={!canSim} onClick={() => setConfirmSim(game)}>
                       Simulate
                     </button>
                     <button
@@ -235,7 +587,7 @@ export default function SeasonScheduleScreen(props: {
         </div>
       </div>
 
-      {confirmSim && (
+      {confirmSim ? (
         <Modal title="Simulate this game?" onClose={() => setConfirmSim(null)}>
           <div className="muted" style={{ lineHeight: 1.45 }}>
             Do you want to simulate this game? Player stats and results will be calculated automatically.
@@ -257,9 +609,9 @@ export default function SeasonScheduleScreen(props: {
             </button>
           </div>
         </Modal>
-      )}
+      ) : null}
 
-      {confirmWeekSim && (
+      {confirmWeekSim ? (
         <Modal title="Simulate the whole week?" onClose={() => setConfirmWeekSim(false)}>
           <div className="muted" style={{ lineHeight: 1.45 }}>
             Simulate all {remainingGames.length} remaining games in this week at once? This is the fast way to finish the slate without clicking every matchup.
@@ -280,7 +632,7 @@ export default function SeasonScheduleScreen(props: {
             </button>
           </div>
         </Modal>
-      )}
+      ) : null}
     </div>
   );
 }

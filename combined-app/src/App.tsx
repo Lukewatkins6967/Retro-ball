@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import type { FranchiseState, FreeAgencyDaySummary, LeagueNewsPost } from '../game/types';
+import type { FranchiseState, FreeAgencyDaySummary, LeagueNewsPost, PlayoffGame, PlayoffSeries } from '../game/types';
 import type { DraftStandingRow } from '../game/types';
 import {
   createFranchiseState,
@@ -19,9 +19,12 @@ import {
   userDraftPick,
   advanceDate,
   ensureSeasonReady,
+  enterReSigningPhase,
   finalizePlayoffGameResult,
   finalizeRegularSeason,
-  prepareNextSeasonCycle,
+  letPlayerWalk,
+  openOffseasonFreeAgency,
+  submitReSigningOffer,
   simulateAiLeagueTradeActivity,
 } from '../game/franchise';
 import StartMenu from '../ui/StartMenu';
@@ -36,19 +39,27 @@ import LotteryScreen from '../ui/LotteryScreen';
 import NewsScreen from '../ui/NewsScreen';
 import SeasonSimScreen from '../ui/SeasonSimScreen';
 import SeasonScheduleScreen from '../ui/SeasonScheduleScreen';
-import PlayoffsScreen from '../ui/PlayoffsScreen';
 import StatsScreen from '../ui/StatsScreen';
 import AwardsScreen from '../ui/AwardsScreen';
 import HistoryScreen from '../ui/HistoryScreen';
 import Modal from '../ui/Modal';
 import FreeAgencyScreen from '../ui/FreeAgencyScreen';
+import ReSigningScreen from '../ui/ReSigningScreen';
 import SettingsPanel from '../ui/SettingsPanel';
 import FreeAgencyRecapModal from '../ui/FreeAgencyRecapModal';
 import { simulateMatch, type SimulatedMatch } from '../game/matchSim';
 import BoxScoreModal from '../ui/BoxScoreModal';
 import { clearFranchise, hasSavedFranchise, loadFranchise, saveFranchise } from '../game/persistence';
 import { buildDynamicStorylinePosts } from '../game/personality';
-import { applySettingsToDocument, getSimPaceFromSettings, loadGameSettings, saveGameSettings, setCurrentSettings, type GameSettings } from '../game/settings';
+import {
+  applySettingsToDocument,
+  getConfiguredSalaryCap,
+  getSimPaceFromSettings,
+  loadGameSettings,
+  saveGameSettings,
+  setCurrentSettings,
+  type GameSettings,
+} from '../game/settings';
 
 type Screen =
   | 'start'
@@ -75,7 +86,7 @@ type ScheduledGameContext = {
 
 const UPDATE_LOG_STORAGE_KEY = 'combinedAppUpdateLog_v2';
 const UPDATE_LOG_LEGACY_STORAGE_KEY = 'combinedAppUpdateLog_v1';
-const UPDATE_LOG_SEED_VERSION = 62;
+const UPDATE_LOG_SEED_VERSION = 63;
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('start');
@@ -227,6 +238,23 @@ export default function App() {
     applySettingsToDocument(settings);
     saveGameSettings(settings);
   }, [settings]);
+
+  const freeAgencySettingsLocked = !!franchise && (franchise.freeAgencyPending || franchise.season?.phase === 'resigning');
+
+  const handleSettingsChange = (next: GameSettings) => {
+    setSettings(next);
+    if (freeAgencySettingsLocked) return;
+    setFranchise((prev) => {
+      if (!prev) return prev;
+      const nextCap = getConfiguredSalaryCap(next);
+      return {
+        ...prev,
+        user: { ...prev.user, salaryCap: nextCap },
+        ai: { ...prev.ai, salaryCap: nextCap },
+        otherTeams: prev.otherTeams.map((team) => ({ ...team, salaryCap: nextCap })),
+      };
+    });
+  };
 
   // Auto-save franchise + news.
   useEffect(() => {
@@ -675,6 +703,13 @@ export default function App() {
         major: false,
         delta: 0.1,
       },
+      {
+        id: 'seed-63',
+        createdAt: Date.now() + 39,
+        description: 'Season flow overhaul: awards now feed into playoff mode on the same Season page, playoff matchups support play/sim game plus sim series controls, finals open a true re-signing phase before free agency, and the hard salary cap plus offseason tags are now enforced more clearly.',
+        major: true,
+        delta: 0.5,
+      },
     ];
 
     try {
@@ -792,7 +827,7 @@ export default function App() {
   };
 
   const showFreeAgency = () => {
-    if (!franchise?.freeAgencyPending) return;
+    if (!franchise || (!franchise.freeAgencyPending && franchise.season?.phase !== 'resigning')) return;
     setFrontOfficeMessage(undefined);
     setScreen('freeAgency');
   };
@@ -875,25 +910,26 @@ export default function App() {
   };
 
   const getResumeScreen = (state: FranchiseState): Screen => {
+    if (state.season?.phase === 'resigning') return 'freeAgency';
     if (state.freeAgencyPending) return 'freeAgency';
     if (!state.draftCompleted) return 'draft';
     if (state.season?.phase === 'playoffs' && !state.hasCompletedAwardsPresentation) return 'awards';
-    if (state.season?.phase === 'playoffs') return 'playoffs';
+    if (state.season?.phase === 'playoffs') return 'seasonSchedule';
     return 'roster';
   };
 
-  const rollIntoNextSeason = (completedFranchise: FranchiseState) => {
+  const beginReSigningPhase = (completedFranchise: FranchiseState) => {
     try {
       localStorage.setItem('combinedAppLastSeasonStandings_v1', JSON.stringify(completedFranchise.seasonStandings));
     } catch {
       // Ignore storage issues.
     }
 
-    setFranchise(prepareNextSeasonCycle(completedFranchise));
+    setFranchise(enterReSigningPhase(completedFranchise));
     setProgressionNotices([]);
     setScheduledPlayGame(null);
     setBoxScore(null);
-    setFrontOfficeMessage('Free agency has opened. Re-sign your own players or hit the market before moving on to the draft lottery.');
+    setFrontOfficeMessage('Re-sign your expiring players first, then continue into full free agency before the draft.');
     setScreen('freeAgency');
   };
 
@@ -903,7 +939,7 @@ export default function App() {
       ? [completedFranchise.user, completedFranchise.ai, ...completedFranchise.otherTeams].find((team) => team.id === championId)
       : null;
     const teamName = champion?.name ?? 'League Champion';
-    const message = `${teamName} are celebrating on the floor after closing out the finals. Take in the moment, then the league will roll into free agency before the next draft.`;
+    const message = `${teamName} are celebrating on the floor after closing out the finals. Take in the moment, then the offseason will open with your re-signing window before free agency.`;
 
     setNewsPosts((prev) => [
       {
@@ -947,6 +983,67 @@ export default function App() {
     return homeEdge >= 0
       ? { score: { home: score.home + 1, away: score.away }, winnerTeamId: homeTeamId }
       : { score: { home: score.home, away: score.away + 1 }, winnerTeamId: awayTeamId };
+  };
+
+  const simulatePlayoffGame = (baseFranchise: FranchiseState, game: PlayoffGame) => {
+    const leagueTeams = [baseFranchise.user, baseFranchise.ai, ...baseFranchise.otherTeams];
+    const home = leagueTeams.find((team) => team.id === game.homeTeamId);
+    const away = leagueTeams.find((team) => team.id === game.awayTeamId);
+    if (!home || !away) {
+      return {
+        updated: baseFranchise,
+        progressionNotices: [] as string[],
+        result: null as SimulatedMatch | null,
+      };
+    }
+
+    const result = simulateMatch(home, away, { pace: getSimPaceFromSettings(settings), userTeamId: baseFranchise.user.id });
+    const applied = applyLeagueMatchResults(baseFranchise, {
+      homeTeamId: game.homeTeamId,
+      awayTeamId: game.awayTeamId,
+      inGameStatsByEntityId: result.playerStatsByEntityId,
+      finalScore: { home: result.finalScore.user, away: result.finalScore.ai },
+    });
+
+    const resolved = resolvePlayoffOutcome(
+      { home: result.finalScore.user, away: result.finalScore.ai },
+      game.homeTeamId,
+      game.awayTeamId,
+    );
+
+    return {
+      updated: finalizePlayoffGameResult(advanceDate(applied.updated, 1), {
+        gameId: game.id,
+        score: resolved.score,
+        winnerTeamId: resolved.winnerTeamId,
+      }),
+      progressionNotices: applied.progressionNotices,
+      result,
+    };
+  };
+
+  const simulatePlayoffSeries = (baseFranchise: FranchiseState, series: PlayoffSeries) => {
+    let working = baseFranchise;
+    const notices: string[] = [];
+    let lastResult: SimulatedMatch | null = null;
+
+    while (true) {
+      const currentSeries = working.season?.playoffs?.series.find((entry) => entry.id === series.id);
+      if (!currentSeries || currentSeries.winnerTeamId) break;
+      const nextGame = working.season?.playoffs?.games.find((game) => game.seriesId === series.id && !game.result?.played);
+      if (!nextGame) break;
+      const simulated = simulatePlayoffGame(working, nextGame);
+      working = simulated.updated;
+      notices.push(...simulated.progressionNotices);
+      if (simulated.result) lastResult = simulated.result;
+      if (working.season?.playoffs?.championTeamId) break;
+    }
+
+    return {
+      updated: working,
+      progressionNotices: notices,
+      result: lastResult,
+    };
   };
 
   return (
@@ -1152,7 +1249,7 @@ export default function App() {
         <AwardsScreen
           franchise={franchise}
           onBack={() => setScreen('roster')}
-          onOpenPlayoffs={() => setScreen('playoffs')}
+          onOpenPlayoffs={() => setScreen('seasonSchedule')}
           onOpenHistory={() => setScreen('history')}
           onCompletePresentation={markAwardsPresentationComplete}
         />
@@ -1195,7 +1292,7 @@ export default function App() {
               setScreen('trade');
             }}
             onOpenFreeAgency={showFreeAgency}
-            freeAgencyAvailable={!!franchise.freeAgencyPending}
+            freeAgencyAvailable={!!franchise.freeAgencyPending || franchise.season?.phase === 'resigning'}
             onOfferReSign={(playerId, offer) => {
               const player = franchise.user.roster.find((entry) => entry.id === playerId);
               if (!player) return;
@@ -1243,96 +1340,129 @@ export default function App() {
       )}
 
       {screen === 'freeAgency' && franchise && (
-        <FreeAgencyScreen
-          franchise={franchise}
-          message={frontOfficeMessage}
-          onBack={() => setScreen('roster')}
-          onOffer={(playerId, offer) => {
-            const player = franchise.freeAgents.find((entry) => entry.id === playerId);
-            if (!player) return;
-            const result = signFreeAgent(franchise, playerId, offer);
-            setFranchise(result.updated);
-            const counterText = result.counterOffer
-              ? ` Counter ask: $${Math.round(result.counterOffer.salary / 1000)}k for ${result.counterOffer.years} years.`
-              : '';
+        franchise.season?.phase === 'resigning' ? (
+          <ReSigningScreen
+            franchise={franchise}
+            message={frontOfficeMessage}
+            onBack={() => setScreen('roster')}
+            onOffer={(playerId, offer) => {
+              const player = franchise.reSigningPlayers.find((entry) => entry.id === playerId);
+              if (!player) return;
+              const result = submitReSigningOffer(franchise, playerId, offer);
+              const counterText = result.counterOffer
+                ? ` Counter ask: $${Math.round(result.counterOffer.salary / 1000)}k for ${result.counterOffer.years} years.`
+                : '';
+              if (!result.accepted) {
+                setFrontOfficeMessage(`${player.prospect.name} said no. ${result.reason ?? 'Re-signing failed.'}${counterText}`);
+                return;
+              }
+              setFranchise(result.updated);
+              setFrontOfficeMessage(`${player.prospect.name} agreed to ${offer.years} years at $${Math.round(offer.salary / 1000)}k per season.`);
+            }}
+            onLetWalk={(playerId) => {
+              const player = franchise.reSigningPlayers.find((entry) => entry.id === playerId);
+              const nextFranchise = letPlayerWalk(franchise, playerId);
+              setFranchise(nextFranchise);
+              setFrontOfficeMessage(player ? `${player.prospect.name} will hit free agency.` : 'Player released into free agency.');
+            }}
+            onContinue={() => {
+              const nextFranchise = openOffseasonFreeAgency(franchise);
+              setFranchise(nextFranchise);
+              setFrontOfficeMessage('Free agency has opened. Your unre-signed players are now on the market.');
+            }}
+          />
+        ) : (
+          <FreeAgencyScreen
+            franchise={franchise}
+            message={frontOfficeMessage}
+            onBack={() => setScreen('roster')}
+            onOffer={(playerId, offer) => {
+              const player = franchise.freeAgents.find((entry) => entry.id === playerId);
+              if (!player) return;
+              const result = signFreeAgent(franchise, playerId, offer);
+              setFranchise(result.updated);
+              const counterText = result.counterOffer
+                ? ` Counter ask: $${Math.round(result.counterOffer.salary / 1000)}k for ${result.counterOffer.years} years.`
+                : '';
 
-            if (result.accepted) {
-              setFrontOfficeMessage(`${player.prospect.name} signed for ${offer.years} years at $${Math.round(offer.salary / 1000)}k per season.`);
+              if (result.accepted) {
+                setFrontOfficeMessage(`${player.prospect.name} signed for ${offer.years} years at $${Math.round(offer.salary / 1000)}k per season.`);
+                setNewsPosts((prev) => [
+                  {
+                    id: `fa-signing-${Date.now()}`,
+                    createdAtMs: Date.now(),
+                    type: 'breaking',
+                    icon: 'FA',
+                    badge: 'FA',
+                    badgeTone: 'good',
+                    text: `${franchise.user.name} signs ${player.prospect.name} for ${offer.years} years at $${Math.round(offer.salary / 1000)}k annually.`,
+                  },
+                  ...prev,
+                ]);
+                pushStorylines(result.updated, 2);
+                return;
+              }
+
+              if (result.submitted) {
+                setFrontOfficeMessage(`${player.prospect.name}: ${result.reason ?? 'Offer submitted.'}${counterText}`);
+                setNewsPosts((prev) => [
+                  {
+                    id: `fa-offer-${Date.now()}`,
+                    createdAtMs: Date.now(),
+                    type: 'reaction',
+                    icon: 'FA',
+                    badge: 'BID',
+                    badgeTone: 'info',
+                    text: `${franchise.user.name} submits ${offer.years} years at $${Math.round(offer.salary / 1000)}k to ${player.prospect.name}. Current sign chance: ${result.evaluation.acceptanceOdds}%.`,
+                  },
+                  ...prev,
+                ]);
+                pushStorylines(result.updated, 1);
+                return;
+              }
+
+              setFrontOfficeMessage(`${player.prospect.name} passed on the offer. ${result.reason ?? 'Signing failed.'}${counterText}`);
               setNewsPosts((prev) => [
                 {
-                  id: `fa-signing-${Date.now()}`,
+                  id: `fa-refusal-${Date.now()}`,
                   createdAtMs: Date.now(),
                   type: 'breaking',
                   icon: 'FA',
                   badge: 'FA',
-                  badgeTone: 'good',
-                  text: `${franchise.user.name} signs ${player.prospect.name} for ${offer.years} years at $${Math.round(offer.salary / 1000)}k annually.`,
-                },
-                ...prev,
-              ]);
-              pushStorylines(result.updated, 2);
-              return;
-            }
-
-            if (result.submitted) {
-              setFrontOfficeMessage(`${player.prospect.name}: ${result.reason ?? 'Offer submitted.'}${counterText}`);
-              setNewsPosts((prev) => [
-                {
-                  id: `fa-offer-${Date.now()}`,
-                  createdAtMs: Date.now(),
-                  type: 'reaction',
-                  icon: 'FA',
-                  badge: 'BID',
-                  badgeTone: 'info',
-                  text: `${franchise.user.name} submits ${offer.years} years at $${Math.round(offer.salary / 1000)}k to ${player.prospect.name}. Current sign chance: ${result.evaluation.acceptanceOdds}%.`,
+                  badgeTone: 'bad',
+                  text: `${player.prospect.name} turns down a bid from ${franchise.user.name}.${counterText ? ` ${counterText.trim()}` : ''}`,
                 },
                 ...prev,
               ]);
               pushStorylines(result.updated, 1);
               return;
-            }
-
-            setFrontOfficeMessage(`${player.prospect.name} passed on the offer. ${result.reason ?? 'Signing failed.'}${counterText}`);
-            setNewsPosts((prev) => [
-              {
-                id: `fa-refusal-${Date.now()}`,
-                createdAtMs: Date.now(),
-                type: 'breaking',
-                icon: 'FA',
-                badge: 'FA',
-                badgeTone: 'bad',
-                text: `${player.prospect.name} turns down a bid from ${franchise.user.name}.${counterText ? ` ${counterText.trim()}` : ''}`,
-              },
-              ...prev,
-            ]);
-            pushStorylines(result.updated, 1);
-            return;
-          }}
-          onAdvanceDay={() => {
-            const advanced = advanceFreeAgencyDay(franchise);
-            const totalDays = advanced.updated.freeAgencyState?.totalDays ?? 7;
-            const summariesDone = advanced.updated.freeAgencyState?.dailySummaries.length ?? 0;
-            if (summariesDone >= totalDays) {
-              const completed = completeFreeAgencyPhase(advanced.updated);
-              const newSummaries = completed.freeAgencyState?.dailySummaries.slice(-1) ?? [advanced.summary];
-              finishFreeAgencyWithRecap(completed, newSummaries, 'Free agency wrapped. Review the market recap, then move on to the lottery.');
-              return;
-            }
-            setFranchise(advanced.updated);
-            setFrontOfficeMessage(advanced.summary.feed[0] ?? `Free agency Day ${advanced.summary.day} is in the books.`);
-            setNewsPosts((prev) => [...buildFreeAgencyNewsPosts([advanced.summary]), ...prev].slice(0, 250));
-            pushStorylines(advanced.updated, 2);
-          }}
-          onContinue={() => {
-            const existingSummaryCount = franchise.freeAgencyState?.dailySummaries.length ?? 0;
-            const completed = completeFreeAgencyPhase(franchise);
-            const newSummaries = completed.freeAgencyState?.dailySummaries.slice(existingSummaryCount) ?? [];
-            finishFreeAgencyWithRecap(completed, newSummaries, 'Free agency is complete. Review the recap, then continue to lottery night.');
-          }}
-        />
+            }}
+            onAdvanceDay={() => {
+              const advanced = advanceFreeAgencyDay(franchise);
+              const totalDays = advanced.updated.freeAgencyState?.totalDays ?? 7;
+              const summariesDone = advanced.updated.freeAgencyState?.dailySummaries.length ?? 0;
+              if (summariesDone >= totalDays) {
+                const completed = completeFreeAgencyPhase(advanced.updated);
+                const newSummaries = completed.freeAgencyState?.dailySummaries.slice(-1) ?? [advanced.summary];
+                finishFreeAgencyWithRecap(completed, newSummaries, 'Free agency wrapped. Review the market recap, then move on to the lottery.');
+                return;
+              }
+              setFranchise(advanced.updated);
+              setFrontOfficeMessage(advanced.summary.feed[0] ?? `Free agency Day ${advanced.summary.day} is in the books.`);
+              setNewsPosts((prev) => [...buildFreeAgencyNewsPosts([advanced.summary]), ...prev].slice(0, 250));
+              pushStorylines(advanced.updated, 2);
+            }}
+            onContinue={() => {
+              const existingSummaryCount = franchise.freeAgencyState?.dailySummaries.length ?? 0;
+              const completed = completeFreeAgencyPhase(franchise);
+              const newSummaries = completed.freeAgencyState?.dailySummaries.slice(existingSummaryCount) ?? [];
+              finishFreeAgencyWithRecap(completed, newSummaries, 'Free agency is complete. Review the recap, then continue to lottery night.');
+            }}
+          />
+        )
       )}
 
-      {screen === 'seasonSchedule' && franchise && (
+      {(screen === 'seasonSchedule' || screen === 'playoffs') && franchise && (
         <SeasonScheduleScreen
           franchise={franchise}
           onGoRoster={() => setScreen('roster')}
@@ -1433,14 +1563,7 @@ export default function App() {
             setFranchise(nextFranchise);
             setScreen('awards');
           }}
-        />
-      )}
-
-      {screen === 'playoffs' && franchise && (
-        <PlayoffsScreen
-          franchise={franchise}
-          onBack={() => setScreen('seasonSchedule')}
-          onPlay={(game) => {
+          onPlayoffPlay={(game) => {
             setScheduledPlayGame({
               source: 'playoffs',
               id: game.id,
@@ -1449,60 +1572,37 @@ export default function App() {
             });
             setScreen('game');
           }}
-          onSimulate={(game) => {
-            const season = franchise.season;
-            const playoffs = season?.playoffs;
-            if (!season || !playoffs) return;
-
-            const leagueTeams = [franchise.user, franchise.ai, ...franchise.otherTeams];
-            const home = leagueTeams.find((t) => t.id === game.homeTeamId);
-            const away = leagueTeams.find((t) => t.id === game.awayTeamId);
-            if (!home || !away) return;
-
-            const res = simulateMatch(home, away, { pace: getSimPaceFromSettings(settings), userTeamId: franchise.user.id });
-            setBoxScore({
-              title: 'Playoff Box Score',
-              homeTeamName: home.name,
-              awayTeamName: away.name,
-              score: { home: res.finalScore.user, away: res.finalScore.ai },
-              homeLines: res.boxScore.homeLines,
-              awayLines: res.boxScore.awayLines,
-            });
-            const applied = applyLeagueMatchResults(franchise, {
-              homeTeamId: game.homeTeamId,
-              awayTeamId: game.awayTeamId,
-              inGameStatsByEntityId: res.playerStatsByEntityId,
-              finalScore: { home: res.finalScore.user, away: res.finalScore.ai },
-            });
-
-            const nextSeason = applied.updated.season;
-            if (!nextSeason?.playoffs) {
-              setFranchise(applied.updated);
-              setProgressionNotices(applied.progressionNotices);
-              pushStorylines(applied.updated, 2);
+          onPlayoffSimGame={(game) => {
+            const home = [franchise.user, franchise.ai, ...franchise.otherTeams].find((team) => team.id === game.homeTeamId);
+            const away = [franchise.user, franchise.ai, ...franchise.otherTeams].find((team) => team.id === game.awayTeamId);
+            const simulated = simulatePlayoffGame(franchise, game);
+            if (simulated.result && home && away) {
+              setBoxScore({
+                title: 'Playoff Box Score',
+                homeTeamName: home.name,
+                awayTeamName: away.name,
+                score: { home: simulated.result.finalScore.user, away: simulated.result.finalScore.ai },
+                homeLines: simulated.result.boxScore.homeLines,
+                awayLines: simulated.result.boxScore.awayLines,
+              });
+            }
+            if (simulated.updated.season?.playoffs?.championTeamId) {
+              queueChampionshipCelebration(simulated.updated);
               return;
             }
-
-            const resolved = resolvePlayoffOutcome(
-              { home: res.finalScore.user, away: res.finalScore.ai },
-              game.homeTeamId,
-              game.awayTeamId,
-            );
-            const nextFranchise = finalizePlayoffGameResult(
-              advanceDate(applied.updated, 1),
-              {
-                gameId: game.id,
-                score: resolved.score,
-                winnerTeamId: resolved.winnerTeamId,
-              },
-            );
-            if (nextFranchise.season?.playoffs?.championTeamId) {
-              queueChampionshipCelebration(nextFranchise);
+            setFranchise(simulated.updated);
+            setProgressionNotices(simulated.progressionNotices);
+            pushStorylines(simulated.updated, 2);
+          }}
+          onPlayoffSimSeries={(series) => {
+            const simulated = simulatePlayoffSeries(franchise, series);
+            if (simulated.updated.season?.playoffs?.championTeamId) {
+              queueChampionshipCelebration(simulated.updated);
               return;
             }
-            setFranchise(nextFranchise);
-            setProgressionNotices(applied.progressionNotices);
-            pushStorylines(nextFranchise, 2);
+            setFranchise(simulated.updated);
+            setProgressionNotices(simulated.progressionNotices);
+            pushStorylines(simulated.updated, 2);
           }}
         />
       )}
@@ -1641,7 +1741,7 @@ export default function App() {
           onClose={() => {
             const next = championshipCelebration.nextFranchise;
             setChampionshipCelebration(null);
-            rollIntoNextSeason(next);
+            beginReSigningPhase(next);
           }}
         >
           <div
@@ -1669,10 +1769,10 @@ export default function App() {
               onClick={() => {
                 const next = championshipCelebration.nextFranchise;
                 setChampionshipCelebration(null);
-                rollIntoNextSeason(next);
+                beginReSigningPhase(next);
               }}
             >
-              Continue to Free Agency
+              Continue to Re-Signing
             </button>
           </div>
         </Modal>
@@ -1747,7 +1847,7 @@ export default function App() {
             const source = scheduledPlayGame.source;
             setScheduledPlayGame(null);
             setFrontOfficeMessage('Live match exited. That matchup was left unplayed.');
-            setScreen(source === 'playoffs' ? 'playoffs' : 'seasonSchedule');
+            setScreen('seasonSchedule');
           }}
           onExit={(result) => {
             if (!scheduledPlayGame) {
@@ -1781,7 +1881,7 @@ export default function App() {
               setFranchise(nextFranchise);
               setProgressionNotices(applied.progressionNotices);
               pushStorylines(nextFranchise, 2);
-              setScreen(game.source === 'playoffs' ? 'playoffs' : 'seasonSchedule');
+              setScreen('seasonSchedule');
               return;
             }
 
@@ -1793,7 +1893,7 @@ export default function App() {
                 setFranchise(dated);
                 setProgressionNotices(applied.progressionNotices);
                 pushStorylines(dated, 2);
-                setScreen('playoffs');
+                setScreen('seasonSchedule');
                 return;
               }
 
@@ -1814,7 +1914,7 @@ export default function App() {
               setFranchise(nextFranchise);
               setProgressionNotices(applied.progressionNotices);
               pushStorylines(nextFranchise, 2);
-              setScreen('playoffs');
+              setScreen('seasonSchedule');
               return;
             }
 
@@ -1892,7 +1992,8 @@ export default function App() {
       {settingsOpen && (
         <SettingsPanel
           settings={settings}
-          onChange={setSettings}
+          salaryCapLocked={freeAgencySettingsLocked}
+          onChange={handleSettingsChange}
           onClose={() => setSettingsOpen(false)}
         />
       )}

@@ -11,7 +11,15 @@ import {
   getPlayerStatusLabel,
   refreshFranchiseDynamics,
 } from './personality';
-import { getAiAggressionMultiplier, getCapAllowance, getDifficultyTuning, getCurrentSettings, getRookieContractSalary } from './settings';
+import {
+  getAiAggressionMultiplier,
+  getCapAllowance,
+  getConfiguredSalaryCap,
+  getDifficultyTuning,
+  getCurrentSettings,
+  getRookieContractSalary,
+  getTargetRosterSize,
+} from './settings';
 import { depthAwareTeamRating, getDepthScore, getRotationMetrics, recoverBetweenGames } from './stamina';
 import type {
   DraftState,
@@ -36,7 +44,6 @@ function clamp(n: number, min: number, max: number) {
 
 const FREE_AGENCY_TOTAL_DAYS = 7;
 const MIN_TEAM_ROSTER_SIZE = 8;
-const TARGET_TEAM_ROSTER_SIZE = 10;
 const REGULAR_SEASON_WEEKS = REGULAR_SEASON_GAMES_PER_TEAM;
 
 function hashSeed(value: string) {
@@ -163,7 +170,7 @@ function createTeam(teamId: string, name: string, managerName: string, logoText:
     logoColor,
     roster: [],
     draftPicks: [],
-    salaryCap: 350_000,
+    salaryCap: getConfiguredSalaryCap(),
     cash: 250_000,
     activePlayerIds: ['', ''],
     rotationMode: 'balanced',
@@ -249,10 +256,29 @@ export function calculateMarketSalary(player: TeamPlayer) {
   const potentialBoost = player.prospect.potential * 2_900;
   const overallBoost = player.prospect.overall * 560;
   const performanceBoost = Math.round(playerPerGameScore(player) * 1_100);
+  const awardBoost = player.awardHistory.reduce((sum, award) => {
+    if (award.awardType === 'mvp') return sum + 16_000;
+    if (award.awardType === 'dpoy') return sum + 10_000;
+    if (award.awardType === 'roy') return sum + 7_000;
+    if (award.awardType === 'allLeagueFirstTeam') return sum + 6_000;
+    return sum;
+  }, 0);
+  const championshipBoost = player.championships * 3_500;
   const loyaltyDiscount = Math.round(player.yearsWithTeam * player.loyalty * 250);
   const walkRiskPremium = Math.round(player.desireToLeave * 1_100);
   const rookieDiscount = player.yearsWithTeam === 0 && player.acquiredRound <= 2 ? 6_000 : 0;
-  const target = 16_000 + overallBoost + potentialBoost + ageCurve + starBoost + performanceBoost + walkRiskPremium - loyaltyDiscount - rookieDiscount;
+  const target =
+    16_000 +
+    overallBoost +
+    potentialBoost +
+    ageCurve +
+    starBoost +
+    performanceBoost +
+    awardBoost +
+    championshipBoost +
+    walkRiskPremium -
+    loyaltyDiscount -
+    rookieDiscount;
   return clamp(Math.round(target), 18_000, 150_000);
 }
 
@@ -303,7 +329,8 @@ function getAllTeams(franchise: FranchiseState) {
 }
 
 function desiredRosterSize(team: TeamState) {
-  return team.teamRating >= 8 ? 9 : TARGET_TEAM_ROSTER_SIZE;
+  const targetSize = getTargetRosterSize();
+  return team.teamRating >= 8 ? Math.max(MIN_TEAM_ROSTER_SIZE + 1, targetSize - 1) : targetSize;
 }
 
 function positionBucket(position: string) {
@@ -701,6 +728,7 @@ export function createFranchiseState(params?: {
     ai: attachPick(ai),
     otherTeams: otherTeams.map(attachPick),
     freeAgents: [],
+    reSigningPlayers: [],
     freeAgencyPending: false,
     freeAgencyState: null,
     draft,
@@ -1193,6 +1221,16 @@ function resetFreeAgentSeasonStats(players: TeamPlayer[]): TeamPlayer[] {
     seasonStats: blankPlayerStats(),
     playoffStats: blankPlayerStats(),
   }));
+}
+
+function buildMarketReadyFreeAgent(player: TeamPlayer, team: TeamState, opts?: { unreSignedByUser?: boolean }): TeamPlayer {
+  return {
+    ...player,
+    formerTeamId: team.id,
+    formerTeamName: team.name,
+    unreSignedByUser: opts?.unreSignedByUser ?? false,
+    marketOffers: [],
+  };
 }
 
 function upsertTeam(franchise: FranchiseState, nextTeam: TeamState): FranchiseState {
@@ -1689,6 +1727,122 @@ export function reSignPlayer(
   };
 }
 
+export function submitReSigningOffer(
+  franchise: FranchiseState,
+  playerId: string,
+  offer: { salary: number; years: number },
+): {
+  updated: FranchiseState;
+  accepted: boolean;
+  reason?: string;
+  evaluation: ReturnType<typeof evaluateContractOffer>;
+  counterOffer?: { salary: number; years: number };
+} {
+  if (franchise.season?.phase !== 'resigning') {
+    return {
+      updated: franchise,
+      accepted: false,
+      reason: 'Re-signing only opens after the finals.',
+      evaluation: {
+        minSalary: 0,
+        targetSalary: 0,
+        maxSalary: 0,
+        acceptanceOdds: 0,
+        happinessMeter: 0,
+        loyaltyMeter: 0,
+        teamAppeal: 0,
+        likelyToRefuse: true,
+        reasons: ['Wait until the re-signing phase begins.'],
+      },
+    };
+  }
+
+  const player = franchise.reSigningPlayers.find((entry) => entry.id === playerId);
+  if (!player) {
+    return {
+      updated: franchise,
+      accepted: false,
+      reason: 'Player not found in the re-signing pool.',
+      evaluation: {
+        minSalary: 0,
+        targetSalary: 0,
+        maxSalary: 0,
+        acceptanceOdds: 0,
+        happinessMeter: 0,
+        loyaltyMeter: 0,
+        teamAppeal: 0,
+        likelyToRefuse: true,
+        reasons: ['Player not found.'],
+      },
+    };
+  }
+
+  const evaluation = evaluateContractOffer(franchise, franchise.user.id, player, offer, { isReSign: true });
+  const adjustedSalaryTotal = teamSalaryTotal(franchise.user) - player.contract.salary + offer.salary;
+  if (adjustedSalaryTotal > franchise.user.salaryCap) {
+    return {
+      updated: franchise,
+      accepted: false,
+      reason: 'This deal would push you over the hard cap.',
+      evaluation,
+    };
+  }
+
+  if (evaluation.acceptanceOdds < 48) {
+    return {
+      updated: franchise,
+      accepted: false,
+      reason: 'Player rejected the offer.',
+      evaluation,
+      counterOffer: evaluation.acceptanceOdds >= 34 ? contractCounter(player, offer) : undefined,
+    };
+  }
+
+  const updatedUser = {
+    ...franchise.user,
+    roster: franchise.user.roster.map((entry) =>
+      entry.id === playerId
+        ? {
+            ...withFreshContract(entry, offer.salary, offer.years),
+            happiness: clamp(entry.happiness + (offer.salary >= evaluation.targetSalary ? 2 : 1), 1, 10),
+            desireToLeave: clamp(entry.desireToLeave - 2, 1, 10),
+            unreSignedByUser: false,
+          }
+        : entry,
+    ),
+  };
+
+  return {
+    updated: refreshFranchiseDynamics({
+      ...franchise,
+      user: updatedUser,
+      reSigningPlayers: franchise.reSigningPlayers.filter((entry) => entry.id !== playerId),
+    }),
+    accepted: true,
+    evaluation,
+  };
+}
+
+export function letPlayerWalk(franchise: FranchiseState, playerId: string): FranchiseState {
+  if (franchise.season?.phase !== 'resigning') return franchise;
+
+  const player = franchise.reSigningPlayers.find((entry) => entry.id === playerId);
+  if (!player) return franchise;
+
+  return refreshFranchiseDynamics({
+    ...franchise,
+    user: {
+      ...franchise.user,
+      roster: franchise.user.roster.filter((entry) => entry.id !== playerId),
+    },
+    reSigningPlayers: franchise.reSigningPlayers.filter((entry) => entry.id !== playerId),
+    freeAgents: [
+      ...franchise.freeAgents,
+      buildMarketReadyFreeAgent(player, franchise.user, { unreSignedByUser: true }),
+    ],
+  });
+}
+
 export function signFreeAgent(
   franchise: FranchiseState,
   playerId: string,
@@ -1743,11 +1897,11 @@ export function signFreeAgent(
   const role = determineOfferRole(team, freeAgent);
   const evaluation = evaluateContractOffer(franchise, team.id, freeAgent, offer, { role });
   const offerBoard = recordMarketOffer(franchise, playerId, team, offer, evaluation.happinessMeter, role, evaluation.acceptanceOdds);
-  if (teamSalaryTotal(team) + offer.salary > team.salaryCap + getCapAllowance()) {
+  if (teamSalaryTotal(team) + offer.salary > team.salaryCap) {
     return {
       updated: refreshFranchiseDynamics(offerBoard),
       accepted: false,
-      reason: 'That contract does not fit under the $350k hard cap.',
+      reason: `That contract does not fit under the $${Math.round(team.salaryCap / 1000)}k salary cap.`,
       evaluation,
     };
   }
@@ -1830,12 +1984,7 @@ export function processEndOfSeason(franchise: FranchiseState): FranchiseState {
         desireToLeave: clamp(player.desireToLeave + (successBoost < 0 ? 1 : -1), 1, 10),
       };
       if (nextYears <= 0) {
-        expiredFreeAgents.push({
-          ...nextPlayer,
-          formerTeamId: team.id,
-          formerTeamName: team.name,
-          marketOffers: [],
-        });
+        expiredFreeAgents.push(buildMarketReadyFreeAgent(nextPlayer, team));
         continue;
       }
       retainedRoster.push(nextPlayer);
@@ -1867,6 +2016,7 @@ export function processEndOfSeason(franchise: FranchiseState): FranchiseState {
       ...player,
       marketOffers: player.marketOffers ?? [],
     })),
+    reSigningPlayers: [],
     freeAgencyPending: true,
     freeAgencyState: {
       currentDay: 1,
@@ -1881,6 +2031,80 @@ export function processEndOfSeason(franchise: FranchiseState): FranchiseState {
   return refreshFranchiseDynamics(seedAiMarketOffers(baseState));
 }
 
+export function enterReSigningPhase(franchise: FranchiseState): FranchiseState {
+  const leagueTeams = [franchise.user, franchise.ai, ...franchise.otherTeams];
+  const expiredFreeAgents: TeamPlayer[] = [];
+  const reSigningPlayers: TeamPlayer[] = [];
+  const championTeamId = franchise.season?.playoffs?.championTeamId;
+  const runnerUpTeamId = franchise.season?.playoffs?.runnerUpTeamId;
+
+  const nextTeams = leagueTeams.map((team) => {
+    const retainedRoster: TeamPlayer[] = [];
+    const successBoost = teamSuccessScore(franchise, team.id) >= 0.6 ? 1 : teamSuccessScore(franchise, team.id) <= 0.3 ? -1 : 0;
+    for (const player of team.roster) {
+      const nextYears = Math.max(0, player.contract.seasonsLeft - 1);
+      const nextPlayer = {
+        ...withFreshContract(player, player.contract.salary, nextYears),
+        yearsWithTeam: player.yearsWithTeam + 1,
+        happiness: clamp(player.happiness + successBoost + (playerPerGameScore(player) >= 12 ? 1 : 0), 1, 10),
+        desireToLeave: clamp(player.desireToLeave + (successBoost < 0 ? 1 : -1), 1, 10),
+      };
+      if (nextYears <= 0) {
+        if (team.id === franchise.user.id) {
+          const expiringPlayer = buildMarketReadyFreeAgent(nextPlayer, team);
+          reSigningPlayers.push(expiringPlayer);
+          retainedRoster.push(expiringPlayer);
+        } else {
+          expiredFreeAgents.push(buildMarketReadyFreeAgent(nextPlayer, team));
+        }
+        continue;
+      }
+      retainedRoster.push(nextPlayer);
+    }
+
+    let nextTeam = {
+      ...team,
+      roster: retainedRoster,
+      contractSeason: team.contractSeason + 1,
+    };
+    nextTeam = setDefaultActivePlayers(nextTeam);
+    nextTeam.teamRating = computeTeamRatingFromRoster(nextTeam);
+    return nextTeam;
+  });
+
+  const baseState: FranchiseState = {
+    ...franchise,
+    user: nextTeams.find((team) => team.id === franchise.user.id) ?? franchise.user,
+    ai: nextTeams.find((team) => team.id === franchise.ai.id) ?? franchise.ai,
+    otherTeams: franchise.otherTeams.map((team) => nextTeams.find((entry) => entry.id === team.id) ?? team),
+    reSigningPlayers,
+    freeAgents: resetFreeAgentSeasonStats([
+      ...franchise.freeAgents,
+      ...expiredFreeAgents,
+      ...generateOffseasonFreeAgents(
+        franchise,
+        Math.max(18, leagueTeams.length * 2 - (franchise.freeAgents.length + expiredFreeAgents.length)),
+      ),
+    ]).map((player) => ({
+      ...player,
+      marketOffers: player.marketOffers ?? [],
+    })),
+    freeAgencyPending: false,
+    freeAgencyState: null,
+    championshipHistory: championTeamId
+      ? appendChampionshipHistory(franchise, championTeamId, runnerUpTeamId)
+      : franchise.championshipHistory,
+    season: franchise.season
+      ? {
+          ...franchise.season,
+          phase: 'resigning',
+        }
+      : franchise.season,
+  };
+
+  return refreshFranchiseDynamics(baseState);
+}
+
 export function completeFreeAgencyPhase(franchise: FranchiseState): FranchiseState {
   let advanced = franchise;
   const totalDays = advanced.freeAgencyState?.totalDays ?? FREE_AGENCY_TOTAL_DAYS;
@@ -1890,6 +2114,7 @@ export function completeFreeAgencyPhase(franchise: FranchiseState): FranchiseSta
   advanced = finalizeAiRosterDepth(advanced);
   return refreshFranchiseDynamics({
     ...advanced,
+    reSigningPlayers: [],
     freeAgencyPending: false,
     freeAgencyState: advanced.freeAgencyState
       ? {
@@ -2200,8 +2425,7 @@ export function finalizePlayoffGameResult(
   };
 }
 
-export function prepareNextSeasonCycle(franchise: FranchiseState): FranchiseState {
-  const processedFranchise = processEndOfSeason(franchise);
+function buildNextSeasonCycleFromProcessedState(franchise: FranchiseState, processedFranchise: FranchiseState): FranchiseState {
   const resetUser = resetTeamSeasonStats(processedFranchise.user);
   const resetAi = resetTeamSeasonStats(processedFranchise.ai);
   const resetOther = processedFranchise.otherTeams.map((team) => resetTeamSeasonStats(team));
@@ -2242,6 +2466,7 @@ export function prepareNextSeasonCycle(franchise: FranchiseState): FranchiseStat
     ai: attachPicks(resetAi),
     otherTeams: resetOther.map(attachPicks),
     freeAgents: resetFreeAgentSeasonStats(processedFranchise.freeAgents),
+    reSigningPlayers: [],
     freeAgencyPending: true,
     freeAgencyState: processedFranchise.freeAgencyState,
     draft: {
@@ -2259,6 +2484,43 @@ export function prepareNextSeasonCycle(franchise: FranchiseState): FranchiseStat
     hasCompletedAwardsPresentation: false,
     currentDate: moveDate(franchise.currentDate, 21),
   });
+}
+
+export function openOffseasonFreeAgency(franchise: FranchiseState): FranchiseState {
+  if (franchise.season?.phase !== 'resigning') return franchise;
+
+  const unresolvedIds = new Set(franchise.reSigningPlayers.map((player) => player.id));
+  const unresolvedFreeAgents = franchise.reSigningPlayers.map((player) =>
+    buildMarketReadyFreeAgent(player, franchise.user, { unreSignedByUser: true }),
+  );
+  const baseState = refreshFranchiseDynamics(seedAiMarketOffers({
+    ...franchise,
+    user: {
+      ...franchise.user,
+      roster: franchise.user.roster.filter((player) => !unresolvedIds.has(player.id)),
+    },
+    freeAgents: [
+      ...franchise.freeAgents,
+      ...unresolvedFreeAgents,
+    ].map((player) => ({
+      ...player,
+      marketOffers: player.marketOffers ?? [],
+    })),
+    reSigningPlayers: [],
+    freeAgencyPending: true,
+    freeAgencyState: {
+      currentDay: 1,
+      totalDays: FREE_AGENCY_TOTAL_DAYS,
+      dailySummaries: [],
+    },
+  }));
+
+  return buildNextSeasonCycleFromProcessedState(franchise, baseState);
+}
+
+export function prepareNextSeasonCycle(franchise: FranchiseState): FranchiseState {
+  const processedFranchise = processEndOfSeason(franchise);
+  return buildNextSeasonCycleFromProcessedState(franchise, processedFranchise);
 }
 
 export function applyTrade(

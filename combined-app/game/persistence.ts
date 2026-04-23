@@ -58,6 +58,7 @@ function normalizePlayer(player: any) {
     championshipSeasons: Array.isArray(player?.championshipSeasons)
       ? player.championshipSeasons.filter((value: unknown) => typeof value === 'number')
       : [],
+    unreSignedByUser: !!player?.unreSignedByUser,
   };
 }
 
@@ -97,6 +98,9 @@ export function loadFranchise(): { franchise: FranchiseState; newsPosts: LeagueN
         : [],
       freeAgents: Array.isArray((parsed.franchise as FranchiseState).freeAgents)
         ? (parsed.franchise as FranchiseState).freeAgents.map(normalizePlayer)
+        : [],
+      reSigningPlayers: Array.isArray((parsed.franchise as FranchiseState).reSigningPlayers)
+        ? (parsed.franchise as FranchiseState).reSigningPlayers.map(normalizePlayer)
         : [],
       freeAgencyPending: typeof (parsed.franchise as FranchiseState).freeAgencyPending === 'boolean'
         ? (parsed.franchise as FranchiseState).freeAgencyPending

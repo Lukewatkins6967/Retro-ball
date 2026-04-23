@@ -23,6 +23,8 @@ export type GameSettings = {
   arcadeBalance: number;
   staminaImpact: StaminaImpactPreset;
   salaryCapStrictness: SalaryCapPreset;
+  salaryCapValue: number;
+  targetRosterSize: number;
   injuryFrequency: InjuryFrequencyPreset;
   aiAggressiveness: AiAggressivenessPreset;
   rookieContractSalary: number;
@@ -41,6 +43,8 @@ export const defaultGameSettings: GameSettings = {
   arcadeBalance: 58,
   staminaImpact: 'medium',
   salaryCapStrictness: 'hard',
+  salaryCapValue: 350,
+  targetRosterSize: 10,
   injuryFrequency: 'low',
   aiAggressiveness: 'medium',
   rookieContractSalary: 0,
@@ -78,6 +82,16 @@ export function normalizeGameSettings(raw: unknown): GameSettings {
     arcadeBalance: clamp(Number.isFinite(candidate.arcadeBalance) ? Number(candidate.arcadeBalance) : defaultGameSettings.arcadeBalance, 0, 100),
     staminaImpact: asEnum(candidate.staminaImpact, defaultGameSettings.staminaImpact, ['low', 'medium', 'high']),
     salaryCapStrictness: asEnum(candidate.salaryCapStrictness, defaultGameSettings.salaryCapStrictness, ['soft', 'hard']),
+    salaryCapValue: clamp(
+      Number.isFinite(candidate.salaryCapValue) ? Number(candidate.salaryCapValue) : defaultGameSettings.salaryCapValue,
+      220,
+      600,
+    ),
+    targetRosterSize: clamp(
+      Number.isFinite(candidate.targetRosterSize) ? Number(candidate.targetRosterSize) : defaultGameSettings.targetRosterSize,
+      8,
+      12,
+    ),
     injuryFrequency: asEnum(candidate.injuryFrequency, defaultGameSettings.injuryFrequency, ['off', 'low', 'high']),
     aiAggressiveness: asEnum(candidate.aiAggressiveness, defaultGameSettings.aiAggressiveness, ['low', 'medium', 'high']),
     rookieContractSalary: clamp(
@@ -204,6 +218,14 @@ export function getStaminaImpactMultiplier(settings = getCurrentSettings()) {
 
 export function getCapAllowance(settings = getCurrentSettings()) {
   return settings.salaryCapStrictness === 'soft' ? 16_000 : 0;
+}
+
+export function getConfiguredSalaryCap(settings = getCurrentSettings()) {
+  return Math.round(settings.salaryCapValue * 1_000);
+}
+
+export function getTargetRosterSize(settings = getCurrentSettings()) {
+  return Math.round(settings.targetRosterSize);
 }
 
 export function getRookieContractSalary(settings = getCurrentSettings()) {

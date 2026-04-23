@@ -127,6 +127,7 @@ export type TeamPlayer = {
   stamina: number; // 0..100 current freshness / game energy
   formerTeamId?: string;
   formerTeamName?: string;
+  unreSignedByUser?: boolean;
   marketOffers?: FreeAgencyOffer[];
   seasonStats: PlayerSeasonStats;
   playoffStats: PlayerSeasonStats;
@@ -297,7 +298,7 @@ export type DraftState = {
   draftedByTeamId: Record<string, string[]>; // teamId -> drafted prospectIds
 };
 
-export type SeasonPhase = 'regular' | 'playoffs' | 'complete';
+export type SeasonPhase = 'regular' | 'playoffs' | 'resigning' | 'complete';
 
 export type SeasonGameResult = {
   played: boolean;
@@ -392,6 +393,7 @@ export type FranchiseState = {
   ai: TeamState;
   otherTeams: TeamState[];
   freeAgents: TeamPlayer[];
+  reSigningPlayers: TeamPlayer[];
   freeAgencyPending: boolean;
   freeAgencyState: FreeAgencyState | null;
   draft: DraftState;

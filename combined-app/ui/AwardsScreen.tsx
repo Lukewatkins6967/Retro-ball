@@ -146,7 +146,7 @@ export default function AwardsScreen(props: {
   ]);
 
   const showReveal = presentationRunStarted && revealOrder.length === 3;
-  const postseasonButtonLabel = season?.playoffs?.stage === 'playIn' ? 'Start Play-In' : 'Open Playoffs';
+  const postseasonButtonLabel = 'Continue to Playoffs';
 
   return (
     <div className="page">
