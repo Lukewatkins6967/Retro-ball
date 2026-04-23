@@ -32,6 +32,12 @@ function computeLotteryOdds(standings: DraftStandingRow[]) {
     .sort((a, b) => b.odd - a.odd);
 }
 
+function playoffBandLabel(rank: number) {
+  if (rank <= 6) return 'Direct Playoff';
+  if (rank <= 10) return 'Play-In';
+  return 'Lottery';
+}
+
 function streakLabel(row: DraftStandingRow) {
   if (!row.streakCount) return '—';
   return `${row.streak}${row.streakCount}`;
@@ -190,6 +196,11 @@ export default function StatsScreen(props: { franchise: FranchiseState; onBack: 
     franchise.user;
 
   const summaryTeam = bestRecord ? teamById[bestRecord.teamId] : franchise.user;
+  const latestAwards =
+    franchise.seasonAwards ??
+    (franchise.seasonAwardsHistory?.length ? franchise.seasonAwardsHistory[franchise.seasonAwardsHistory.length - 1] : null);
+  const latestChampion =
+    franchise.championshipHistory?.length ? franchise.championshipHistory[franchise.championshipHistory.length - 1] : null;
 
   return (
     <div className="page">
@@ -277,6 +288,85 @@ export default function StatsScreen(props: { franchise: FranchiseState; onBack: 
         <div style={{ marginTop: 16 }} className="grid2">
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+              <b>Awards</b>
+              <span className="muted" style={{ fontSize: 12 }}>
+                End-of-regular-season honors
+              </span>
+            </div>
+            <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
+              <div className="pill" style={{ justifyContent: 'space-between', gap: 10, padding: '12px 14px' }}>
+                <span>MVP</span>
+                <span style={{ fontWeight: 1000 }}>{latestAwards?.mvp ? `${latestAwards.mvp.playerName} - ${latestAwards.mvp.teamName}` : 'Race still open'}</span>
+              </div>
+              <div className="pill" style={{ justifyContent: 'space-between', gap: 10, padding: '12px 14px' }}>
+                <span>ROY</span>
+                <span style={{ fontWeight: 1000 }}>{latestAwards?.roy ? `${latestAwards.roy.playerName} - ${latestAwards.roy.teamName}` : 'Race still open'}</span>
+              </div>
+              <div className="pill" style={{ justifyContent: 'space-between', gap: 10, padding: '12px 14px' }}>
+                <span>DPOY</span>
+                <span style={{ fontWeight: 1000 }}>{latestAwards?.dpoy ? `${latestAwards.dpoy.playerName} - ${latestAwards.dpoy.teamName}` : 'Race still open'}</span>
+              </div>
+              <div style={{ padding: 12, borderRadius: 14, background: 'rgba(37,99,235,0.06)' }}>
+                <div className="muted" style={{ fontSize: 12, fontWeight: 900 }}>
+                  All-League First Team
+                </div>
+                <div style={{ marginTop: 8, display: 'grid', gap: 6 }}>
+                  {(latestAwards?.allLeagueFirstTeam ?? []).length ? (
+                    latestAwards?.allLeagueFirstTeam.map((entry) => (
+                      <div key={`${entry.slot}-${entry.playerId}`} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                        <span style={{ fontWeight: 900 }}>
+                          {entry.slot} - {entry.playerName}
+                        </span>
+                        <span className="muted">{entry.teamName}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="muted">Awards will lock in when the regular season ends.</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+              <b>League History</b>
+              <span className="muted" style={{ fontSize: 12 }}>
+                Champions and continuity
+              </span>
+            </div>
+            <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
+              <div style={{ padding: 12, borderRadius: 14, background: 'rgba(245,158,11,0.10)' }}>
+                <div className="muted" style={{ fontSize: 12, fontWeight: 900 }}>
+                  Latest Champion
+                </div>
+                <div style={{ marginTop: 6, fontWeight: 1000 }}>
+                  {latestChampion ? `${latestChampion.championTeamName} (${latestChampion.seasonIndex})` : 'No champion crowned yet'}
+                </div>
+                <div className="muted" style={{ marginTop: 4 }}>
+                  {latestChampion?.runnerUpTeamName ? `Finals over ${latestChampion.runnerUpTeamName}` : 'Finish a season to start the history log.'}
+                </div>
+              </div>
+              <div style={{ display: 'grid', gap: 8 }}>
+                {(franchise.championshipHistory ?? []).slice(-5).reverse().map((entry) => (
+                  <div key={`${entry.seasonIndex}-${entry.championTeamId}`} style={{ padding: 10, borderRadius: 12, background: 'rgba(255,255,255,0.8)' }}>
+                    <div style={{ fontWeight: 900 }}>
+                      Season {entry.seasonIndex}: {entry.championTeamName}
+                    </div>
+                    <div className="muted" style={{ marginTop: 4, fontSize: 12 }}>
+                      {entry.runnerUpTeamName ? `Defeated ${entry.runnerUpTeamName}` : 'Championship record saved'}
+                    </div>
+                  </div>
+                ))}
+                {!franchise.championshipHistory?.length ? <div className="muted">History will build after the first completed playoffs.</div> : null}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 16 }} className="grid2">
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
               <b>Standings</b>
               <span className="muted" style={{ fontSize: 12 }}>Click a team to inspect</span>
             </div>
@@ -305,6 +395,9 @@ export default function StatsScreen(props: { franchise: FranchiseState; onBack: 
                         <div style={{ fontWeight: 1000 }}>{row.wins}-{row.losses}</div>
                         <div className="muted" style={{ fontSize: 12 }}>
                           PD {row.pointsFor - row.pointsAgainst} | {streakLabel(row)}
+                        </div>
+                        <div className="muted" style={{ fontSize: 12, fontWeight: 900, marginTop: 4 }}>
+                          {playoffBandLabel(index + 1)}
                         </div>
                       </div>
                     </div>

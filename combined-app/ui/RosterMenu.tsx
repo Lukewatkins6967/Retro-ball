@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import type { FranchiseState, TeamPlayer } from '../game/types';
 import { calculateMarketSalary, evaluateContractOffer } from '../game/franchise';
 import { describeLockerRoom } from '../game/personality';
+import { REGULAR_SEASON_GAMES_PER_TEAM } from '../game/schedule';
 import { fatigueLabel, getRotationMetrics, staminaPercent, type RotationMode } from '../game/stamina';
 import PotentialStars from './PotentialStars';
 import RatingMeter from './RatingMeter';
@@ -461,7 +462,7 @@ export default function RosterMenu(props: {
 
         <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <button onClick={() => props.onStartSeason()} className="btn btnPrimary" disabled={roster.length < 2} style={{ padding: '12px 16px', fontWeight: 900 }}>
-            Start Season (5 Games)
+            Start Season ({REGULAR_SEASON_GAMES_PER_TEAM} Games)
           </button>
           <div style={{ fontSize: 13, opacity: 0.8, alignSelf: 'center' }} className="muted">
             Stats influence gameplay and contract expectations.

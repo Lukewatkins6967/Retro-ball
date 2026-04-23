@@ -1,6 +1,7 @@
 import { loadDraftProspects } from './prospectLoader';
-import { buildRoundRobinWeeks } from './schedule';
-import { createPlayoffsState } from './playoffs';
+import { applySeasonAwards } from './awards';
+import { buildRoundRobinWeeks, PLAYOFF_SERIES_BEST_OF, REGULAR_SEASON_GAMES_PER_TEAM } from './schedule';
+import { applyPlayoffGameResult, createPlayoffsState } from './playoffs';
 import { deriveOverall100, isImpactOverall, isStarOverall, overallToTenScale } from './ratings';
 import {
   applyTradePlayerMood,
@@ -16,6 +17,7 @@ import type {
   DraftState,
   DraftStandingRow,
   DraftPickAsset,
+  ChampionshipHistoryEntry,
   FreeAgencyDaySummary,
   FreeAgencyRole,
   FranchiseState,
@@ -35,6 +37,7 @@ function clamp(n: number, min: number, max: number) {
 const FREE_AGENCY_TOTAL_DAYS = 7;
 const MIN_TEAM_ROSTER_SIZE = 8;
 const TARGET_TEAM_ROSTER_SIZE = 10;
+const REGULAR_SEASON_WEEKS = REGULAR_SEASON_GAMES_PER_TEAM;
 
 function hashSeed(value: string) {
   let hash = 2166136261;
@@ -66,6 +69,79 @@ function computeContractLength(rank: number) {
   if (rank <= 15) return 3;
   if (rank <= 30) return 2;
   return 1;
+}
+
+function computeTeamPowerRankingScore(team: TeamState) {
+  const avgPotential = team.roster.length ? team.roster.reduce((sum, player) => sum + player.prospect.potential, 0) / team.roster.length : 5;
+  return team.teamRating * 1.4 + avgPotential * 1.2;
+}
+
+function createPowerRankings(allTeams: TeamState[]) {
+  return allTeams
+    .map((t) => {
+      const score = computeTeamPowerRankingScore(t);
+      return {
+        teamId: t.id,
+        teamName: t.name,
+        managerName: t.managerName,
+        logoText: t.logoText,
+        logoColor: t.logoColor,
+        rank: 0,
+        score,
+      } satisfies PowerRankingRow;
+    })
+    .sort((a, b) => b.score - a.score)
+    .map((row, idx) => ({ ...row, rank: idx + 1 }));
+}
+
+function blankStandingRow(team: TeamState): DraftStandingRow {
+  return {
+    teamId: team.id,
+    teamName: team.name,
+    managerName: team.managerName,
+    logoText: team.logoText,
+    logoColor: team.logoColor,
+    wins: 0,
+    losses: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    streak: 'â€”',
+    streakCount: 0,
+  };
+}
+
+function sortStandings(rows: DraftStandingRow[]) {
+  return rows
+    .slice()
+    .sort((a, b) => b.wins - a.wins || (b.pointsFor - b.pointsAgainst) - (a.pointsFor - a.pointsAgainst));
+}
+
+function createSeasonState(seasonIndex: number, allTeams: TeamState[]): SeasonState {
+  return {
+    seasonId: `season-${seasonIndex}-${Date.now()}`,
+    phase: 'regular',
+    gamesPerTeam: REGULAR_SEASON_GAMES_PER_TEAM,
+    weeksTotal: REGULAR_SEASON_WEEKS,
+    weekIndex: 0,
+    games: buildRoundRobinWeeks(allTeams.map((team) => team.id), REGULAR_SEASON_WEEKS),
+  };
+}
+
+function appendChampionshipHistory(franchise: FranchiseState, championTeamId: string, runnerUpTeamId?: string) {
+  if ((franchise.championshipHistory ?? []).some((entry) => entry.seasonIndex === franchise.seasonIndex)) {
+    return franchise.championshipHistory;
+  }
+  const allTeams = [franchise.user, franchise.ai, ...franchise.otherTeams];
+  const champion = allTeams.find((team) => team.id === championTeamId);
+  const runnerUp = runnerUpTeamId ? allTeams.find((team) => team.id === runnerUpTeamId) : undefined;
+  const nextEntry: ChampionshipHistoryEntry = {
+    seasonIndex: franchise.seasonIndex,
+    championTeamId,
+    championTeamName: champion?.name ?? championTeamId,
+    runnerUpTeamId,
+    runnerUpTeamName: runnerUp?.name,
+  };
+  return [...(franchise.championshipHistory ?? []), nextEntry].sort((a, b) => a.seasonIndex - b.seasonIndex);
 }
 
 function createTeam(teamId: string, name: string, managerName: string, logoText: string, logoColor: string): TeamState {
@@ -129,6 +205,7 @@ function createTeamPlayer(teamId: string, prospect: Prospect, acquiredRound: num
     stamina: 100,
     seasonStats: blankStats,
     playoffStats: { ...blankStats },
+    awardHistory: [],
   };
 }
 
@@ -619,6 +696,9 @@ export function createFranchiseState(params?: {
     seasonStandings: [],
     powerRankings: [],
     season: null,
+    seasonAwards: null,
+    seasonAwardsHistory: [],
+    championshipHistory: [],
     currentDate: { year: 2026, month: 9, day: 1 },
     tradeHistory: [],
   });
@@ -654,32 +734,11 @@ function finalizeCompletedDraft(
     streakCount: 0,
   });
 
-  const seasonStandings = allTeams.map(teamToStanding).sort((a, b) => b.wins - a.wins || b.pointsFor - a.pointsAgainst - (a.pointsFor - a.pointsAgainst));
+  const seasonStandings = sortStandings(allTeams.map(blankStandingRow));
 
-  const powerRankings = allTeams
-    .map((t) => {
-      const avgPotential = t.roster.length ? t.roster.reduce((s, p) => s + p.prospect.potential, 0) / t.roster.length : 5;
-      const score = t.teamRating * 1.2 + avgPotential * 0.9;
-      return {
-        teamId: t.id,
-        teamName: t.name,
-        managerName: t.managerName,
-        logoText: t.logoText,
-        logoColor: t.logoColor,
-        rank: 0,
-        score,
-      } satisfies PowerRankingRow;
-    })
-    .sort((a, b) => b.score - a.score)
-    .map((row, idx) => ({ ...row, rank: idx + 1 }));
+  const powerRankings = createPowerRankings(allTeams);
 
-  const season: SeasonState = {
-    seasonId: `season-${franchise.seasonIndex + 1}-${Date.now()}`,
-    phase: 'regular',
-    weeksTotal: 5,
-    weekIndex: 0,
-    games: buildRoundRobinWeeks(allTeams.map((t) => t.id), 5),
-  };
+  const season = createSeasonState(franchise.seasonIndex + 1, allTeams);
 
   return refreshFranchiseDynamics({
     ...franchise,
@@ -1066,32 +1125,11 @@ export function userDraftPick(franchise: FranchiseState, prospectId: string): Fr
     streakCount: 0,
   });
 
-  const seasonStandings = allTeams.map(teamToStanding).sort((a, b) => b.wins - a.wins || b.pointsFor - a.pointsAgainst - (a.pointsFor - a.pointsAgainst));
+  const seasonStandings = sortStandings(allTeams.map(blankStandingRow));
 
-  const powerRankings = allTeams
-    .map((t) => {
-      const avgPotential = t.roster.length ? t.roster.reduce((s, p) => s + p.prospect.potential, 0) / t.roster.length : 5;
-      const score = t.teamRating * 1.2 + avgPotential * 0.9;
-      return {
-        teamId: t.id,
-        teamName: t.name,
-        managerName: t.managerName,
-        logoText: t.logoText,
-        logoColor: t.logoColor,
-        rank: 0,
-        score,
-      } satisfies PowerRankingRow;
-    })
-    .sort((a, b) => b.score - a.score)
-    .map((row, idx) => ({ ...row, rank: idx + 1 }));
+  const powerRankings = createPowerRankings(allTeams);
 
-  const season: SeasonState = {
-    seasonId: `season-${franchise.seasonIndex + 1}-${Date.now()}`,
-    phase: 'regular',
-    weeksTotal: 5,
-    weekIndex: 0,
-    games: buildRoundRobinWeeks(allTeams.map((t) => t.id), 5),
-  };
+  const season = createSeasonState(franchise.seasonIndex + 1, allTeams);
 
   return refreshFranchiseDynamics({
     ...franchise,
@@ -1763,6 +1801,8 @@ function generateOffseasonFreeAgents(franchise: FranchiseState, count: number) {
 export function processEndOfSeason(franchise: FranchiseState): FranchiseState {
   const leagueTeams = [franchise.user, franchise.ai, ...franchise.otherTeams];
   const expiredFreeAgents: TeamPlayer[] = [];
+  const championTeamId = franchise.season?.playoffs?.championTeamId;
+  const runnerUpTeamId = franchise.season?.playoffs?.runnerUpTeamId;
 
   const nextTeams = leagueTeams.map((team) => {
     const retainedRoster: TeamPlayer[] = [];
@@ -1819,6 +1859,9 @@ export function processEndOfSeason(franchise: FranchiseState): FranchiseState {
       totalDays: FREE_AGENCY_TOTAL_DAYS,
       dailySummaries: [],
     },
+    championshipHistory: championTeamId
+      ? appendChampionshipHistory(franchise, championTeamId, runnerUpTeamId)
+      : franchise.championshipHistory,
   };
 
   return refreshFranchiseDynamics(seedAiMarketOffers(baseState));
@@ -2040,13 +2083,7 @@ export function ensureSeasonReady(franchise: FranchiseState): FranchiseState {
     .sort((a, b) => b.score - a.score)
     .map((row, idx) => ({ ...row, rank: idx + 1 }));
 
-  const season: SeasonState = {
-    seasonId: `season-${franchise.seasonIndex}-${Date.now()}`,
-    phase: 'regular',
-    weeksTotal: 5,
-    weekIndex: 0,
-    games: buildRoundRobinWeeks(allTeams.map((t) => t.id), 5),
-  };
+  const season = createSeasonState(franchise.seasonIndex, allTeams);
 
   return refreshFranchiseDynamics({
     ...franchise,
@@ -2054,6 +2091,49 @@ export function ensureSeasonReady(franchise: FranchiseState): FranchiseState {
     powerRankings,
     season,
   });
+}
+
+export function finalizeRegularSeason(franchise: FranchiseState): FranchiseState {
+  if (!franchise.season || franchise.season.phase !== 'regular') return franchise;
+  const awarded =
+    franchise.seasonAwards?.seasonIndex === franchise.seasonIndex
+      ? franchise
+      : applySeasonAwards(franchise);
+  const teams = [awarded.user, awarded.ai, ...awarded.otherTeams];
+  return {
+    ...awarded,
+    season: {
+      ...awarded.season,
+      phase: 'playoffs',
+      playoffs: createPlayoffsState(teams, awarded.seasonStandings, PLAYOFF_SERIES_BEST_OF),
+    },
+  };
+}
+
+export function finalizePlayoffGameResult(
+  franchise: FranchiseState,
+  params: {
+    gameId: string;
+    score: { home: number; away: number };
+    winnerTeamId: string;
+  },
+): FranchiseState {
+  const season = franchise.season;
+  const playoffs = season?.playoffs;
+  if (!season || !playoffs) return franchise;
+
+  const nextPlayoffs = applyPlayoffGameResult(playoffs, params.gameId, params.score, params.winnerTeamId);
+  return {
+    ...franchise,
+    championshipHistory: nextPlayoffs.championTeamId
+      ? appendChampionshipHistory(franchise, nextPlayoffs.championTeamId, nextPlayoffs.runnerUpTeamId)
+      : franchise.championshipHistory,
+    season: {
+      ...season,
+      phase: nextPlayoffs.championTeamId ? 'complete' : season.phase,
+      playoffs: nextPlayoffs,
+    },
+  };
 }
 
 export function prepareNextSeasonCycle(franchise: FranchiseState): FranchiseState {
@@ -2111,6 +2191,7 @@ export function prepareNextSeasonCycle(franchise: FranchiseState): FranchiseStat
     },
     draftCompleted: false,
     season: null,
+    seasonAwards: null,
     currentDate: moveDate(franchise.currentDate, 21),
   });
 }
@@ -2390,32 +2471,11 @@ export function userDraftPickAuto(franchise: FranchiseState, prospectId: string)
     };
   };
 
-  const seasonStandings = allTeams.map(teamToStanding).sort((a, b) => b.wins - a.wins || b.pointsFor - a.pointsAgainst - (a.pointsFor - a.pointsAgainst));
+  const seasonStandings = sortStandings(allTeams.map(blankStandingRow));
 
-  const powerRankings = allTeams
-    .map((t) => {
-      const avgPotential = t.roster.length ? t.roster.reduce((s, p) => s + p.prospect.potential, 0) / t.roster.length : 5;
-      const score = t.teamRating * 1.2 + avgPotential * 0.9;
-      return {
-        teamId: t.id,
-        teamName: t.name,
-        managerName: t.managerName,
-        logoText: t.logoText,
-        logoColor: t.logoColor,
-        rank: 0,
-        score,
-      } satisfies PowerRankingRow;
-    })
-    .sort((a, b) => b.score - a.score)
-    .map((row, idx) => ({ ...row, rank: idx + 1 }));
+  const powerRankings = createPowerRankings(allTeams);
 
-  const season: SeasonState = {
-    seasonId: `season-${franchise.seasonIndex + 1}-${Date.now()}`,
-    phase: 'regular',
-    weeksTotal: 5,
-    weekIndex: 0,
-    games: buildRoundRobinWeeks(allTeams.map((t) => t.id), 5),
-  };
+  const season = createSeasonState(franchise.seasonIndex + 1, allTeams);
 
   return refreshFranchiseDynamics({
     ...franchise,
@@ -3323,7 +3383,7 @@ export function applyMatchResults(
 
   // Update season standings + power rankings (UI-only season meta).
   let nextSeasonStandings = franchise.seasonStandings;
-  if (finalScore && nextSeasonStandings.length > 0) {
+  if (finalScore && nextSeasonStandings.length > 0 && franchise.season?.phase !== 'playoffs') {
     nextSeasonStandings = nextSeasonStandings.map((row) => {
       if (row.teamId === franchise.user.id) {
         const won = didUserWin === true;
@@ -3491,7 +3551,7 @@ export function applyLeagueMatchResults(
 
   // Update standings for both teams (if standings exist).
   let nextSeasonStandings = franchise.seasonStandings;
-  if (nextSeasonStandings.length > 0) {
+  if (nextSeasonStandings.length > 0 && franchise.season?.phase !== 'playoffs') {
     nextSeasonStandings = nextSeasonStandings.map((row) => {
       if (row.teamId === params.homeTeamId) {
         const won = winnerTeamId === params.homeTeamId;

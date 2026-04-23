@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { DraftStandingRow, FranchiseState, LeagueNewsPost, PowerRankingRow } from '../game/types';
 import { simulateSeasonWithAwardsAndPlayoffs, type SeasonMatchEvent } from '../game/seasonSimEngine';
 import { prepareNextSeasonCycle } from '../game/franchise';
+import { REGULAR_SEASON_GAMES_PER_TEAM } from '../game/schedule';
 
 function formatRankList(
   title: string,
@@ -76,7 +77,7 @@ export default function SeasonSimScreen(props: {
     const run = async () => {
       setPhase('simulating');
       // Run the whole simulation upfront; then “replay” it to give live-feel UI updates.
-      const sim = simulateSeasonWithAwardsAndPlayoffs(props.franchise, { gamesPerTeam: 5, dtMs: 45 });
+      const sim = simulateSeasonWithAwardsAndPlayoffs(props.franchise, { gamesPerTeam: REGULAR_SEASON_GAMES_PER_TEAM, dtMs: 45 });
       if (cancelled) return;
       setResult(sim);
       setPlayhead(0);
@@ -98,13 +99,14 @@ export default function SeasonSimScreen(props: {
       return;
     }
 
+    const stepSize = Math.max(1, Math.ceil((result.events.length || 1) / 90));
     const t = setInterval(() => {
       setPlayhead((p) => {
-        const next = p + 1;
+        const next = Math.min(result.events.length - 1, p + stepSize);
         if (next >= result.events.length) return p;
         return next;
       });
-    }, 750);
+    }, 120);
 
     return () => clearInterval(t);
   }, [phase, result]);
@@ -128,7 +130,7 @@ export default function SeasonSimScreen(props: {
           <div>
             <h2 style={{ margin: 0 }}>League Season</h2>
             <div className="muted" style={{ marginTop: 6 }}>
-              5-game regular season · live award race · playoffs + championship (fast-forward)
+      {REGULAR_SEASON_GAMES_PER_TEAM}-game regular season · live award race · playoffs + championship (fast-forward)
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -289,7 +291,7 @@ export default function SeasonSimScreen(props: {
                   Updated through Week {event.week}
                 </div>
                 <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
-                  {standings.slice(0, 8).map((row, idx) => (
+                  {standings.slice(0, 10).map((row, idx) => (
                     <div
                       key={row.teamId}
                       style={{

@@ -130,6 +130,7 @@ export type TeamPlayer = {
   marketOffers?: FreeAgencyOffer[];
   seasonStats: PlayerSeasonStats;
   playoffStats: PlayerSeasonStats;
+  awardHistory: PlayerAwardHistoryEntry[];
 };
 
 export type PlayerSeasonStats = {
@@ -142,6 +143,52 @@ export type PlayerSeasonStats = {
 };
 
 export type PlayerInGameStats = Omit<PlayerSeasonStats, 'matchesPlayed'>;
+
+export type PlayerAwardType = 'mvp' | 'roy' | 'dpoy' | 'allLeagueFirstTeam' | 'finalsMvp';
+
+export type PlayerAwardHistoryEntry = {
+  seasonIndex: number;
+  awardType: PlayerAwardType;
+  label: string;
+};
+
+export type SeasonAwardWinner = {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  teamName: string;
+  score: number;
+};
+
+export type AllLeagueSlot = 'G1' | 'G2' | 'F1' | 'F2' | 'C';
+
+export type AllLeagueTeamEntry = {
+  slot: AllLeagueSlot;
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  teamName: string;
+  position: ProspectPosition;
+  score: number;
+};
+
+export type SeasonAwards = {
+  seasonIndex: number;
+  mvp?: SeasonAwardWinner;
+  roy?: SeasonAwardWinner;
+  dpoy?: SeasonAwardWinner;
+  allLeagueFirstTeam: AllLeagueTeamEntry[];
+};
+
+export type ChampionshipHistoryEntry = {
+  seasonIndex: number;
+  championTeamId: string;
+  championTeamName: string;
+  runnerUpTeamId?: string;
+  runnerUpTeamName?: string;
+  finalsMvpPlayerId?: string;
+  finalsMvpPlayerName?: string;
+};
 
 export type DraftPickAsset = {
   id: string;
@@ -262,6 +309,7 @@ export type SeasonGame = {
 export type SeasonState = {
   seasonId: string;
   phase: SeasonPhase;
+  gamesPerTeam: number;
   weeksTotal: number;
   weekIndex: number;
   games: SeasonGame[];
@@ -269,20 +317,48 @@ export type SeasonState = {
   playoffs?: PlayoffsState;
 };
 
-export type PlayoffRound = 'semi' | 'final';
+export type PlayoffRound = 'playIn' | 'quarter' | 'semi' | 'final';
+export type PlayoffSeriesRound = Exclude<PlayoffRound, 'playIn'>;
 
 export type PlayoffGame = {
   id: string;
   round: PlayoffRound;
+  label: string;
   homeTeamId: string;
   awayTeamId: string;
+  homeSeed?: number;
+  awaySeed?: number;
+  seriesId?: string;
+  gameNumber?: number;
+  eliminationGame?: boolean;
   result?: SeasonGameResult;
 };
 
+export type PlayoffSeries = {
+  id: string;
+  round: PlayoffSeriesRound;
+  label: string;
+  teamAId: string;
+  teamBId: string;
+  seedA: number;
+  seedB: number;
+  winsA: number;
+  winsB: number;
+  winsNeeded: number;
+  gameIds: string[];
+  winnerTeamId?: string;
+  loserTeamId?: string;
+};
+
 export type PlayoffsState = {
-  qualifiedTeamIds: string[]; // seeded order (best -> worst)
+  stage: 'playIn' | 'bracket' | 'complete';
+  seriesBestOf: number;
+  seededTeamIds: string[]; // regular-season seeds 1-10
+  qualifiedTeamIds: string[]; // final playoff bracket seeds 1-8
   games: PlayoffGame[];
+  series: PlayoffSeries[];
   championTeamId?: string;
+  runnerUpTeamId?: string;
 };
 
 export type CalendarDate = {
@@ -320,6 +396,9 @@ export type FranchiseState = {
   powerRankings: PowerRankingRow[];
 
   season: SeasonState | null;
+  seasonAwards: SeasonAwards | null;
+  seasonAwardsHistory: SeasonAwards[];
+  championshipHistory: ChampionshipHistoryEntry[];
 
   currentDate: CalendarDate; // live calendar tracking
   tradeHistory: TradeLogEntry[];

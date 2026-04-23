@@ -19,6 +19,8 @@ import {
   userDraftPick,
   advanceDate,
   ensureSeasonReady,
+  finalizePlayoffGameResult,
+  finalizeRegularSeason,
   prepareNextSeasonCycle,
   simulateAiLeagueTradeActivity,
 } from '../game/franchise';
@@ -42,7 +44,6 @@ import SettingsPanel from '../ui/SettingsPanel';
 import FreeAgencyRecapModal from '../ui/FreeAgencyRecapModal';
 import { simulateMatch, type SimulatedMatch } from '../game/matchSim';
 import BoxScoreModal from '../ui/BoxScoreModal';
-import { createPlayoffsState, tryAdvancePlayoffs } from '../game/playoffs';
 import { clearFranchise, hasSavedFranchise, loadFranchise, saveFranchise } from '../game/persistence';
 import { buildDynamicStorylinePosts } from '../game/personality';
 import { applySettingsToDocument, getSimPaceFromSettings, loadGameSettings, saveGameSettings, setCurrentSettings, type GameSettings } from '../game/settings';
@@ -57,7 +58,7 @@ type ScheduledGameContext = {
 
 const UPDATE_LOG_STORAGE_KEY = 'combinedAppUpdateLog_v2';
 const UPDATE_LOG_LEGACY_STORAGE_KEY = 'combinedAppUpdateLog_v1';
-const UPDATE_LOG_SEED_VERSION = 53;
+const UPDATE_LOG_SEED_VERSION = 60;
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('start');
@@ -636,6 +637,13 @@ export default function App() {
         major: true,
         delta: 0.5,
       },
+      {
+        id: 'seed-60',
+        createdAt: Date.now() + 36,
+        description: 'Season structure overhaul: the league now runs a longer regular season, seeds an NBA-style 7-10 play-in into a full bracket, tracks multi-game playoff series, and saves award winners plus championship history across seasons.',
+        major: true,
+        delta: 0.5,
+      },
     ];
 
     try {
@@ -846,6 +854,35 @@ export default function App() {
       ...prev,
     ]);
     setChampionshipCelebration({ teamName, message, nextFranchise: completedFranchise });
+  };
+
+  const resolvePlayoffOutcome = (
+    score: { home: number; away: number },
+    homeTeamId: string,
+    awayTeamId: string,
+  ) => {
+    if (score.home !== score.away) {
+      return {
+        score,
+        winnerTeamId: score.home > score.away ? homeTeamId : awayTeamId,
+      };
+    }
+
+    const leagueTeams = franchise ? [franchise.user, franchise.ai, ...franchise.otherTeams] : [];
+    const homeTeam = leagueTeams.find((team) => team.id === homeTeamId);
+    const awayTeam = leagueTeams.find((team) => team.id === awayTeamId);
+    const homeRow = franchise?.seasonStandings.find((row) => row.teamId === homeTeamId);
+    const awayRow = franchise?.seasonStandings.find((row) => row.teamId === awayTeamId);
+    const homeEdge =
+      (homeRow?.wins ?? 0) -
+      (awayRow?.wins ?? 0) ||
+      ((homeRow?.pointsFor ?? 0) - (homeRow?.pointsAgainst ?? 0)) -
+        ((awayRow?.pointsFor ?? 0) - (awayRow?.pointsAgainst ?? 0)) ||
+      (homeTeam?.teamRating ?? 0) - (awayTeam?.teamRating ?? 0);
+
+    return homeEdge >= 0
+      ? { score: { home: score.home + 1, away: score.away }, winnerTeamId: homeTeamId }
+      : { score: { home: score.home, away: score.away + 1 }, winnerTeamId: awayTeamId };
   };
 
   return (
@@ -1303,19 +1340,9 @@ export default function App() {
               return;
             }
 
-            const teams = [baseFranchise.user, baseFranchise.ai, ...baseFranchise.otherTeams];
-            const playoffs = createPlayoffsState(teams, baseFranchise.seasonStandings);
-            setFranchise({
-              ...baseFranchise,
-              season: {
-                ...currentSeason,
-                phase: 'playoffs',
-                playoffs,
-              },
-            });
-            if (regularSeasonComplete) {
-              setScreen('playoffs');
-            }
+            const nextFranchise = finalizeRegularSeason(baseFranchise);
+            setFranchise(nextFranchise);
+            setScreen('playoffs');
           }}
         />
       )}
@@ -1367,34 +1394,20 @@ export default function App() {
               return;
             }
 
-            const homeScore = res.finalScore.user;
-            const awayScore = res.finalScore.ai;
-            const winnerTeamId =
-              homeScore === awayScore ? null : homeScore > awayScore ? game.homeTeamId : game.awayTeamId;
-
-            const nextPoGames = nextSeason.playoffs.games.map((playoffGame) => {
-              if (playoffGame.id !== game.id) return playoffGame;
-              return {
-                ...playoffGame,
-                result: {
-                  played: true,
-                  score: { home: homeScore, away: awayScore },
-                  winnerTeamId,
-                },
-              };
-            });
-
-            const playoffsAdvanced = tryAdvancePlayoffs({ ...nextSeason.playoffs, games: nextPoGames });
-            const dated = advanceDate(applied.updated, 1);
-            const nextFranchise = {
-              ...dated,
-              season: {
-                ...(dated.season ?? nextSeason),
-                playoffs: playoffsAdvanced,
-                phase: playoffsAdvanced.championTeamId ? 'complete' : nextSeason.phase,
+            const resolved = resolvePlayoffOutcome(
+              { home: res.finalScore.user, away: res.finalScore.ai },
+              game.homeTeamId,
+              game.awayTeamId,
+            );
+            const nextFranchise = finalizePlayoffGameResult(
+              advanceDate(applied.updated, 1),
+              {
+                gameId: game.id,
+                score: resolved.score,
+                winnerTeamId: resolved.winnerTeamId,
               },
-            };
-            if (playoffsAdvanced.championTeamId) {
+            );
+            if (nextFranchise.season?.playoffs?.championTeamId) {
               queueChampionshipCelebration(nextFranchise);
               return;
             }
@@ -1683,8 +1696,6 @@ export default function App() {
               return;
             }
 
-            const winnerTeamId =
-              homeScore === awayScore ? null : homeScore > awayScore ? game.homeTeamId : game.awayTeamId;
             const dated = advanceDate(applied.updated, 1);
 
             if (game.source === 'playoffs') {
@@ -1697,27 +1708,17 @@ export default function App() {
                 return;
               }
 
-              const nextPoGames = nextPlayoffs.games.map((playoffGame) => {
-                if (playoffGame.id !== game.id) return playoffGame;
-                return {
-                  ...playoffGame,
-                  result: {
-                    played: true,
-                    score: { home: homeScore, away: awayScore },
-                    winnerTeamId,
-                  },
-                };
+              const resolved = resolvePlayoffOutcome(
+                { home: homeScore, away: awayScore },
+                game.homeTeamId,
+                game.awayTeamId,
+              );
+              const nextFranchise = finalizePlayoffGameResult(dated, {
+                gameId: game.id,
+                score: resolved.score,
+                winnerTeamId: resolved.winnerTeamId,
               });
-              const playoffsAdvanced = tryAdvancePlayoffs({ ...nextPlayoffs, games: nextPoGames });
-              const nextFranchise = {
-                ...dated,
-                season: {
-                  ...(dated.season ?? nextSeason),
-                  playoffs: playoffsAdvanced,
-                  phase: playoffsAdvanced.championTeamId ? 'complete' : nextSeason.phase,
-                },
-              };
-              if (playoffsAdvanced.championTeamId) {
+              if (nextFranchise.season?.playoffs?.championTeamId) {
                 queueChampionshipCelebration(nextFranchise);
                 return;
               }

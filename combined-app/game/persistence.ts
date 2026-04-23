@@ -26,6 +26,7 @@ function normalizePlayer(player: any) {
     morale,
     status: player?.status ?? getPlayerStatusLabel(morale),
     recentTradeAdjustment: typeof player?.recentTradeAdjustment === 'number' ? player.recentTradeAdjustment : 0,
+    awardHistory: Array.isArray(player?.awardHistory) ? player.awardHistory : [],
   };
 }
 
@@ -69,6 +70,13 @@ export function loadFranchise(): { franchise: FranchiseState; newsPosts: LeagueN
       freeAgencyPending: typeof (parsed.franchise as FranchiseState).freeAgencyPending === 'boolean'
         ? (parsed.franchise as FranchiseState).freeAgencyPending
         : false,
+      seasonAwards: (parsed.franchise as FranchiseState).seasonAwards ?? null,
+      seasonAwardsHistory: Array.isArray((parsed.franchise as FranchiseState).seasonAwardsHistory)
+        ? (parsed.franchise as FranchiseState).seasonAwardsHistory
+        : [],
+      championshipHistory: Array.isArray((parsed.franchise as FranchiseState).championshipHistory)
+        ? (parsed.franchise as FranchiseState).championshipHistory
+        : [],
     } as FranchiseState);
     return {
       franchise: normalizedFranchise,

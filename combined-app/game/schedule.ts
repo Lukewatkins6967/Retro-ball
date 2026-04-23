@@ -1,5 +1,8 @@
 import type { SeasonGame } from './types';
 
+export const REGULAR_SEASON_GAMES_PER_TEAM = 29;
+export const PLAYOFF_SERIES_BEST_OF = 7;
+
 export function buildRoundRobinWeeks(teamIds: string[], weeksTotal: number): SeasonGame[] {
   const n = teamIds.length;
   if (n % 2 !== 0) throw new Error('Schedule requires an even number of teams');

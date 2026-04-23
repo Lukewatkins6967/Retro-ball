@@ -1,4 +1,6 @@
 import { createMatch, updateMatch, type MatchResult, type PlayerInput } from './basketballEngine';
+import { applySeasonAwards } from './awards';
+import { REGULAR_SEASON_GAMES_PER_TEAM } from './schedule';
 import { deriveOverall100, overallToTenScale } from './ratings';
 import { depthAwareTeamRating } from './stamina';
 import type { DraftStandingRow, FranchiseState, LeagueNewsPost, PowerRankingRow, PlayerInGameStats, Prospect, TeamState } from './types';
@@ -368,7 +370,7 @@ function cloneTeamWithBoost(team: TeamState, boostPct: number): TeamState {
 }
 
 export function simulateSeasonWithAwardsAndPlayoffs(franchise: FranchiseState, opts?: { gamesPerTeam?: number; weeks?: number; dtMs?: number }): SeasonSimulationResult {
-  const gamesPerTeam = opts?.gamesPerTeam ?? 5;
+  const gamesPerTeam = opts?.gamesPerTeam ?? REGULAR_SEASON_GAMES_PER_TEAM;
   const dtMs = opts?.dtMs ?? 45;
 
   const seasonTeams = getLeagueTeams(franchise);
@@ -734,6 +736,7 @@ export function simulateSeasonWithAwardsAndPlayoffs(franchise: FranchiseState, o
   // Simulate semis then finals for >=4.
   let finalsTeams: { winnerA: TeamState; winnerB: TeamState } | null = null;
   let championTeam: TeamState | null = null;
+  let runnerUpTeam: TeamState | null = null;
   let finalsMvpPlayerId = '';
   let playoffResults: SeasonSimulationResult['playoffs'] | undefined = undefined;
 
@@ -748,6 +751,7 @@ export function simulateSeasonWithAwardsAndPlayoffs(franchise: FranchiseState, o
   if (teamsToQualify === 2) {
     const match = simulateBoosted(qualified[0], qualified[1], 0.12);
     championTeam = match.winner === 'user' ? qualified[0] : match.winner === 'ai' ? qualified[1] : qualified[0];
+    runnerUpTeam = championTeam.id === qualified[0].id ? qualified[1] : qualified[0];
     // finals MVP: top efficiency by points+contrib
     const finalsStats = match.playerStatsByEntityId;
     let best: { id: string; score: number } | null = null;
@@ -780,6 +784,7 @@ export function simulateSeasonWithAwardsAndPlayoffs(franchise: FranchiseState, o
     const winner2 = semi2.winner === 'user' ? qualified[1] : semi2.winner === 'ai' ? qualified[2] : qualified[1];
     const finalMatch = simulateBoosted(winner1, winner2, 0.16);
     championTeam = finalMatch.winner === 'user' ? winner1 : finalMatch.winner === 'ai' ? winner2 : winner1;
+    runnerUpTeam = championTeam.id === winner1.id ? winner2 : winner1;
 
     const finalsStats = finalMatch.playerStatsByEntityId;
     let best: { id: string; score: number } | null = null;
@@ -821,6 +826,7 @@ export function simulateSeasonWithAwardsAndPlayoffs(franchise: FranchiseState, o
   } else {
     // Fallback: pick best by regular season teamRating.
     championTeam = qualified[0] ?? null;
+    runnerUpTeam = qualified[1] ?? null;
   }
 
   if (championTeam) {
@@ -878,8 +884,50 @@ export function simulateSeasonWithAwardsAndPlayoffs(franchise: FranchiseState, o
     }
   }
 
+  updatedFranchise.seasonStandings = seasonStandings;
+  updatedFranchise.powerRankings = powerRankings;
+  const awardedFranchise = applySeasonAwards(updatedFranchise);
+  awardedFranchise.championshipHistory = championTeam
+    ? [
+        ...(awardedFranchise.championshipHistory ?? []).filter((entry) => entry.seasonIndex !== awardedFranchise.seasonIndex),
+        {
+          seasonIndex: awardedFranchise.seasonIndex,
+          championTeamId: championTeam.id,
+          championTeamName: championTeam.name,
+          runnerUpTeamId: runnerUpTeam?.id,
+          runnerUpTeamName: runnerUpTeam?.name,
+          finalsMvpPlayerId: finalsMvpPlayerId || undefined,
+          finalsMvpPlayerName: finalsMvpPlayerId
+            ? getLeagueTeams(awardedFranchise)
+                .flatMap((team) => team.roster)
+                .find((player) => player.id === finalsMvpPlayerId)?.prospect.name
+            : undefined,
+        },
+      ].sort((a, b) => a.seasonIndex - b.seasonIndex)
+    : awardedFranchise.championshipHistory;
+  awardedFranchise.season = {
+    seasonId: `season-sim-${awardedFranchise.seasonIndex}`,
+    phase: 'complete',
+    gamesPerTeam,
+    weeksTotal: gamesPerTeam,
+    weekIndex: Math.max(0, gamesPerTeam - 1),
+    games: [],
+    playoffs: championTeam
+      ? {
+          stage: 'complete',
+          seriesBestOf: 7,
+          seededTeamIds: seededTeams.slice(0, 10).map((team) => team.id),
+          qualifiedTeamIds: qualified.map((team) => team.id),
+          games: [],
+          series: [],
+          championTeamId: championTeam.id,
+          runnerUpTeamId: runnerUpTeam?.id,
+        }
+      : undefined,
+  };
+
   return {
-    updatedFranchise,
+    updatedFranchise: awardedFranchise,
     seasonStandings,
     powerRankings,
     awardWinners,

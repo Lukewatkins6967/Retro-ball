@@ -50,7 +50,7 @@ export default function SeasonScheduleScreen(props: {
   const recentTrades = props.franchise.tradeHistory.slice(-3).reverse();
   const leadMessage = allWeekPlayed
     ? isLastWeek
-      ? 'Every game in the regular season is complete. The playoff bracket is ready to go.'
+      ? 'Every game in the regular season is complete. Awards, seeds, and the play-in bracket are ready to lock.'
       : 'This slate is wrapped. Advance when you are ready for the next week of league action.'
     : 'Play or simulate every matchup in this slate before the season can move on.';
 
@@ -60,7 +60,7 @@ export default function SeasonScheduleScreen(props: {
         <div className="scheduleHeroGrid">
           <div className="scheduleWeekCard">
             <div className="scheduleWeekKicker">League Hub</div>
-            <div className="scheduleWeekTitle">Week {season.weekIndex + 1} Matchday</div>
+            <div className="scheduleWeekTitle">Week {season.weekIndex + 1} of {season.weeksTotal}</div>
             <div className="muted" style={{ marginTop: 10, lineHeight: 1.55, maxWidth: 620 }}>
               {leadMessage}
             </div>
@@ -86,7 +86,11 @@ export default function SeasonScheduleScreen(props: {
               </div>
               <div className="statChip">
                 <span className="statChipLabel">Week Goal</span>
-                <span className="statChipValue">{isLastWeek ? 'Close the Year' : 'Keep Pace'}</span>
+                <span className="statChipValue">{isLastWeek ? 'Lock the Play-In' : 'Keep Pace'}</span>
+              </div>
+              <div className="statChip">
+                <span className="statChipLabel">Season Length</span>
+                <span className="statChipValue">{season.gamesPerTeam} Games</span>
               </div>
             </div>
           </div>
@@ -145,7 +149,7 @@ export default function SeasonScheduleScreen(props: {
               disabled={!allWeekPlayed}
               title={!allWeekPlayed ? 'Finish all games this week first' : isLastWeek ? 'Finish regular season' : 'Advance to next week'}
             >
-              {isLastWeek ? 'Finish Regular Season' : 'Advance Week'}
+              {isLastWeek ? 'Start Play-In' : 'Advance Week'}
             </button>
           </div>
         </div>
