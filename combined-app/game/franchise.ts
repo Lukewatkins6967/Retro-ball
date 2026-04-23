@@ -127,7 +127,15 @@ function createSeasonState(seasonIndex: number, allTeams: TeamState[]): SeasonSt
   };
 }
 
-function appendChampionshipHistory(franchise: FranchiseState, championTeamId: string, runnerUpTeamId?: string) {
+function appendChampionshipHistory(
+  franchise: FranchiseState,
+  championTeamId: string,
+  runnerUpTeamId?: string,
+  seriesResult?: {
+    finalsWinsChampion?: number;
+    finalsWinsRunnerUp?: number;
+  },
+) {
   if ((franchise.championshipHistory ?? []).some((entry) => entry.seasonIndex === franchise.seasonIndex)) {
     return franchise.championshipHistory;
   }
@@ -140,6 +148,8 @@ function appendChampionshipHistory(franchise: FranchiseState, championTeamId: st
     championTeamName: champion?.name ?? championTeamId,
     runnerUpTeamId,
     runnerUpTeamName: runnerUp?.name,
+    finalsWinsChampion: seriesResult?.finalsWinsChampion,
+    finalsWinsRunnerUp: seriesResult?.finalsWinsRunnerUp,
   };
   return [...(franchise.championshipHistory ?? []), nextEntry].sort((a, b) => a.seasonIndex - b.seasonIndex);
 }
@@ -205,7 +215,9 @@ function createTeamPlayer(teamId: string, prospect: Prospect, acquiredRound: num
     stamina: 100,
     seasonStats: blankStats,
     playoffStats: { ...blankStats },
+    careerStats: { ...blankStats },
     awardHistory: [],
+    championships: 0,
   };
 }
 
@@ -2110,6 +2122,20 @@ export function finalizeRegularSeason(franchise: FranchiseState): FranchiseState
   };
 }
 
+function addBoxScoreToTotals(
+  current: TeamPlayer['seasonStats'],
+  inc: PlayerInGameStats,
+): TeamPlayer['seasonStats'] {
+  return {
+    matchesPlayed: current.matchesPlayed + 1,
+    points: current.points + inc.points,
+    assists: current.assists + inc.assists,
+    rebounds: current.rebounds + inc.rebounds,
+    steals: current.steals + inc.steals,
+    blocks: current.blocks + inc.blocks,
+  };
+}
+
 export function finalizePlayoffGameResult(
   franchise: FranchiseState,
   params: {
@@ -2123,10 +2149,42 @@ export function finalizePlayoffGameResult(
   if (!season || !playoffs) return franchise;
 
   const nextPlayoffs = applyPlayoffGameResult(playoffs, params.gameId, params.score, params.winnerTeamId);
+  const championTeamId = nextPlayoffs.championTeamId;
+  const finalsSeries = nextPlayoffs.series.find((series) => series.round === 'final');
+  const finalsSeriesResult =
+    championTeamId && finalsSeries && finalsSeries.winnerTeamId
+      ? finalsSeries.winnerTeamId === finalsSeries.teamAId
+        ? {
+            finalsWinsChampion: finalsSeries.winsA,
+            finalsWinsRunnerUp: finalsSeries.winsB,
+          }
+        : {
+            finalsWinsChampion: finalsSeries.winsB,
+            finalsWinsRunnerUp: finalsSeries.winsA,
+          }
+      : undefined;
+  const bumpChampionships = (team: TeamState): TeamState =>
+    championTeamId && team.id === championTeamId
+      ? {
+          ...team,
+          roster: team.roster.map((player) => ({
+            ...player,
+            championships: player.championships + 1,
+          })),
+        }
+      : team;
   return {
     ...franchise,
+    user: bumpChampionships(franchise.user),
+    ai: bumpChampionships(franchise.ai),
+    otherTeams: franchise.otherTeams.map(bumpChampionships),
     championshipHistory: nextPlayoffs.championTeamId
-      ? appendChampionshipHistory(franchise, nextPlayoffs.championTeamId, nextPlayoffs.runnerUpTeamId)
+      ? appendChampionshipHistory(
+          franchise,
+          nextPlayoffs.championTeamId,
+          nextPlayoffs.runnerUpTeamId,
+          finalsSeriesResult,
+        )
       : franchise.championshipHistory,
     season: {
       ...season,
@@ -3332,14 +3390,8 @@ export function applyMatchResults(
       };
 
       const currentStats = tp[statBucket];
-      const nextBucketStats: TeamPlayer['seasonStats'] = {
-        matchesPlayed: currentStats.matchesPlayed + 1,
-        points: currentStats.points + inc.points,
-        assists: currentStats.assists + inc.assists,
-        rebounds: currentStats.rebounds + inc.rebounds,
-        steals: currentStats.steals + inc.steals,
-        blocks: currentStats.blocks + inc.blocks,
-      };
+      const nextBucketStats = addBoxScoreToTotals(currentStats, inc);
+      const nextCareerStats = addBoxScoreToTotals(tp.careerStats, inc);
       const { nextCats, nextOverall } = applyProgressionFromGame(tp, nextBucketStats, inc, teamWon);
 
       const afterRounds = {
@@ -3362,6 +3414,7 @@ export function applyMatchResults(
       return {
         ...tp,
         [statBucket]: nextBucketStats,
+        careerStats: nextCareerStats,
         stamina: recoverBetweenGames(tp).stamina,
         prospect: {
           ...tp.prospect,
@@ -3490,14 +3543,8 @@ export function applyLeagueMatchResults(
       };
 
       const currentStats = tp[statBucket];
-      const nextBucketStats: TeamPlayer['seasonStats'] = {
-        matchesPlayed: currentStats.matchesPlayed + 1,
-        points: currentStats.points + inc.points,
-        assists: currentStats.assists + inc.assists,
-        rebounds: currentStats.rebounds + inc.rebounds,
-        steals: currentStats.steals + inc.steals,
-        blocks: currentStats.blocks + inc.blocks,
-      };
+      const nextBucketStats = addBoxScoreToTotals(currentStats, inc);
+      const nextCareerStats = addBoxScoreToTotals(tp.careerStats, inc);
       const { nextCats, nextOverall } = applyProgressionFromGame(tp, nextBucketStats, inc, teamWon);
 
       const afterRounds = {
@@ -3520,6 +3567,7 @@ export function applyLeagueMatchResults(
       return {
         ...tp,
         [statBucket]: nextBucketStats,
+        careerStats: nextCareerStats,
         stamina: recoverBetweenGames(tp).stamina,
         prospect: {
           ...tp.prospect,

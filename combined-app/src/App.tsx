@@ -38,6 +38,8 @@ import SeasonSimScreen from '../ui/SeasonSimScreen';
 import SeasonScheduleScreen from '../ui/SeasonScheduleScreen';
 import PlayoffsScreen from '../ui/PlayoffsScreen';
 import StatsScreen from '../ui/StatsScreen';
+import AwardsScreen from '../ui/AwardsScreen';
+import HistoryScreen from '../ui/HistoryScreen';
 import Modal from '../ui/Modal';
 import FreeAgencyScreen from '../ui/FreeAgencyScreen';
 import SettingsPanel from '../ui/SettingsPanel';
@@ -48,7 +50,22 @@ import { clearFranchise, hasSavedFranchise, loadFranchise, saveFranchise } from 
 import { buildDynamicStorylinePosts } from '../game/personality';
 import { applySettingsToDocument, getSimPaceFromSettings, loadGameSettings, saveGameSettings, setCurrentSettings, type GameSettings } from '../game/settings';
 
-type Screen = 'start' | 'lottery' | 'draft' | 'roster' | 'stats' | 'trade' | 'freeAgency' | 'game' | 'seasonSchedule' | 'playoffs' | 'season' | 'news' | 'updateLog';
+type Screen =
+  | 'start'
+  | 'lottery'
+  | 'draft'
+  | 'roster'
+  | 'stats'
+  | 'awards'
+  | 'history'
+  | 'trade'
+  | 'freeAgency'
+  | 'game'
+  | 'seasonSchedule'
+  | 'playoffs'
+  | 'season'
+  | 'news'
+  | 'updateLog';
 type ScheduledGameContext = {
   source: 'season' | 'playoffs';
   id: string;
@@ -58,7 +75,7 @@ type ScheduledGameContext = {
 
 const UPDATE_LOG_STORAGE_KEY = 'combinedAppUpdateLog_v2';
 const UPDATE_LOG_LEGACY_STORAGE_KEY = 'combinedAppUpdateLog_v1';
-const UPDATE_LOG_SEED_VERSION = 60;
+const UPDATE_LOG_SEED_VERSION = 61;
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('start');
@@ -644,6 +661,13 @@ export default function App() {
         major: true,
         delta: 0.5,
       },
+      {
+        id: 'seed-61',
+        createdAt: Date.now() + 37,
+        description: 'League experience polish: shortened season length for a faster loop, added a cleaner playoff bracket view, introduced dedicated awards and history pages with live MVP race + reveal flow, and expanded long-term records with career totals and finals results.',
+        major: true,
+        delta: 0.5,
+      },
     ];
 
     try {
@@ -815,6 +839,27 @@ export default function App() {
       },
       progressionNotices: applied.progressionNotices,
       result: res,
+    };
+  };
+
+  const finalizeSeasonIfComplete = (baseFranchise: FranchiseState) => {
+    const season = baseFranchise.season;
+    const regularSeasonFinished =
+      !!season &&
+      season.phase === 'regular' &&
+      season.games.length > 0 &&
+      season.games.every((game) => game.result?.played);
+
+    if (!regularSeasonFinished) {
+      return {
+        updated: baseFranchise,
+        regularSeasonFinished: false,
+      };
+    }
+
+    return {
+      updated: finalizeRegularSeason(baseFranchise),
+      regularSeasonFinished: true,
     };
   };
 
@@ -1084,6 +1129,22 @@ export default function App() {
         />
       )}
 
+      {screen === 'awards' && franchise && (
+        <AwardsScreen
+          franchise={franchise}
+          onBack={() => setScreen('roster')}
+          onOpenPlayoffs={() => setScreen('playoffs')}
+          onOpenHistory={() => setScreen('history')}
+        />
+      )}
+
+      {screen === 'history' && franchise && (
+        <HistoryScreen
+          franchise={franchise}
+          onBack={() => setScreen('roster')}
+        />
+      )}
+
       {screen === 'roster' && franchise && (
         <div>
           <div style={{ maxWidth: 980, margin: '16px auto 0', padding: '0 16px', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
@@ -1278,9 +1339,13 @@ export default function App() {
               homeLines: simulated.result.boxScore.homeLines,
               awayLines: simulated.result.boxScore.awayLines,
             });
-            setFranchise(simulated.updated);
+            const finalized = finalizeSeasonIfComplete(simulated.updated);
+            setFranchise(finalized.updated);
             setProgressionNotices(simulated.progressionNotices);
-            pushStorylines(simulated.updated, 2);
+            pushStorylines(finalized.updated, 2);
+            if (finalized.regularSeasonFinished) {
+              setScreen('awards');
+            }
           }}
           onSimulateWeek={() => {
             const season = franchise.season;
@@ -1296,10 +1361,14 @@ export default function App() {
               combinedNotices.push(...simulated.progressionNotices);
             }
 
-            setFranchise(working);
+            const finalized = finalizeSeasonIfComplete(working);
+            setFranchise(finalized.updated);
             setProgressionNotices(combinedNotices);
             setFrontOfficeMessage(`Simulated all ${remainingWeekGames.length} remaining game${remainingWeekGames.length === 1 ? '' : 's'} for Week ${season.weekIndex + 1}. You can still use Advance Week when you're ready.`);
-            pushStorylines(working, 2);
+            pushStorylines(finalized.updated, 2);
+            if (finalized.regularSeasonFinished) {
+              setScreen('awards');
+            }
           }}
           onAdvanceWeek={() => {
             const season = franchise.season;
@@ -1342,7 +1411,7 @@ export default function App() {
 
             const nextFranchise = finalizeRegularSeason(baseFranchise);
             setFranchise(nextFranchise);
-            setScreen('playoffs');
+            setScreen('awards');
           }}
         />
       )}
@@ -1744,10 +1813,11 @@ export default function App() {
               ...dated,
               season: { ...(dated.season ?? nextSeason), games: nextGames },
             };
-            setFranchise(nextFranchise);
+            const finalized = finalizeSeasonIfComplete(nextFranchise);
+            setFranchise(finalized.updated);
             setProgressionNotices(applied.progressionNotices);
-            pushStorylines(nextFranchise, 2);
-            setScreen('seasonSchedule');
+            pushStorylines(finalized.updated, 2);
+            setScreen(finalized.regularSeasonFinished ? 'awards' : 'seasonSchedule');
           }}
         />
       )}

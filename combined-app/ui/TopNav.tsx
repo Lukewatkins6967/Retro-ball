@@ -1,10 +1,24 @@
 import React from 'react';
 
 export default function TopNav(props: {
-  current: 'start' | 'lottery' | 'draft' | 'roster' | 'stats' | 'game' | 'seasonSchedule' | 'playoffs' | 'news' | 'freeAgency' | 'updateLog' | string;
+  current:
+    | 'start'
+    | 'lottery'
+    | 'draft'
+    | 'roster'
+    | 'stats'
+    | 'awards'
+    | 'history'
+    | 'game'
+    | 'seasonSchedule'
+    | 'playoffs'
+    | 'news'
+    | 'freeAgency'
+    | 'updateLog'
+    | string;
   hasFranchise: boolean;
   freeAgencyEnabled: boolean;
-  onNavigate: (screen: 'draft' | 'roster' | 'stats' | 'seasonSchedule' | 'game' | 'news' | 'freeAgency') => void;
+  onNavigate: (screen: 'draft' | 'roster' | 'stats' | 'awards' | 'history' | 'seasonSchedule' | 'game' | 'news' | 'freeAgency') => void;
   onOpenSettings: () => void;
   onRestart: () => void;
 }) {
@@ -14,7 +28,10 @@ export default function TopNav(props: {
       ? 'Offseason market open'
       : 'Season in progress';
 
-  const navBtn = (label: string, target: 'draft' | 'roster' | 'stats' | 'seasonSchedule' | 'game' | 'freeAgency') => {
+  const navBtn = (
+    label: string,
+    target: 'draft' | 'roster' | 'stats' | 'awards' | 'history' | 'seasonSchedule' | 'game' | 'freeAgency',
+  ) => {
     const active = props.current === target;
     const disabled = (!props.hasFranchise && target !== 'draft') || (target === 'freeAgency' && !props.freeAgencyEnabled);
 
@@ -49,6 +66,8 @@ export default function TopNav(props: {
             {navBtn('Roster', 'roster')}
             {navBtn('Free Agency', 'freeAgency')}
             {navBtn('Stats', 'stats')}
+            {navBtn('Awards', 'awards')}
+            {navBtn('History', 'history')}
             {navBtn('Season', 'seasonSchedule')}
             <button
               className={`btn navBtn ${props.current === 'news' ? 'btnPrimary navBtnActive' : 'btnSoft'}`}

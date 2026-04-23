@@ -5,7 +5,49 @@ import Modal from './Modal';
 function roundLabel(round: PlayoffSeries['round']) {
   if (round === 'quarter') return 'Quarterfinals';
   if (round === 'semi') return 'Semifinals';
-  return 'Finals';
+  return 'League Finals';
+}
+
+function currentRound(playoffs: NonNullable<FranchiseState['season']>['playoffs']) {
+  if (playoffs.stage === 'playIn' && playoffs.games.some((game) => game.round === 'playIn' && !game.result?.played)) {
+    return 'playIn';
+  }
+  if (playoffs.series.some((series) => series.round === 'quarter' && !series.winnerTeamId)) return 'quarter';
+  if (playoffs.series.some((series) => series.round === 'semi' && !series.winnerTeamId)) return 'semi';
+  if (playoffs.series.some((series) => series.round === 'final' && !series.winnerTeamId)) return 'final';
+  return playoffs.championTeamId ? 'complete' : 'quarter';
+}
+
+function SeriesNode(props: {
+  series?: PlayoffSeries;
+  teamName: (id: string) => string;
+  active: boolean;
+}) {
+  if (!props.series) {
+    return <div className="playoffSeriesNode isEmpty">Waiting for bracket to advance</div>;
+  }
+
+  const leaderText = props.series.winnerTeamId
+    ? `Advanced: ${props.teamName(props.series.winnerTeamId)}`
+    : `${props.series.winsA}-${props.series.winsB} in progress`;
+
+  return (
+    <div className={`playoffSeriesNode ${props.active ? 'isActive' : ''} ${props.series.winnerTeamId ? 'isAdvanced' : ''}`}>
+      <div className="playoffSeriesLabel">{props.series.label}</div>
+      <div className="playoffSeriesTeams">
+        <div>
+          <span className="playoffSeed">#{props.series.seedA}</span> {props.teamName(props.series.teamAId)}
+        </div>
+        <div>
+          <span className="playoffSeed">#{props.series.seedB}</span> {props.teamName(props.series.teamBId)}
+        </div>
+      </div>
+      <div className="playoffSeriesFooter">
+        <span>{leaderText}</span>
+        <span>Best-of-{props.series.winsNeeded * 2 - 1}</span>
+      </div>
+    </div>
+  );
 }
 
 export default function PlayoffsScreen(props: {
@@ -29,12 +71,11 @@ export default function PlayoffsScreen(props: {
   const teamName = (id: string) => teamById[id]?.name ?? id;
   const activeGames = playoffs?.games.filter((game) => !game.result?.played && game.round !== 'playIn') ?? [];
   const playInGames = playoffs?.games.filter((game) => game.round === 'playIn') ?? [];
-  const seriesByRound = useMemo(() => {
-    const quarter = playoffs?.series.filter((series) => series.round === 'quarter') ?? [];
-    const semi = playoffs?.series.filter((series) => series.round === 'semi') ?? [];
-    const final = playoffs?.series.filter((series) => series.round === 'final') ?? [];
-    return { quarter, semi, final };
-  }, [playoffs]);
+  const roundNow = playoffs ? currentRound(playoffs) : 'quarter';
+  const seriesById = useMemo(
+    () => Object.fromEntries((playoffs?.series ?? []).map((series) => [series.id, series])),
+    [playoffs],
+  );
 
   if (!season || !playoffs) {
     return (
@@ -58,13 +99,11 @@ export default function PlayoffsScreen(props: {
     const played = !!game.result?.played;
     const involvesUser = game.homeTeamId === props.franchise.user.id || game.awayTeamId === props.franchise.user.id;
     return (
-      <div key={game.id} className="card" style={{ background: 'rgba(255,255,255,0.82)' }}>
+      <div key={game.id} className="card playoffActionCard">
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <div>
-            <div className="muted" style={{ fontSize: 12, fontWeight: 900 }}>
-              {game.label}
-            </div>
-            <div style={{ marginTop: 6, fontWeight: 1000, fontSize: 17 }}>
+            <div className="playoffSeriesLabel">{game.label}</div>
+            <div className="playoffActionTitle">
               #{game.homeSeed ?? '-'} {teamName(game.homeTeamId)} vs #{game.awaySeed ?? '-'} {teamName(game.awayTeamId)}
             </div>
             <div className="muted" style={{ marginTop: 6, fontSize: 13 }}>
@@ -72,7 +111,7 @@ export default function PlayoffsScreen(props: {
                 ? `Final: ${game.result?.score.home}-${game.result?.score.away}`
                 : game.eliminationGame
                   ? 'Single-game elimination'
-                  : 'Ready to play'}
+                  : 'Next game ready'}
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -99,98 +138,113 @@ export default function PlayoffsScreen(props: {
     );
   };
 
-  const seriesCard = (series: PlayoffSeries) => {
-    const leaderText =
-      series.winnerTeamId
-        ? `Winner: ${teamName(series.winnerTeamId)}`
-        : `${teamName(series.teamAId)} ${series.winsA} - ${series.winsB} ${teamName(series.teamBId)}`;
-    return (
-      <div key={series.id} className="card" style={{ background: 'rgba(255,255,255,0.8)' }}>
-        <div className="muted" style={{ fontSize: 12, fontWeight: 900 }}>
-          {series.label}
-        </div>
-        <div style={{ marginTop: 6, fontWeight: 1000 }}>
-          #{series.seedA} {teamName(series.teamAId)} vs #{series.seedB} {teamName(series.teamBId)}
-        </div>
-        <div className="muted" style={{ marginTop: 6 }}>
-          {leaderText}
-        </div>
-        <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <span className="pill">Best-of-{playoffs.seriesBestOf}</span>
-          <span className="pill">{series.winsA}-{series.winsB}</span>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="page">
       <div className="panelSolid panel" style={{ padding: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="playoffHero">
           <div>
-            <h2 style={{ margin: 0 }}>Playoffs</h2>
-            <div className="muted" style={{ marginTop: 6 }}>
-              NBA-style play-in plus multi-game bracket series
+            <div className="pill awardsHeroPill">NBA-style bracket</div>
+            <h2 style={{ margin: '12px 0 0' }}>Playoff Picture</h2>
+            <div className="muted awardsHeroCopy">
+              Play-in decides the last two seeds, then the bracket runs 1-8, 2-7, 3-6, and 4-5 until a champion is crowned.
             </div>
           </div>
-          <button className="btn btnSoft" onClick={props.onBack} style={{ padding: '10px 14px' }}>
-            Back
-          </button>
+          <div className="playoffHeroMeta">
+            <div className="playoffMetaChip">
+              <span>Current Round</span>
+              <strong>{roundNow === 'playIn' ? 'Play-In' : roundNow === 'complete' ? 'Champion Crowned' : roundLabel(roundNow as PlayoffSeries['round'])}</strong>
+            </div>
+            <button className="btn btnGhost" onClick={props.onBack} style={{ padding: '10px 14px', fontWeight: 900 }}>
+              Back
+            </button>
+          </div>
         </div>
 
         {playoffs.championTeamId ? (
-          <div style={{ marginTop: 14, padding: 14, borderRadius: 16, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)' }}>
-            <div className="muted" style={{ fontSize: 12, fontWeight: 900 }}>
-              CHAMPION
+          <div className="playoffChampionBanner">
+            <div className="playoffSeriesLabel">Champion</div>
+            <div className="playoffChampionName">{teamName(playoffs.championTeamId)}</div>
+            <div className="muted">
+              {playoffs.runnerUpTeamId ? `Closed out the finals over ${teamName(playoffs.runnerUpTeamId)}.` : 'Season finished.'}
             </div>
-            <div style={{ fontWeight: 1000, fontSize: 18 }}>{teamName(playoffs.championTeamId)}</div>
           </div>
         ) : null}
 
-        <div style={{ marginTop: 14, display: 'grid', gap: 14 }}>
-          <div className="card" style={{ background: 'rgba(37,99,235,0.08)' }}>
-            <div style={{ fontWeight: 1000 }}>Seed Table</div>
-            <div className="muted" style={{ marginTop: 6 }}>
-              Seeds 1-6 advance straight in. Seeds 7-10 fight through the play-in.
-            </div>
-            <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {playoffs.seededTeamIds.map((teamId, index) => (
-                <span key={teamId} className="pill" style={{ background: index < 6 ? 'rgba(34,197,94,0.12)' : 'rgba(245,158,11,0.12)' }}>
-                  #{index + 1} {teamName(teamId)}
-                </span>
-              ))}
-            </div>
+        <div className="card playoffSeedCard">
+          <div className="awardsSectionLabel">Seed Table</div>
+          <div className="playoffSeedTable">
+            {playoffs.seededTeamIds.map((teamId, index) => (
+              <div key={teamId} className={`playoffSeedPill ${index < 6 ? 'isDirect' : 'isPlayIn'}`}>
+                <span>#{index + 1}</span>
+                <strong>{teamName(teamId)}</strong>
+              </div>
+            ))}
           </div>
-
-          {activeGames.length ? (
-            <div>
-              <div className="muted" style={{ fontSize: 12, fontWeight: 900, marginBottom: 8 }}>
-                ACTIVE GAMES
-              </div>
-              <div className="grid1">{activeGames.map(gameCard)}</div>
-            </div>
-          ) : null}
-
-          <div>
-            <div className="muted" style={{ fontSize: 12, fontWeight: 900, marginBottom: 8 }}>
-              PLAY-IN
-            </div>
-            <div className="grid1">
-              {playInGames.length ? playInGames.map(gameCard) : <div className="muted">Play-in is complete.</div>}
-            </div>
-          </div>
-
-          {(['quarter', 'semi', 'final'] as const).map((round) => (
-            <div key={round}>
-              <div className="muted" style={{ fontSize: 12, fontWeight: 900, marginBottom: 8 }}>
-                {roundLabel(round)}
-              </div>
-              <div className="grid1">
-                {seriesByRound[round].length ? seriesByRound[round].map(seriesCard) : <div className="muted">Round opens once the previous stage is finished.</div>}
-              </div>
-            </div>
-          ))}
         </div>
+
+        <div className="playoffPlayInSection">
+          <div className="awardsSectionLabel">Play-In</div>
+          <div className="playInGrid">
+            {playInGames.length ? (
+              playInGames.map((game) => (
+                <div key={game.id} className={`playInCard ${game.result?.played ? 'isResolved' : ''}`}>
+                  <div className="playoffSeriesLabel">{game.label}</div>
+                  <div className="playoffSeriesTeams">
+                    <div>
+                      <span className="playoffSeed">#{game.homeSeed}</span> {teamName(game.homeTeamId)}
+                    </div>
+                    <div>
+                      <span className="playoffSeed">#{game.awaySeed}</span> {teamName(game.awayTeamId)}
+                    </div>
+                  </div>
+                  <div className="playoffSeriesFooter">
+                    <span>
+                      {game.result?.played
+                        ? `${teamName(game.result.winnerTeamId ?? '')} advanced`
+                        : game.eliminationGame
+                          ? 'Loser goes home'
+                          : 'Winner locks the 7 seed'}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="muted">Play-in is complete.</div>
+            )}
+          </div>
+        </div>
+
+        <div className="playoffBracketGrid">
+          <div className="playoffBracketColumn">
+            <div className="playoffBracketHeading">Quarters</div>
+            <SeriesNode series={seriesById['quarter-1']} teamName={teamName} active={roundNow === 'quarter'} />
+            <SeriesNode series={seriesById['quarter-2']} teamName={teamName} active={roundNow === 'quarter'} />
+          </div>
+          <div className="playoffBracketColumn isInner">
+            <div className="playoffBracketHeading">Semis</div>
+            <SeriesNode series={seriesById['semi-1']} teamName={teamName} active={roundNow === 'semi'} />
+          </div>
+          <div className="playoffBracketColumn isCenter">
+            <div className="playoffBracketHeading">Finals</div>
+            <SeriesNode series={seriesById['final-1']} teamName={teamName} active={roundNow === 'final'} />
+          </div>
+          <div className="playoffBracketColumn isInner">
+            <div className="playoffBracketHeading">Semis</div>
+            <SeriesNode series={seriesById['semi-2']} teamName={teamName} active={roundNow === 'semi'} />
+          </div>
+          <div className="playoffBracketColumn">
+            <div className="playoffBracketHeading">Quarters</div>
+            <SeriesNode series={seriesById['quarter-3']} teamName={teamName} active={roundNow === 'quarter'} />
+            <SeriesNode series={seriesById['quarter-4']} teamName={teamName} active={roundNow === 'quarter'} />
+          </div>
+        </div>
+
+        {activeGames.length ? (
+          <div style={{ marginTop: 18 }}>
+            <div className="awardsSectionLabel">Active Games</div>
+            <div className="grid1">{activeGames.map(gameCard)}</div>
+          </div>
+        ) : null}
       </div>
 
       {confirmSim && (

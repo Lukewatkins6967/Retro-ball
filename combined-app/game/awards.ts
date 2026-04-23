@@ -107,6 +107,47 @@ function buildWinner(team: TeamState, player: TeamPlayer, score: number): Season
     teamId: team.id,
     teamName: team.name,
     score: Math.round(score * 10) / 10,
+    tagline:
+      player.prospect.overall >= 90
+        ? 'Dominant season'
+        : player.yearsWithTeam === 0
+          ? 'Breakout star'
+          : teamSuccessScoreText(team, score),
+  };
+}
+
+function teamSuccessScoreText(team: TeamState, score: number) {
+  if (team.teamRating >= 9) return 'Led a powerhouse run';
+  if (score >= 40) return 'Owned the spotlight';
+  return 'Set the league pace';
+}
+
+function eligiblePool(franchise: FranchiseState) {
+  const teams = getLeagueTeams(franchise);
+  const standingsById = new Map(franchise.seasonStandings.map((row) => [row.teamId, row]));
+  return teams.flatMap((team) =>
+    team.roster
+      .filter((player) => player.seasonStats.matchesPlayed > 0)
+      .map((player) => ({ team, player, row: standingsById.get(team.id) })),
+  );
+}
+
+export function computeAwardRaces(franchise: FranchiseState) {
+  const eligible = eligiblePool(franchise);
+  return {
+    mvp: eligible
+      .map((entry) => buildWinner(entry.team, entry.player, mvpScore(entry.player, entry.row)))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5),
+    roy: eligible
+      .filter((entry) => entry.player.yearsWithTeam === 0)
+      .map((entry) => buildWinner(entry.team, entry.player, royScore(entry.player, entry.row)))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5),
+    dpoy: eligible
+      .map((entry) => buildWinner(entry.team, entry.player, dpoyScore(entry.player, entry.row)))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5),
   };
 }
 
@@ -158,11 +199,8 @@ function buildAllLeagueFirstTeam(franchise: FranchiseState, standingsById: Map<s
 export function computeSeasonAwards(franchise: FranchiseState): SeasonAwards {
   const teams = getLeagueTeams(franchise);
   const standingsById = new Map(franchise.seasonStandings.map((row) => [row.teamId, row]));
-  const eligible = teams.flatMap((team) =>
-    team.roster
-      .filter((player) => player.seasonStats.matchesPlayed > 0)
-      .map((player) => ({ team, player, row: standingsById.get(team.id) })),
-  );
+  const eligible = eligiblePool(franchise);
+  const races = computeAwardRaces(franchise);
 
   const mvp = eligible
     .map((entry) => ({ ...entry, score: mvpScore(entry.player, entry.row) }))
@@ -179,6 +217,7 @@ export function computeSeasonAwards(franchise: FranchiseState): SeasonAwards {
 
   return {
     seasonIndex: franchise.seasonIndex,
+    mvpFinalists: races.mvp.slice(0, 3),
     mvp: mvp ? buildWinner(mvp.team, mvp.player, mvp.score) : undefined,
     roy: roy ? buildWinner(roy.team, roy.player, roy.score) : undefined,
     dpoy: dpoy ? buildWinner(dpoy.team, dpoy.player, dpoy.score) : undefined,

@@ -16,6 +16,22 @@ function normalizePlayer(player: any) {
     typeof player?.morale === 'number'
       ? Math.max(0, Math.min(100, player.morale))
       : Math.max(12, Math.min(92, 46 + (player?.happiness ?? 6) * 5 - (player?.desireToLeave ?? 4) * 2));
+  const seasonStats = player?.seasonStats ?? {
+    matchesPlayed: 0,
+    points: 0,
+    assists: 0,
+    rebounds: 0,
+    steals: 0,
+    blocks: 0,
+  };
+  const playoffStats = player?.playoffStats ?? {
+    matchesPlayed: 0,
+    points: 0,
+    assists: 0,
+    rebounds: 0,
+    steals: 0,
+    blocks: 0,
+  };
   return {
     ...player,
     yearsWithTeam: typeof player?.yearsWithTeam === 'number' ? player.yearsWithTeam : 0,
@@ -26,7 +42,19 @@ function normalizePlayer(player: any) {
     morale,
     status: player?.status ?? getPlayerStatusLabel(morale),
     recentTradeAdjustment: typeof player?.recentTradeAdjustment === 'number' ? player.recentTradeAdjustment : 0,
+    seasonStats,
+    playoffStats,
+    careerStats:
+      player?.careerStats ?? {
+        matchesPlayed: (seasonStats.matchesPlayed ?? 0) + (playoffStats.matchesPlayed ?? 0),
+        points: (seasonStats.points ?? 0) + (playoffStats.points ?? 0),
+        assists: (seasonStats.assists ?? 0) + (playoffStats.assists ?? 0),
+        rebounds: (seasonStats.rebounds ?? 0) + (playoffStats.rebounds ?? 0),
+        steals: (seasonStats.steals ?? 0) + (playoffStats.steals ?? 0),
+        blocks: (seasonStats.blocks ?? 0) + (playoffStats.blocks ?? 0),
+      },
     awardHistory: Array.isArray(player?.awardHistory) ? player.awardHistory : [],
+    championships: typeof player?.championships === 'number' ? player.championships : 0,
   };
 }
 

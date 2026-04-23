@@ -130,7 +130,9 @@ export type TeamPlayer = {
   marketOffers?: FreeAgencyOffer[];
   seasonStats: PlayerSeasonStats;
   playoffStats: PlayerSeasonStats;
+  careerStats: PlayerSeasonStats;
   awardHistory: PlayerAwardHistoryEntry[];
+  championships: number;
 };
 
 export type PlayerSeasonStats = {
@@ -158,6 +160,7 @@ export type SeasonAwardWinner = {
   teamId: string;
   teamName: string;
   score: number;
+  tagline?: string;
 };
 
 export type AllLeagueSlot = 'G1' | 'G2' | 'F1' | 'F2' | 'C';
@@ -174,6 +177,7 @@ export type AllLeagueTeamEntry = {
 
 export type SeasonAwards = {
   seasonIndex: number;
+  mvpFinalists: SeasonAwardWinner[];
   mvp?: SeasonAwardWinner;
   roy?: SeasonAwardWinner;
   dpoy?: SeasonAwardWinner;
@@ -186,6 +190,8 @@ export type ChampionshipHistoryEntry = {
   championTeamName: string;
   runnerUpTeamId?: string;
   runnerUpTeamName?: string;
+  finalsWinsChampion?: number;
+  finalsWinsRunnerUp?: number;
   finalsMvpPlayerId?: string;
   finalsMvpPlayerName?: string;
 };
