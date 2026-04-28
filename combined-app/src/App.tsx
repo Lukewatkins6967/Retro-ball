@@ -86,7 +86,7 @@ type ScheduledGameContext = {
 
 const UPDATE_LOG_STORAGE_KEY = 'combinedAppUpdateLog_v2';
 const UPDATE_LOG_LEGACY_STORAGE_KEY = 'combinedAppUpdateLog_v1';
-const UPDATE_LOG_SEED_VERSION = 63;
+const UPDATE_LOG_SEED_VERSION = 64;
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('start');
@@ -709,6 +709,13 @@ export default function App() {
         description: 'Season flow overhaul: awards now feed into playoff mode on the same Season page, playoff matchups support play/sim game plus sim series controls, finals open a true re-signing phase before free agency, and the hard salary cap plus offseason tags are now enforced more clearly.',
         major: true,
         delta: 0.5,
+      },
+      {
+        id: 'seed-64',
+        createdAt: Date.now() + 40,
+        description: 'Experimental court presentation refresh: the downloaded arena art now powers the experimental gameplay court and in-image scoreboard, while player and ball rendering are remapped to sit cleaner on that new floor.',
+        major: false,
+        delta: 0.1,
       },
     ];
 

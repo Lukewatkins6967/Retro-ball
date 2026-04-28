@@ -91,6 +91,7 @@ const UNITY_SHARED_IMAGES = {
   court: `${UNITY_ASSET_BASE}/courtTimber.png`,
   logoBlue: `${UNITY_ASSET_BASE}/blue_team_logo_transparent.png`,
   logoRed: `${UNITY_ASSET_BASE}/red_team_logo_transparent.png`,
+  experimentalArena: '/experimental/arena-court-scoreboard.jpg',
 } as const;
 
 const UNITY_FX_IMAGES = {
@@ -247,6 +248,82 @@ function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w:
   ctx.closePath();
 }
 
+type QuadPoint = { x: number; y: number };
+type RectShape = { x: number; y: number; w: number; h: number };
+
+type ExperimentalArenaLayout = {
+  frame: RectShape;
+  floor: {
+    topLeft: QuadPoint;
+    topRight: QuadPoint;
+    bottomLeft: QuadPoint;
+    bottomRight: QuadPoint;
+  };
+  scoreboard: RectShape;
+};
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
+}
+
+function getExperimentalArenaLayout(width: number, height: number): ExperimentalArenaLayout {
+  const sourceWidth = 256;
+  const sourceHeight = 148;
+  const aspect = sourceWidth / sourceHeight;
+  const maxWidth = width - 28;
+  const maxHeight = height - 8;
+  let frameWidth = maxWidth;
+  let frameHeight = frameWidth / aspect;
+  if (frameHeight > maxHeight) {
+    frameHeight = maxHeight;
+    frameWidth = frameHeight * aspect;
+  }
+  const frameX = (width - frameWidth) / 2;
+  const frameY = (height - frameHeight) / 2;
+  const frame = { x: frameX, y: frameY, w: frameWidth, h: frameHeight };
+  return {
+    frame,
+    floor: {
+      topLeft: { x: frame.x + frame.w * 0.12, y: frame.y + frame.h * 0.48 },
+      topRight: { x: frame.x + frame.w * 0.88, y: frame.y + frame.h * 0.48 },
+      bottomLeft: { x: frame.x + frame.w * 0.03, y: frame.y + frame.h * 0.962 },
+      bottomRight: { x: frame.x + frame.w * 0.97, y: frame.y + frame.h * 0.962 },
+    },
+    scoreboard: {
+      x: frame.x + frame.w * 0.37,
+      y: frame.y + frame.h * 0.028,
+      w: frame.w * 0.26,
+      h: frame.h * 0.16,
+    },
+  };
+}
+
+function projectExperimentalPoint(point: QuadPoint, court: { width: number; height: number }, layout: ExperimentalArenaLayout) {
+  const u = clamp(point.x / court.width, 0, 1);
+  const v = clamp(point.y / court.height, 0, 1);
+  const leftX = lerp(layout.floor.topLeft.x, layout.floor.bottomLeft.x, v);
+  const rightX = lerp(layout.floor.topRight.x, layout.floor.bottomRight.x, v);
+  const leftY = lerp(layout.floor.topLeft.y, layout.floor.bottomLeft.y, v);
+  const rightY = lerp(layout.floor.topRight.y, layout.floor.bottomRight.y, v);
+  return {
+    x: lerp(leftX, rightX, u),
+    y: lerp(leftY, rightY, u),
+  };
+}
+
+function unprojectExperimentalPoint(point: QuadPoint, court: { width: number; height: number }, layout: ExperimentalArenaLayout) {
+  const topY = (layout.floor.topLeft.y + layout.floor.topRight.y) * 0.5;
+  const bottomY = (layout.floor.bottomLeft.y + layout.floor.bottomRight.y) * 0.5;
+  const v = clamp((point.y - topY) / Math.max(1, bottomY - topY), 0, 1);
+  const leftX = lerp(layout.floor.topLeft.x, layout.floor.bottomLeft.x, v);
+  const rightX = lerp(layout.floor.topRight.x, layout.floor.bottomRight.x, v);
+  const u = clamp((point.x - leftX) / Math.max(1, rightX - leftX), 0, 1);
+  return {
+    x: u * court.width,
+    y: v * court.height,
+  };
+}
+
 function jumpLiftMs(jumpMs: number) {
   if (!jumpMs) return 0;
   const total = 420;
@@ -279,13 +356,14 @@ function drawStylizedHoop(
   side: HoopSide,
   palette: { post: string; glow: string },
   layer: HoopLayer,
+  scale = 1,
 ) {
   const dir = side === 'left' ? 1 : -1;
   const rimCenter = { x: basket.x, y: basket.y };
-  const rimX = rimCenter.x + dir * 3;
-  const board = { x: rimCenter.x - dir * 20, y: rimCenter.y - 31, w: 16, h: 62 };
-  const braceAnchor = { x: rimCenter.x + dir * 48, y: rimCenter.y - 44 };
-  const basePad = { x: braceAnchor.x - 11, y: rimCenter.y + 25, w: 22, h: 56 };
+  const rimX = rimCenter.x + dir * 3 * scale;
+  const board = { x: rimCenter.x - dir * 20 * scale, y: rimCenter.y - 31 * scale, w: 16 * scale, h: 62 * scale };
+  const braceAnchor = { x: rimCenter.x + dir * 48 * scale, y: rimCenter.y - 44 * scale };
+  const basePad = { x: braceAnchor.x - 11 * scale, y: rimCenter.y + 25 * scale, w: 22 * scale, h: 56 * scale };
   const padFill = side === 'left' ? 'rgba(113,31,31,0.42)' : 'rgba(24,73,135,0.42)';
 
   ctx.save();
@@ -293,7 +371,7 @@ function drawStylizedHoop(
   if (layer === 'back') {
     ctx.fillStyle = 'rgba(2,6,23,0.16)';
     ctx.beginPath();
-    ctx.ellipse(rimCenter.x + dir * 2, rimCenter.y + 13, 25, 8, 0, 0, Math.PI * 2);
+    ctx.ellipse(rimCenter.x + dir * 2 * scale, rimCenter.y + 13 * scale, 25 * scale, 8 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = padFill;
@@ -302,18 +380,18 @@ function drawStylizedHoop(
 
     ctx.lineCap = 'round';
     ctx.strokeStyle = palette.post;
-    ctx.lineWidth = 8;
+    ctx.lineWidth = 8 * scale;
     ctx.beginPath();
     ctx.moveTo(braceAnchor.x, braceAnchor.y);
-    ctx.lineTo(board.x + dir * 7, rimCenter.y - 16);
-    ctx.lineTo(board.x + dir * 2, rimCenter.y - 2);
+    ctx.lineTo(board.x + dir * 7 * scale, rimCenter.y - 16 * scale);
+    ctx.lineTo(board.x + dir * 2 * scale, rimCenter.y - 2 * scale);
     ctx.stroke();
 
     ctx.strokeStyle = 'rgba(226,232,240,0.82)';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3 * scale;
     ctx.beginPath();
-    ctx.moveTo(board.x + dir * 3, rimCenter.y - 4);
-    ctx.lineTo(rimX - dir * 10, rimCenter.y - 4);
+    ctx.moveTo(board.x + dir * 3 * scale, rimCenter.y - 4 * scale);
+    ctx.lineTo(rimX - dir * 10 * scale, rimCenter.y - 4 * scale);
     ctx.stroke();
 
     ctx.fillStyle = 'rgba(15,23,42,0.24)';
@@ -328,54 +406,54 @@ function drawStylizedHoop(
     drawRoundedRect(ctx, board.x, board.y, board.w, board.h, 5);
     ctx.fill();
     ctx.strokeStyle = 'rgba(15,23,42,0.5)';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2 * scale;
     drawRoundedRect(ctx, board.x, board.y, board.w, board.h, 5);
     ctx.stroke();
 
-    const squareX = side === 'left' ? board.x + 2 : board.x + 6;
+    const squareX = side === 'left' ? board.x + 2 * scale : board.x + 6 * scale;
     ctx.strokeStyle = palette.glow;
-    ctx.lineWidth = 1.6;
-    ctx.strokeRect(squareX, rimCenter.y - 10, 8, 20);
+    ctx.lineWidth = 1.6 * scale;
+    ctx.strokeRect(squareX, rimCenter.y - 10 * scale, 8 * scale, 20 * scale);
   } else {
     ctx.strokeStyle = 'rgba(255,145,77,0.34)';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 4 * scale;
     ctx.beginPath();
-    ctx.ellipse(rimX, rimCenter.y, 15, 5.4, 0, Math.PI, Math.PI * 2);
+    ctx.ellipse(rimX, rimCenter.y, 15 * scale, 5.4 * scale, 0, Math.PI, Math.PI * 2);
     ctx.stroke();
 
     ctx.strokeStyle = 'rgba(241,245,249,0.76)';
-    ctx.lineWidth = 1.4;
+    ctx.lineWidth = 1.4 * scale;
     for (let i = -2; i <= 2; i += 1) {
-      const strandX = rimX + i * 4.8;
+      const strandX = rimX + i * 4.8 * scale;
       ctx.beginPath();
-      ctx.moveTo(strandX, rimCenter.y + 2);
+      ctx.moveTo(strandX, rimCenter.y + 2 * scale);
       ctx.quadraticCurveTo(
-        strandX + dir * (i * 0.9),
-        rimCenter.y + 12,
-        rimX + i * 2.4,
-        rimCenter.y + 22,
+        strandX + dir * (i * 0.9) * scale,
+        rimCenter.y + 12 * scale,
+        rimX + i * 2.4 * scale,
+        rimCenter.y + 22 * scale,
       );
       ctx.stroke();
     }
 
     for (let row = 0; row < 2; row += 1) {
-      const y = rimCenter.y + 9 + row * 6;
+      const y = rimCenter.y + 9 * scale + row * 6 * scale;
       ctx.beginPath();
-      ctx.moveTo(rimX - 10, y);
-      ctx.lineTo(rimX + 10, y);
+      ctx.moveTo(rimX - 10 * scale, y);
+      ctx.lineTo(rimX + 10 * scale, y);
       ctx.stroke();
     }
 
     ctx.strokeStyle = '#ff8d47';
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 5 * scale;
     ctx.beginPath();
-    ctx.ellipse(rimX, rimCenter.y, 15, 5.4, 0, 0, Math.PI * 2);
+    ctx.ellipse(rimX, rimCenter.y, 15 * scale, 5.4 * scale, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.strokeStyle = 'rgba(255,243,224,0.7)';
-    ctx.lineWidth = 1.7;
+    ctx.lineWidth = 1.7 * scale;
     ctx.beginPath();
-    ctx.ellipse(rimX, rimCenter.y - 0.5, 12.2, 3.9, 0, 0.16 * Math.PI, 0.84 * Math.PI);
+    ctx.ellipse(rimX, rimCenter.y - 0.5 * scale, 12.2 * scale, 3.9 * scale, 0, 0.16 * Math.PI, 0.84 * Math.PI);
     ctx.stroke();
   }
 
@@ -844,8 +922,15 @@ export default function GameScreen(props: GameScreenProps) {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * courtSize.w;
-      const y = ((e.clientY - rect.top) / rect.height) * courtSize.h;
+      const pointer = {
+        x: ((e.clientX - rect.left) / rect.width) * courtSize.w,
+        y: ((e.clientY - rect.top) / rect.height) * courtSize.h,
+      };
+      const projectedTarget = props.settings.experimentalGameplay
+        ? unprojectExperimentalPoint(pointer, { width: courtSize.w, height: courtSize.h }, getExperimentalArenaLayout(courtSize.w, courtSize.h))
+        : pointer;
+      const x = projectedTarget.x;
+      const y = projectedTarget.y;
       triggerTimedPass({ x, y });
     };
 
@@ -858,7 +943,7 @@ export default function GameScreen(props: GameScreenProps) {
       window.removeEventListener('keyup', onKeyUp);
       canvas?.removeEventListener('mousedown', onCanvasMouseDown);
     };
-  }, [courtSize.h, courtSize.w]);
+  }, [courtSize.h, courtSize.w, props.settings.experimentalGameplay]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -938,7 +1023,7 @@ export default function GameScreen(props: GameScreenProps) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     };
-  }, [courtSize.h, courtSize.w, speedMultiplier]);
+  }, [courtSize.h, courtSize.w, speedMultiplier, props.settings.experimentalGameplay]);
 
   function drawOld(ctx: CanvasRenderingContext2D, state: MatchState) {
     ctx.clearRect(0, 0, state.court.width, state.court.height);
@@ -1065,10 +1150,27 @@ export default function GameScreen(props: GameScreenProps) {
         : [...state.entities]
             .filter((entity) => entity.team === 'user')
             .sort((a, b) => Math.hypot(a.pos.x - ball.x, a.pos.y - ball.y) - Math.hypot(b.pos.x - ball.x, b.pos.y - ball.y))[0]?.id;
+    const logoBlue = images[UNITY_SHARED_IMAGES.logoBlue];
+    const logoRed = images[UNITY_SHARED_IMAGES.logoRed];
+    const experimentalArena = images[UNITY_SHARED_IMAGES.experimentalArena];
+    const useExperimentalArena = Boolean(props.settings.experimentalGameplay && isReadyImage(experimentalArena));
+    const experimentalLayout = useExperimentalArena ? getExperimentalArenaLayout(width, height) : null;
     const courtLeft = 40;
     const courtTop = 54;
     const courtWidth = width - 80;
     const courtHeight = height - 108;
+    const projectedPoint = (point: { x: number; y: number }) =>
+      experimentalLayout ? projectExperimentalPoint(point, state.court, experimentalLayout) : point;
+    const projectedBasket = (side: HoopSide) => {
+      if (!experimentalLayout) return side === 'left' ? { x: 104, y: height / 2 } : { x: width - 104, y: height / 2 };
+      const logicalAnchor = side === 'left' ? { x: 104, y: height / 2 } : { x: width - 104, y: height / 2 };
+      const projected = projectExperimentalPoint(logicalAnchor, state.court, experimentalLayout);
+      return {
+        x: projected.x + (side === 'left' ? 1 : -1) * experimentalLayout.frame.w * 0.02,
+        y: projected.y - experimentalLayout.frame.h * 0.19,
+      };
+    };
+    const liftScale = useExperimentalArena ? 0.74 : 1;
 
     const bg = ctx.createLinearGradient(0, 0, 0, height);
     bg.addColorStop(0, '#07101c');
@@ -1077,191 +1179,246 @@ export default function GameScreen(props: GameScreenProps) {
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, width, height);
 
-    const upperDeck = ctx.createLinearGradient(0, 0, 0, 54);
-    upperDeck.addColorStop(0, '#16283c');
-    upperDeck.addColorStop(1, '#0c1521');
-    ctx.fillStyle = upperDeck;
-    ctx.fillRect(0, 0, width, 54);
+    if (useExperimentalArena && experimentalLayout && experimentalArena) {
+      ctx.save();
+      drawRoundedRect(ctx, experimentalLayout.frame.x - 3, experimentalLayout.frame.y - 3, experimentalLayout.frame.w + 6, experimentalLayout.frame.h + 6, 24);
+      ctx.fillStyle = 'rgba(7,12,20,0.72)';
+      ctx.fill();
+      ctx.drawImage(experimentalArena, experimentalLayout.frame.x, experimentalLayout.frame.y, experimentalLayout.frame.w, experimentalLayout.frame.h);
+      ctx.restore();
 
-    const lowerDeck = ctx.createLinearGradient(0, height - 54, 0, height);
-    lowerDeck.addColorStop(0, '#0c1521');
-    lowerDeck.addColorStop(1, '#16283c');
-    ctx.fillStyle = lowerDeck;
-    ctx.fillRect(0, height - 54, width, 54);
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(experimentalLayout.floor.topLeft.x, experimentalLayout.floor.topLeft.y);
+      ctx.lineTo(experimentalLayout.floor.topRight.x, experimentalLayout.floor.topRight.y);
+      ctx.lineTo(experimentalLayout.floor.bottomRight.x, experimentalLayout.floor.bottomRight.y);
+      ctx.lineTo(experimentalLayout.floor.bottomLeft.x, experimentalLayout.floor.bottomLeft.y);
+      ctx.closePath();
+      ctx.clip();
 
-    const crowdReady = UNITY_CROWD_IMAGES.map((src) => images[src]).filter((img): img is HTMLImageElement => isReadyImage(img));
-    if (crowdReady.length) {
-      const laneWidth = 54;
-      const crowdCount = Math.ceil(width / laneWidth) + 1;
-      for (let i = 0; i < crowdCount; i += 1) {
-        const x = i * laneWidth - 8;
-        const topImg = crowdReady[i % crowdReady.length];
-        const bottomImg = crowdReady[(i * 3) % crowdReady.length];
-        drawSpriteImage(ctx, topImg, x, 7, 28, 34, false, 0.92);
-        drawSpriteImage(ctx, bottomImg, x, height - 43, 28, 34, false, 0.92);
-      }
-    }
+      const floorGlow = ctx.createLinearGradient(0, experimentalLayout.floor.topLeft.y, 0, experimentalLayout.floor.bottomLeft.y);
+      floorGlow.addColorStop(0, 'rgba(255,255,255,0.02)');
+      floorGlow.addColorStop(0.45, 'rgba(255,255,255,0.08)');
+      floorGlow.addColorStop(1, 'rgba(12,18,29,0.16)');
+      ctx.fillStyle = floorGlow;
+      ctx.fillRect(experimentalLayout.frame.x, experimentalLayout.floor.topLeft.y - 8, experimentalLayout.frame.w, experimentalLayout.frame.h);
 
-    ctx.fillStyle = 'rgba(255,255,255,0.08)';
-    for (let i = 0; i < 22; i += 1) {
-      ctx.fillRect(22 + i * 42, 14, 28, 10);
-      ctx.fillRect(22 + i * 42, height - 24, 28, 10);
-    }
+      const sweepX = experimentalLayout.frame.x - 140 + ((nowMs * 0.04) % (experimentalLayout.frame.w + 220));
+      const floorSweep = ctx.createLinearGradient(sweepX, experimentalLayout.floor.topLeft.y, sweepX + 120, experimentalLayout.floor.topLeft.y);
+      floorSweep.addColorStop(0, 'rgba(255,255,255,0)');
+      floorSweep.addColorStop(0.5, 'rgba(255,255,255,0.08)');
+      floorSweep.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = floorSweep;
+      ctx.fillRect(experimentalLayout.frame.x, experimentalLayout.floor.topLeft.y, experimentalLayout.frame.w, experimentalLayout.frame.h);
+      ctx.restore();
 
-    drawRoundedRect(ctx, courtLeft, courtTop, courtWidth, courtHeight, 24);
-    ctx.fillStyle = '#d59a61';
-    ctx.fill();
-
-    ctx.save();
-    drawRoundedRect(ctx, courtLeft, courtTop, courtWidth, courtHeight, 24);
-    ctx.clip();
-
-    const courtTexture = images[UNITY_SHARED_IMAGES.court];
-    if (isReadyImage(courtTexture)) {
-      ctx.drawImage(courtTexture, courtLeft, courtTop, courtWidth, courtHeight);
+      const vignette = ctx.createLinearGradient(0, experimentalLayout.frame.y, 0, experimentalLayout.frame.y + experimentalLayout.frame.h);
+      vignette.addColorStop(0, 'rgba(7,12,18,0.3)');
+      vignette.addColorStop(0.4, 'rgba(7,12,18,0)');
+      vignette.addColorStop(1, 'rgba(7,12,18,0.12)');
+      ctx.fillStyle = vignette;
+      drawRoundedRect(ctx, experimentalLayout.frame.x, experimentalLayout.frame.y, experimentalLayout.frame.w, experimentalLayout.frame.h, 22);
+      ctx.fill();
     } else {
-      const wood = ctx.createLinearGradient(0, courtTop, 0, height - courtTop);
-      wood.addColorStop(0, '#efc178');
-      wood.addColorStop(0.5, '#d99655');
-      wood.addColorStop(1, '#c87f42');
-      ctx.fillStyle = wood;
+      const upperDeck = ctx.createLinearGradient(0, 0, 0, 54);
+      upperDeck.addColorStop(0, '#16283c');
+      upperDeck.addColorStop(1, '#0c1521');
+      ctx.fillStyle = upperDeck;
+      ctx.fillRect(0, 0, width, 54);
+
+      const lowerDeck = ctx.createLinearGradient(0, height - 54, 0, height);
+      lowerDeck.addColorStop(0, '#0c1521');
+      lowerDeck.addColorStop(1, '#16283c');
+      ctx.fillStyle = lowerDeck;
+      ctx.fillRect(0, height - 54, width, 54);
+
+      const crowdReady = UNITY_CROWD_IMAGES.map((src) => images[src]).filter((img): img is HTMLImageElement => isReadyImage(img));
+      if (crowdReady.length) {
+        const laneWidth = 54;
+        const crowdCount = Math.ceil(width / laneWidth) + 1;
+        for (let i = 0; i < crowdCount; i += 1) {
+          const x = i * laneWidth - 8;
+          const topImg = crowdReady[i % crowdReady.length];
+          const bottomImg = crowdReady[(i * 3) % crowdReady.length];
+          drawSpriteImage(ctx, topImg, x, 7, 28, 34, false, 0.92);
+          drawSpriteImage(ctx, bottomImg, x, height - 43, 28, 34, false, 0.92);
+        }
+      }
+
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      for (let i = 0; i < 22; i += 1) {
+        ctx.fillRect(22 + i * 42, 14, 28, 10);
+        ctx.fillRect(22 + i * 42, height - 24, 28, 10);
+      }
+
+      drawRoundedRect(ctx, courtLeft, courtTop, courtWidth, courtHeight, 24);
+      ctx.fillStyle = '#d59a61';
+      ctx.fill();
+
+      ctx.save();
+      drawRoundedRect(ctx, courtLeft, courtTop, courtWidth, courtHeight, 24);
+      ctx.clip();
+
+      const courtTexture = images[UNITY_SHARED_IMAGES.court];
+      if (isReadyImage(courtTexture)) {
+        ctx.drawImage(courtTexture, courtLeft, courtTop, courtWidth, courtHeight);
+      } else {
+        const wood = ctx.createLinearGradient(0, courtTop, 0, height - courtTop);
+        wood.addColorStop(0, '#efc178');
+        wood.addColorStop(0.5, '#d99655');
+        wood.addColorStop(1, '#c87f42');
+        ctx.fillStyle = wood;
+        ctx.fillRect(courtLeft, courtTop, courtWidth, courtHeight);
+      }
+
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      for (let x = courtLeft + 24; x < courtLeft + courtWidth; x += 44) {
+        ctx.fillRect(x, courtTop, 3, courtHeight);
+      }
+
+      const floorGlow = ctx.createRadialGradient(width / 2, height / 2, 64, width / 2, height / 2, courtWidth * 0.44);
+      floorGlow.addColorStop(0, 'rgba(255,255,255,0.12)');
+      floorGlow.addColorStop(0.45, 'rgba(255,255,255,0.04)');
+      floorGlow.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = floorGlow;
       ctx.fillRect(courtLeft, courtTop, courtWidth, courtHeight);
+
+      const paintWidth = 114;
+      const paintHeight = 188;
+      const paintY = height / 2 - paintHeight / 2;
+      const leftPaintX = 92;
+      const rightPaintX = width - 92 - paintWidth;
+
+      const leftPaint = ctx.createLinearGradient(leftPaintX, paintY, leftPaintX + paintWidth, paintY);
+      leftPaint.addColorStop(0, 'rgba(127,29,29,0.24)');
+      leftPaint.addColorStop(1, 'rgba(248,113,113,0.08)');
+      ctx.fillStyle = leftPaint;
+      ctx.fillRect(leftPaintX, paintY, paintWidth, paintHeight);
+
+      const rightPaint = ctx.createLinearGradient(rightPaintX + paintWidth, paintY, rightPaintX, paintY);
+      rightPaint.addColorStop(0, 'rgba(30,64,175,0.24)');
+      rightPaint.addColorStop(1, 'rgba(96,165,250,0.08)');
+      ctx.fillStyle = rightPaint;
+      ctx.fillRect(rightPaintX, paintY, paintWidth, paintHeight);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(leftPaintX, paintY, paintWidth, paintHeight);
+      ctx.strokeRect(rightPaintX, paintY, paintWidth, paintHeight);
+      ctx.beginPath();
+      ctx.arc(leftPaintX + paintWidth, height / 2, 34, -Math.PI / 2, Math.PI / 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(rightPaintX, height / 2, 34, Math.PI / 2, Math.PI * 1.5);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(255,255,255,0.12)';
+      for (let i = 0; i < 4; i += 1) {
+        const markerY = paintY + 24 + i * 36;
+        ctx.fillRect(leftPaintX + 10, markerY, 10, 5);
+        ctx.fillRect(rightPaintX + paintWidth - 20, markerY, 10, 5);
+      }
+
+      if (isReadyImage(logoRed)) {
+        drawSpriteImage(ctx, logoRed, courtLeft + 118, height / 2 - 62, 92, 92, false, 0.13);
+      }
+      if (isReadyImage(logoBlue)) {
+        drawSpriteImage(ctx, logoBlue, width - 210, height / 2 - 62, 92, 92, false, 0.13);
+      }
+
+      const gloss = ctx.createLinearGradient(0, courtTop, 0, courtTop + courtHeight);
+      gloss.addColorStop(0, 'rgba(255,255,255,0.08)');
+      gloss.addColorStop(0.35, 'rgba(255,255,255,0)');
+      gloss.addColorStop(1, 'rgba(18,31,45,0.08)');
+      ctx.fillStyle = gloss;
+      ctx.fillRect(courtLeft, courtTop, courtWidth, courtHeight);
+
+      const sweepX = courtLeft - 160 + ((nowMs * 0.05) % (courtWidth + 280));
+      const floorSweep = ctx.createLinearGradient(sweepX, courtTop, sweepX + 170, courtTop);
+      floorSweep.addColorStop(0, 'rgba(255,255,255,0)');
+      floorSweep.addColorStop(0.5, 'rgba(255,255,255,0.09)');
+      floorSweep.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = floorSweep;
+      ctx.fillRect(courtLeft, courtTop, courtWidth, courtHeight);
+      ctx.restore();
+
+      const barrier = images[UNITY_FX_IMAGES.barrier];
+      if (isReadyImage(barrier)) {
+        drawSpriteImage(ctx, barrier, courtLeft + 8, courtTop - 18, courtWidth - 16, 18, false, 0.95);
+        drawSpriteImage(ctx, barrier, courtLeft + 8, courtTop + courtHeight, courtWidth - 16, 18, false, 0.95);
+      }
+
+      const judgeTable = images[UNITY_FX_IMAGES.judgeTable];
+      if (isReadyImage(judgeTable)) {
+        drawSpriteImage(ctx, judgeTable, width / 2 - 120, 22, 240, 72, false, 0.95);
+      }
+
+      const seatBlue = images[UNITY_FX_IMAGES.seatBlue];
+      const seatRed = images[UNITY_FX_IMAGES.seatRed];
+      if (isReadyImage(seatRed)) {
+        drawSpriteImage(ctx, seatRed, 42, height / 2 - 118, 64, 88, false, 0.92);
+        drawSpriteImage(ctx, seatRed, 42, height / 2 + 28, 64, 88, false, 0.92);
+      }
+      if (isReadyImage(seatBlue)) {
+        drawSpriteImage(ctx, seatBlue, width - 106, height / 2 - 118, 64, 88, false, 0.92);
+        drawSpriteImage(ctx, seatBlue, width - 106, height / 2 + 28, 64, 88, false, 0.92);
+      }
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.48)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(92, 110, width - 184, height - 220);
+      ctx.beginPath();
+      ctx.moveTo(width / 2, 110);
+      ctx.lineTo(width / 2, height - 110);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(width / 2, height / 2, 44, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(104, height / 2, 124, -Math.PI / 2.9, Math.PI / 2.9);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(width - 104, height / 2, 124, Math.PI - Math.PI / 2.9, Math.PI + Math.PI / 2.9);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(7,28,56,0.86)';
+      ctx.fillRect(width - 154, height / 2 - 88, 62, 176);
+      ctx.fillStyle = 'rgba(72,20,20,0.86)';
+      ctx.fillRect(92, height / 2 - 88, 62, 176);
     }
 
-    ctx.fillStyle = 'rgba(255,255,255,0.04)';
-    for (let x = courtLeft + 24; x < courtLeft + courtWidth; x += 44) {
-      ctx.fillRect(x, courtTop, 3, courtHeight);
-    }
-
-    const floorGlow = ctx.createRadialGradient(width / 2, height / 2, 64, width / 2, height / 2, courtWidth * 0.44);
-    floorGlow.addColorStop(0, 'rgba(255,255,255,0.12)');
-    floorGlow.addColorStop(0.45, 'rgba(255,255,255,0.04)');
-    floorGlow.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = floorGlow;
-    ctx.fillRect(courtLeft, courtTop, courtWidth, courtHeight);
-
-    const paintWidth = 114;
-    const paintHeight = 188;
-    const paintY = height / 2 - paintHeight / 2;
-    const leftPaintX = 92;
-    const rightPaintX = width - 92 - paintWidth;
-
-    const leftPaint = ctx.createLinearGradient(leftPaintX, paintY, leftPaintX + paintWidth, paintY);
-    leftPaint.addColorStop(0, 'rgba(127,29,29,0.24)');
-    leftPaint.addColorStop(1, 'rgba(248,113,113,0.08)');
-    ctx.fillStyle = leftPaint;
-    ctx.fillRect(leftPaintX, paintY, paintWidth, paintHeight);
-
-    const rightPaint = ctx.createLinearGradient(rightPaintX + paintWidth, paintY, rightPaintX, paintY);
-    rightPaint.addColorStop(0, 'rgba(30,64,175,0.24)');
-    rightPaint.addColorStop(1, 'rgba(96,165,250,0.08)');
-    ctx.fillStyle = rightPaint;
-    ctx.fillRect(rightPaintX, paintY, paintWidth, paintHeight);
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(leftPaintX, paintY, paintWidth, paintHeight);
-    ctx.strokeRect(rightPaintX, paintY, paintWidth, paintHeight);
-    ctx.beginPath();
-    ctx.arc(leftPaintX + paintWidth, height / 2, 34, -Math.PI / 2, Math.PI / 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(rightPaintX, height / 2, 34, Math.PI / 2, Math.PI * 1.5);
-    ctx.stroke();
-
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
-    for (let i = 0; i < 4; i += 1) {
-      const markerY = paintY + 24 + i * 36;
-      ctx.fillRect(leftPaintX + 10, markerY, 10, 5);
-      ctx.fillRect(rightPaintX + paintWidth - 20, markerY, 10, 5);
-    }
-
-    const logoBlue = images[UNITY_SHARED_IMAGES.logoBlue];
-    const logoRed = images[UNITY_SHARED_IMAGES.logoRed];
-    if (isReadyImage(logoRed)) {
-      drawSpriteImage(ctx, logoRed, courtLeft + 118, height / 2 - 62, 92, 92, false, 0.13);
-    }
-    if (isReadyImage(logoBlue)) {
-      drawSpriteImage(ctx, logoBlue, width - 210, height / 2 - 62, 92, 92, false, 0.13);
-    }
-
-    const gloss = ctx.createLinearGradient(0, courtTop, 0, courtTop + courtHeight);
-    gloss.addColorStop(0, 'rgba(255,255,255,0.08)');
-    gloss.addColorStop(0.35, 'rgba(255,255,255,0)');
-    gloss.addColorStop(1, 'rgba(18,31,45,0.08)');
-    ctx.fillStyle = gloss;
-    ctx.fillRect(courtLeft, courtTop, courtWidth, courtHeight);
-
-    const sweepX = courtLeft - 160 + ((nowMs * 0.05) % (courtWidth + 280));
-    const floorSweep = ctx.createLinearGradient(sweepX, courtTop, sweepX + 170, courtTop);
-    floorSweep.addColorStop(0, 'rgba(255,255,255,0)');
-    floorSweep.addColorStop(0.5, 'rgba(255,255,255,0.09)');
-    floorSweep.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = floorSweep;
-    ctx.fillRect(courtLeft, courtTop, courtWidth, courtHeight);
-    ctx.restore();
-
-    const barrier = images[UNITY_FX_IMAGES.barrier];
-    if (isReadyImage(barrier)) {
-      drawSpriteImage(ctx, barrier, courtLeft + 8, courtTop - 18, courtWidth - 16, 18, false, 0.95);
-      drawSpriteImage(ctx, barrier, courtLeft + 8, courtTop + courtHeight, courtWidth - 16, 18, false, 0.95);
-    }
-
-    const judgeTable = images[UNITY_FX_IMAGES.judgeTable];
-    if (isReadyImage(judgeTable)) {
-      drawSpriteImage(ctx, judgeTable, width / 2 - 120, 22, 240, 72, false, 0.95);
-    }
-
-    const seatBlue = images[UNITY_FX_IMAGES.seatBlue];
-    const seatRed = images[UNITY_FX_IMAGES.seatRed];
-    if (isReadyImage(seatRed)) {
-      drawSpriteImage(ctx, seatRed, 42, height / 2 - 118, 64, 88, false, 0.92);
-      drawSpriteImage(ctx, seatRed, 42, height / 2 + 28, 64, 88, false, 0.92);
-    }
-    if (isReadyImage(seatBlue)) {
-      drawSpriteImage(ctx, seatBlue, width - 106, height / 2 - 118, 64, 88, false, 0.92);
-      drawSpriteImage(ctx, seatBlue, width - 106, height / 2 + 28, 64, 88, false, 0.92);
-    }
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.48)';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(92, 110, width - 184, height - 220);
-    ctx.beginPath();
-    ctx.moveTo(width / 2, 110);
-    ctx.lineTo(width / 2, height - 110);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(width / 2, height / 2, 44, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.28)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(104, height / 2, 124, -Math.PI / 2.9, Math.PI / 2.9);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(width - 104, height / 2, 124, Math.PI - Math.PI / 2.9, Math.PI + Math.PI / 2.9);
-    ctx.stroke();
-
-    ctx.fillStyle = 'rgba(7,28,56,0.86)';
-    ctx.fillRect(width - 154, height / 2 - 88, 62, 176);
-    ctx.fillStyle = 'rgba(72,20,20,0.86)';
-    ctx.fillRect(92, height / 2 - 88, 62, 176);
-
-    const basketLeft = { x: 104, y: height / 2 };
-    const basketRight = { x: width - 104, y: height / 2 };
-    drawStylizedHoop(ctx, basketLeft, 'left', {
-      post: 'rgba(113,31,31,0.96)',
-      glow: 'rgba(248,113,113,0.52)',
-    }, 'back');
-    drawStylizedHoop(ctx, basketRight, 'right', {
-      post: 'rgba(24,73,135,0.96)',
-      glow: 'rgba(96,165,250,0.48)',
-    }, 'back');
+    const basketLeft = projectedBasket('left');
+    const basketRight = projectedBasket('right');
+    drawStylizedHoop(
+      ctx,
+      basketLeft,
+      'left',
+      {
+        post: 'rgba(113,31,31,0.96)',
+        glow: 'rgba(248,113,113,0.52)',
+      },
+      'back',
+      useExperimentalArena ? 0.78 : 1,
+    );
+    drawStylizedHoop(
+      ctx,
+      basketRight,
+      'right',
+      {
+        post: 'rgba(24,73,135,0.96)',
+        glow: 'rgba(96,165,250,0.48)',
+      },
+      'back',
+      useExperimentalArena ? 0.78 : 1,
+    );
 
     for (const entity of state.entities) {
-      const lift = Math.max(jumpLiftMs(entity.jumpMs ?? 0), dunkLiftMs(entity.dunkMs ?? 0), blockLiftMs(entity.blockMs ?? 0));
-      const drawY = entity.pos.y - lift;
+      const renderPos = projectedPoint(entity.pos);
+      const lift = Math.max(jumpLiftMs(entity.jumpMs ?? 0), dunkLiftMs(entity.dunkMs ?? 0), blockLiftMs(entity.blockMs ?? 0)) * liftScale;
+      const drawY = renderPos.y - lift;
       const stamina = Math.round(state.staminaByPlayerId[entity.id] ?? 100);
       const healthRatio = Math.max(0, Math.min(1, (entity.health ?? 10) / (entity.maxHealth ?? 10)));
       const highlight = entity.id === controlledUserId;
@@ -1270,29 +1427,31 @@ export default function GameScreen(props: GameScreenProps) {
       const pulse = highlight ? 0.74 + Math.sin(nowMs / 120) * 0.12 : 0.5;
       const dunkProgress = entity.dunkMs > 0 ? 1 - Math.max(0, Math.min(1, entity.dunkMs / 360)) : 0;
       const blockProgress = entity.blockMs > 0 ? 1 - Math.max(0, Math.min(1, entity.blockMs / 420)) : 0;
+      const depthScale = useExperimentalArena ? 0.76 + clamp(entity.pos.y / height, 0, 1) * 0.2 : 1;
+      const markerRadius = (hasBall ? 20 : 18) * (useExperimentalArena ? 0.82 + clamp(entity.pos.y / height, 0, 1) * 0.18 : 1);
 
       ctx.fillStyle = 'rgba(0,0,0,0.18)';
       ctx.beginPath();
-      ctx.ellipse(entity.pos.x, entity.pos.y + 12, Math.max(12, 19 - lift * 0.18), Math.max(5, 9.5 - lift * 0.09), 0, 0, Math.PI * 2);
+      ctx.ellipse(renderPos.x, renderPos.y + (useExperimentalArena ? 10 : 12), Math.max(11, (19 - lift * 0.18) * depthScale), Math.max(5, (9.5 - lift * 0.09) * depthScale), 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.strokeStyle = hasBall ? '#ffe082' : highlight ? `rgba(255,255,255,${pulse})` : look.ring;
       ctx.lineWidth = hasBall ? 4 : highlight ? 3 : 2;
       ctx.beginPath();
-      ctx.arc(entity.pos.x, entity.pos.y + 8, hasBall ? 20 : 18, 0, Math.PI * 2);
+      ctx.arc(renderPos.x, renderPos.y + 8, markerRadius, 0, Math.PI * 2);
       ctx.stroke();
 
       ctx.fillStyle = 'rgba(15,23,42,0.78)';
-      ctx.fillRect(entity.pos.x - 24, drawY - 39, 48, 5);
+      ctx.fillRect(renderPos.x - 24 * depthScale, drawY - 39 * depthScale, 48 * depthScale, 5);
       ctx.fillStyle = '#fb7185';
-      ctx.fillRect(entity.pos.x - 24, drawY - 39, 48 * healthRatio, 5);
+      ctx.fillRect(renderPos.x - 24 * depthScale, drawY - 39 * depthScale, 48 * depthScale * healthRatio, 5);
 
       if (entity.screenMs > 0 || entity.rollMs > 0) {
         ctx.save();
-        ctx.font = '700 10px "Trebuchet MS", sans-serif';
+        ctx.font = `700 ${useExperimentalArena ? 9 : 10}px "Trebuchet MS", sans-serif`;
         ctx.textAlign = 'center';
         ctx.fillStyle = entity.screenMs > 0 ? 'rgba(255,245,157,0.94)' : 'rgba(153,246,228,0.94)';
-        ctx.fillText(entity.screenMs > 0 ? 'SCREEN' : 'ROLL', entity.pos.x, drawY - 47);
+        ctx.fillText(entity.screenMs > 0 ? 'SCREEN' : 'ROLL', renderPos.x, drawY - 47 * depthScale);
         ctx.restore();
       }
 
@@ -1300,7 +1459,7 @@ export default function GameScreen(props: GameScreenProps) {
         ctx.strokeStyle = entity.team === 'user' ? 'rgba(90,174,255,0.42)' : 'rgba(255,107,107,0.42)';
         ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.arc(entity.pos.x, drawY, entity.radius + 5, 0, Math.PI * 2);
+        ctx.arc(renderPos.x, drawY, (entity.radius + 5) * depthScale, 0, Math.PI * 2);
         ctx.stroke();
       }
 
@@ -1314,14 +1473,15 @@ export default function GameScreen(props: GameScreenProps) {
             : entity.blockMs > 0
               ? 1.08 + Math.sin(blockProgress * Math.PI) * 0.18
               : 1;
-        const spriteWidth = 90 * airScale;
+        const spriteWidth = 90 * airScale * depthScale;
         const spriteHeight =
           90 *
           (entity.dunkMs > 0
             ? 1.08 + Math.sin(dunkProgress * Math.PI) * 0.2
             : entity.blockMs > 0
               ? 1.1 + Math.sin(blockProgress * Math.PI) * 0.24
-              : 1);
+              : 1) *
+          depthScale;
         const airDriveX =
           entity.dunkMs > 0
             ? faceDir.x * (8 + Math.sin(dunkProgress * Math.PI) * 12)
@@ -1338,13 +1498,21 @@ export default function GameScreen(props: GameScreenProps) {
           ctx.strokeStyle = entity.team === 'user' ? 'rgba(96,165,250,0.34)' : 'rgba(248,113,113,0.34)';
           ctx.lineWidth = 6;
           ctx.beginPath();
-          ctx.moveTo(entity.pos.x - faceDir.x * 8, drawY + 8);
-          ctx.lineTo(entity.pos.x + faceDir.x * 16, drawY - 18);
+          ctx.moveTo(renderPos.x - faceDir.x * 8 * depthScale, drawY + 8 * depthScale);
+          ctx.lineTo(renderPos.x + faceDir.x * 16 * depthScale, drawY - 18 * depthScale);
           ctx.stroke();
 
           ctx.fillStyle = entity.team === 'user' ? 'rgba(147,197,253,0.18)' : 'rgba(252,165,165,0.18)';
           ctx.beginPath();
-          ctx.ellipse(entity.pos.x + faceDir.x * 8, drawY - 6, 14 + dunkProgress * 10, 6 + dunkProgress * 4, 0, 0, Math.PI * 2);
+          ctx.ellipse(
+            renderPos.x + faceDir.x * 8 * depthScale,
+            drawY - 6 * depthScale,
+            (14 + dunkProgress * 10) * depthScale,
+            (6 + dunkProgress * 4) * depthScale,
+            0,
+            0,
+            Math.PI * 2,
+          );
           ctx.fill();
         }
         if (entity.blockMs > 0) {
@@ -1352,7 +1520,7 @@ export default function GameScreen(props: GameScreenProps) {
           drawSpriteImage(
             ctx,
             sprite,
-            entity.pos.x - spriteWidth / 2 - faceDir.x * 10,
+            renderPos.x - spriteWidth / 2 - faceDir.x * 10 * depthScale,
             drawY - spriteHeight + 34,
             spriteWidth,
             spriteHeight,
@@ -1362,7 +1530,7 @@ export default function GameScreen(props: GameScreenProps) {
           drawSpriteImage(
             ctx,
             sprite,
-            entity.pos.x - spriteWidth / 2 - faceDir.x * 4,
+            renderPos.x - spriteWidth / 2 - faceDir.x * 4 * depthScale,
             drawY - spriteHeight + 18,
             spriteWidth,
             spriteHeight,
@@ -1372,17 +1540,17 @@ export default function GameScreen(props: GameScreenProps) {
           ctx.strokeStyle = blockGlow;
           ctx.lineWidth = 4;
           ctx.beginPath();
-          ctx.moveTo(entity.pos.x, drawY + 10);
-          ctx.lineTo(entity.pos.x + faceDir.x * 10, drawY - 30);
+          ctx.moveTo(renderPos.x, drawY + 10 * depthScale);
+          ctx.lineTo(renderPos.x + faceDir.x * 10 * depthScale, drawY - 30 * depthScale);
           ctx.stroke();
           ctx.beginPath();
-          ctx.arc(entity.pos.x, drawY - 12, entity.radius + 8 + Math.sin(blockProgress * Math.PI) * 10, 0, Math.PI * 2);
+          ctx.arc(renderPos.x, drawY - 12 * depthScale, (entity.radius + 8 + Math.sin(blockProgress * Math.PI) * 10) * depthScale, 0, Math.PI * 2);
           ctx.stroke();
         }
         drawSpriteImage(
           ctx,
           sprite,
-          entity.pos.x - spriteWidth / 2 + airDriveX,
+          renderPos.x - spriteWidth / 2 + airDriveX * depthScale,
           drawY - spriteHeight + (entity.dunkMs > 0 || entity.blockMs > 0 ? 24 + airDriveY : 20),
           spriteWidth,
           spriteHeight,
@@ -1392,7 +1560,7 @@ export default function GameScreen(props: GameScreenProps) {
       } else {
         ctx.fillStyle = entity.stunMs > 0 || (entity.koMs ?? 0) > 0 ? '#cbd5e1' : entity.color;
         ctx.beginPath();
-        ctx.arc(entity.pos.x, drawY, entity.radius, 0, Math.PI * 2);
+        ctx.arc(renderPos.x, drawY, entity.radius * depthScale, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = 'rgba(15,23,42,0.62)';
         ctx.lineWidth = 2;
@@ -1402,48 +1570,49 @@ export default function GameScreen(props: GameScreenProps) {
       ctx.strokeStyle = hasBall ? '#fde68a' : look.accent;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(entity.pos.x - 7, drawY + 17);
-      ctx.lineTo(entity.pos.x + 7, drawY + 17);
+      ctx.moveTo(renderPos.x - 7 * depthScale, drawY + 17 * depthScale);
+      ctx.lineTo(renderPos.x + 7 * depthScale, drawY + 17 * depthScale);
       ctx.stroke();
 
       ctx.fillStyle = 'rgba(15,23,42,0.76)';
-      ctx.fillRect(entity.pos.x - 20, drawY - 26, 40, 6);
+      ctx.fillRect(renderPos.x - 20 * depthScale, drawY - 26 * depthScale, 40 * depthScale, 6);
       ctx.fillStyle = staminaTone(stamina);
-      ctx.fillRect(entity.pos.x - 20, drawY - 26, 40 * (stamina / 100), 6);
+      ctx.fillRect(renderPos.x - 20 * depthScale, drawY - 26 * depthScale, 40 * depthScale * (stamina / 100), 6);
 
       ctx.fillStyle = '#f8fafc';
-      ctx.font = 'bold 10px Trebuchet MS';
+      ctx.font = `bold ${useExperimentalArena ? 9 : 10}px Trebuchet MS`;
       ctx.textAlign = 'center';
-      ctx.fillText(`#${entity.jerseyNumber ?? entity.slotIndex + 1}`, entity.pos.x, drawY + 34);
+      ctx.fillText(`#${entity.jerseyNumber ?? entity.slotIndex + 1}`, renderPos.x, drawY + 34 * depthScale);
       ctx.textAlign = 'start';
     }
 
+    const renderBall = projectedPoint(ball);
     ctx.fillStyle = 'rgba(0,0,0,0.2)';
     ctx.beginPath();
-    ctx.ellipse(ball.x, ball.y + 12, 8, 4, 0, 0, Math.PI * 2);
+    ctx.ellipse(renderBall.x, renderBall.y + (useExperimentalArena ? 10 : 12), useExperimentalArena ? 7 : 8, useExperimentalArena ? 3.5 : 4, 0, 0, Math.PI * 2);
     ctx.fill();
     const ballSprite = images[UNITY_SHARED_IMAGES.ball];
-    const ballLift = (ball.zArc ?? 0) * 0.08;
+    const ballLift = (ball.zArc ?? 0) * (useExperimentalArena ? 0.065 : 0.08);
     if (state.ball.kind === 'loose' && state.ball.source === 'shot' && Math.hypot(state.ball.vel.x, state.ball.vel.y) > 220) {
       const trailDir = normalize(state.ball.vel);
       ctx.strokeStyle = 'rgba(255,226,138,0.34)';
       ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.moveTo(ball.x - trailDir.x * 10, ball.y - ballLift - trailDir.y * 10);
-      ctx.lineTo(ball.x - trailDir.x * 42, ball.y - ballLift - trailDir.y * 42);
+      ctx.moveTo(renderBall.x - trailDir.x * 10, renderBall.y - ballLift - trailDir.y * 10);
+      ctx.lineTo(renderBall.x - trailDir.x * 42, renderBall.y - ballLift - trailDir.y * 42);
       ctx.stroke();
     }
     if (isReadyImage(ballSprite)) {
-      const ballSize = 18 + Math.min(10, (ball.zArc ?? 0) * 0.03) + (state.ball.kind === 'shot' && state.ball.isDunk ? 4 : 0);
+      const ballSize = (useExperimentalArena ? 16 : 18) + Math.min(10, (ball.zArc ?? 0) * 0.03) + (state.ball.kind === 'shot' && state.ball.isDunk ? 4 : 0);
       ctx.save();
-      ctx.translate(ball.x, ball.y - ballLift);
+      ctx.translate(renderBall.x, renderBall.y - ballLift);
       ctx.rotate(nowMs / 140);
       ctx.drawImage(ballSprite, -ballSize / 2, -ballSize / 2, ballSize, ballSize);
       ctx.restore();
     } else {
       ctx.fillStyle = '#e86c2e';
       ctx.beginPath();
-      ctx.arc(ball.x, ball.y - ballLift, 9, 0, Math.PI * 2);
+      ctx.arc(renderBall.x, renderBall.y - ballLift, useExperimentalArena ? 8 : 9, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = 'rgba(0,0,0,0.3)';
       ctx.lineWidth = 2;
@@ -1452,63 +1621,79 @@ export default function GameScreen(props: GameScreenProps) {
 
     if (state.ball.kind === 'shot' && state.ball.isDunk) {
       const dunkFlash = Math.max(0, 1 - Math.abs(1 - Math.min(1, state.ball.t / state.ball.duration) * 1.35));
+      const targetBasket = state.ball.target.x < width * 0.5 ? basketLeft : basketRight;
       ctx.strokeStyle = `rgba(255,244,214,${0.18 + dunkFlash * 0.22})`;
       ctx.lineWidth = 2.4;
       for (let i = -1; i <= 1; i += 1) {
         ctx.beginPath();
-        ctx.moveTo(state.ball.target.x + i * 6, state.ball.target.y - 1);
-        ctx.lineTo(state.ball.target.x + i * 3, state.ball.target.y + 24 + dunkFlash * 8);
+        ctx.moveTo(targetBasket.x + i * 6, targetBasket.y - 1);
+        ctx.lineTo(targetBasket.x + i * 3, targetBasket.y + 24 + dunkFlash * 8);
         ctx.stroke();
       }
       ctx.strokeStyle = `rgba(255,216,107,${0.18 + dunkFlash * 0.22})`;
       ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.arc(state.ball.target.x, state.ball.target.y, 18 + dunkFlash * 8, 0, Math.PI * 2);
+      ctx.arc(targetBasket.x, targetBasket.y, 18 + dunkFlash * 8, 0, Math.PI * 2);
       ctx.stroke();
     }
 
-    drawStylizedHoop(ctx, basketLeft, 'left', {
-      post: 'rgba(113,31,31,0.96)',
-      glow: 'rgba(248,113,113,0.52)',
-    }, 'front');
-    drawStylizedHoop(ctx, basketRight, 'right', {
-      post: 'rgba(24,73,135,0.96)',
-      glow: 'rgba(96,165,250,0.48)',
-    }, 'front');
+    drawStylizedHoop(
+      ctx,
+      basketLeft,
+      'left',
+      {
+        post: 'rgba(113,31,31,0.96)',
+        glow: 'rgba(248,113,113,0.52)',
+      },
+      'front',
+      useExperimentalArena ? 0.78 : 1,
+    );
+    drawStylizedHoop(
+      ctx,
+      basketRight,
+      'right',
+      {
+        post: 'rgba(24,73,135,0.96)',
+        glow: 'rgba(96,165,250,0.48)',
+      },
+      'front',
+      useExperimentalArena ? 0.78 : 1,
+    );
 
     ctx.font = '16px Arial';
     for (const event of state.events) {
       const age = (nowMs - event.createdAtMs) / 2500;
       const alpha = clamp(1 - age, 0, 1);
-      const y = event.y - age * 22;
+      const eventAnchor = projectedPoint({ x: event.x, y: event.y });
+      const y = eventAnchor.y - age * 22;
       ctx.fillStyle =
         event.tone === 'green'
           ? `rgba(40,167,69,${alpha})`
           : event.tone === 'red'
             ? `rgba(220,53,69,${alpha})`
-            : event.tone === 'gold'
-              ? `rgba(212,175,55,${alpha})`
-              : `rgba(33,150,243,${alpha})`;
-      ctx.fillText(event.text, event.x - 34, y);
+              : event.tone === 'gold'
+                ? `rgba(212,175,55,${alpha})`
+                : `rgba(33,150,243,${alpha})`;
+      ctx.fillText(event.text, eventAnchor.x - 34, y);
     }
 
-    const scoreboardX = width / 2 - 194;
-    const scoreboardY = 10;
-    const scoreboardWidth = 388;
-    const scoreboardHeight = 76;
+    const scoreboardX = experimentalLayout ? experimentalLayout.scoreboard.x : width / 2 - 194;
+    const scoreboardY = experimentalLayout ? experimentalLayout.scoreboard.y : 10;
+    const scoreboardWidth = experimentalLayout ? experimentalLayout.scoreboard.w : 388;
+    const scoreboardHeight = experimentalLayout ? experimentalLayout.scoreboard.h : 76;
     drawRoundedRect(ctx, scoreboardX, scoreboardY, scoreboardWidth, scoreboardHeight, 20);
-    ctx.fillStyle = 'rgba(5,10,18,0.84)';
+    ctx.fillStyle = useExperimentalArena ? 'rgba(7,12,20,0.72)' : 'rgba(5,10,18,0.84)';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = useExperimentalArena ? 'rgba(248,250,252,0.14)' : 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = useExperimentalArena ? 1.4 : 1;
     ctx.stroke();
 
-    const scoreboardLogoSize = 28;
+    const scoreboardLogoSize = useExperimentalArena ? scoreboardHeight * 0.38 : 28;
     if (isReadyImage(logoBlue)) {
-      drawSpriteImage(ctx, logoBlue, scoreboardX + 16, scoreboardY + 22, scoreboardLogoSize, scoreboardLogoSize);
+      drawSpriteImage(ctx, logoBlue, scoreboardX + 14, scoreboardY + scoreboardHeight * 0.32, scoreboardLogoSize, scoreboardLogoSize);
     }
     if (isReadyImage(logoRed)) {
-      drawSpriteImage(ctx, logoRed, scoreboardX + scoreboardWidth - 44, scoreboardY + 22, scoreboardLogoSize, scoreboardLogoSize);
+      drawSpriteImage(ctx, logoRed, scoreboardX + scoreboardWidth - scoreboardLogoSize - 14, scoreboardY + scoreboardHeight * 0.32, scoreboardLogoSize, scoreboardLogoSize);
     }
 
     const seconds = Math.floor((state.timeLeftMs % 60000) / 1000)
@@ -1521,15 +1706,19 @@ export default function GameScreen(props: GameScreenProps) {
     ctx.save();
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(226,232,240,0.72)';
-    ctx.font = 'bold 10px Trebuchet MS';
-    ctx.fillText(canvasUserLabel, scoreboardX + 88, scoreboardY + 24);
-    ctx.fillText(canvasAiLabel, scoreboardX + scoreboardWidth - 88, scoreboardY + 24);
+    ctx.font = `bold ${useExperimentalArena ? 8.5 : 10}px Trebuchet MS`;
+    ctx.fillText(canvasUserLabel, scoreboardX + scoreboardWidth * 0.2, scoreboardY + scoreboardHeight * 0.36);
+    ctx.fillText(canvasAiLabel, scoreboardX + scoreboardWidth * 0.8, scoreboardY + scoreboardHeight * 0.36);
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 30px Trebuchet MS';
-    ctx.fillText(`${state.score.user} - ${state.score.ai}`, width / 2, scoreboardY + 44);
-    ctx.font = '12px Trebuchet MS';
+    ctx.font = `bold ${useExperimentalArena ? 23 : 30}px Trebuchet MS`;
+    ctx.fillText(`${state.score.user} - ${state.score.ai}`, scoreboardX + scoreboardWidth * 0.5, scoreboardY + scoreboardHeight * 0.56);
+    ctx.font = `${useExperimentalArena ? 10.5 : 12}px Trebuchet MS`;
     ctx.fillStyle = 'rgba(226,232,240,0.88)';
-    ctx.fillText(`CLOCK ${overtimePrefix}${Math.floor(state.timeLeftMs / 60000)}:${seconds}${possessionText}`, width / 2, scoreboardY + 63);
+    ctx.fillText(
+      `CLOCK ${overtimePrefix}${Math.floor(state.timeLeftMs / 60000)}:${seconds}${possessionText}`,
+      scoreboardX + scoreboardWidth * 0.5,
+      scoreboardY + scoreboardHeight * 0.82,
+    );
     ctx.restore();
     ctx.restore();
   }
